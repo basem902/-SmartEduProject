@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#00ADEF">
+    
+    <title>لوحة التحكم - مشروعي الذكي</title>
+    <meta name="description" content="إدارة مشاريعك وصفوفك الدراسية من لوحة التحكم الذكية">
+    <meta name="robots" content="noindex, nofollow">
+    
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="/assets/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192x192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <link rel="stylesheet" href="/assets/css/base.css">
+    <link rel="stylesheet" href="/assets/css/dark-mode.css">
+    <link rel="stylesheet" href="/assets/css/dashboard.css">
+    <link rel="stylesheet" href="/assets/css/animations.css">
+    <link rel="stylesheet" href="/assets/css/mobile-responsive.css">
+</head>
+<body data-page-type="dashboard">
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">🎓</div>
+                <div class="logo-text">
+                    <h1>مشروعي الذكي</h1>
+                    <p>SmartEduProject</p>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <!-- Hamburger Menu Button (Mobile Only) -->
+                <button class="hamburger-btn mobile-only" onclick="toggleMobileMenu()" aria-label="القائمة">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                
+                <div class="user-menu" onclick="toggleUserMenu()">
+                    <div class="user-avatar" id="userAvatar">A</div>
+                    <span id="userName">المعلم</span>
+                    <span>▼</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- User Menu Dropdown -->
+    <div id="userMenuDropdown" style="display: none; position: fixed; top: 70px; left: 20px; background: var(--card-bg); border-radius: 10px; box-shadow: 0 4px 12px var(--shadow-color); padding: 10px; z-index: 1000; min-width: 200px;">
+        <a href="/pages/settings.html" style="display: block; padding: 10px; color: var(--text-primary); text-decoration: none; border-radius: 5px; transition: background 0.3s;" onmouseover="this.style.background='var(--bg-color)'" onmouseout="this.style.background='transparent'">
+            ⚙️ الإعدادات
+        </a>
+        <a href="#" onclick="auth.logout(); return false;" style="display: block; padding: 10px; color: var(--danger-color); text-decoration: none; border-radius: 5px; transition: background 0.3s;" onmouseover="this.style.background='var(--bg-color)'" onmouseout="this.style.background='transparent'">
+            🚪 تسجيل الخروج
+        </a>
+    </div>
+
+    <!-- Mobile Navigation Overlay -->
+    <div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="toggleMobileMenu()"></div>
+    
+    <!-- Mobile Navigation Sidebar -->
+    <nav class="mobile-nav" id="mobileNav">
+        <div class="mobile-nav-header">
+            <h3>القائمة</h3>
+            <button class="mobile-nav-close" onclick="toggleMobileMenu()" aria-label="إغلاق">✕</button>
+        </div>
+        <ul class="mobile-nav-list">
+            <li><a href="/pages/dashboard.html" class="active">📊 لوحة التحكم</a></li>
+            <li><a href="/pages/create-project.html">📚 إنشاء مشروع</a></li>
+            <li><a href="/pages/sections-manage.html">🏫 الصفوف والشُعب</a></li>
+            <li><a href="/pages/sections-dashboard.html">📊 الإحصائيات</a></li>
+            <li><a href="/pages/settings.html">⚙️ الإعدادات</a></li>
+            <li><a href="#" onclick="auth.logout(); return false;" class="logout-link">🚪 تسجيل الخروج</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Navigation -->
+        <nav class="nav fade-in desktop-only">
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a href="/pages/dashboard.html" class="nav-link active">
+                        <span class="nav-icon">📊</span>
+                        <span>لوحة التحكم</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="showSection('projects'); return false;">
+                        <span class="nav-icon">📚</span>
+                        <span>المشاريع</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/pages/sections-manage.html" class="nav-link">
+                        <span class="nav-icon">🏫</span>
+                        <span>الصفوف والشُعب</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/pages/sections-dashboard.html" class="nav-link">
+                        <span class="nav-icon">📊</span>
+                        <span>الإحصائيات</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="showSection('submissions'); return false;">
+                        <span class="nav-icon">📤</span>
+                        <span>التسليمات</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/pages/settings.html" class="nav-link">
+                        <span class="nav-icon">⚙️</span>
+                        <span>الإعدادات</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Welcome Section -->
+        <div class="card slide-up">
+            <h2>👋 مرحباً <span id="teacherName">المعلم</span></h2>
+            <p class="text-muted">نتمنى لك يومًا مثمرًا في إدارة مشاريعك الدراسية</p>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card stagger-item">
+                <div class="stat-icon">📚</div>
+                <div class="stat-value" id="projectsCount">0</div>
+                <div class="stat-label">المشاريع</div>
+            </div>
+            
+            <div class="stat-card success stagger-item">
+                <div class="stat-icon">👥</div>
+                <div class="stat-value" id="studentsCount">0</div>
+                <div class="stat-label">الطلاب</div>
+            </div>
+            
+            <div class="stat-card warning stagger-item">
+                <div class="stat-icon">📤</div>
+                <div class="stat-value" id="submissionsCount">0</div>
+                <div class="stat-label">التسليمات</div>
+            </div>
+            
+            <div class="stat-card danger stagger-item">
+                <div class="stat-icon">⏳</div>
+                <div class="stat-value" id="pendingCount">0</div>
+                <div class="stat-label">قيد المراجعة</div>
+            </div>
+        </div>
+
+        <!-- Sections Stats Grid -->
+        <div class="stats-grid" style="margin-top: 30px;">
+            <div class="stat-card primary stagger-item" onclick="location.href='/pages/sections-manage.html'" style="cursor: pointer;">
+                <div class="stat-icon">🏫</div>
+                <div class="stat-value" id="sectionsGradesCount">0</div>
+                <div class="stat-label">الصفوف الدراسية</div>
+            </div>
+            
+            <div class="stat-card info stagger-item" onclick="location.href='/pages/sections-manage.html'" style="cursor: pointer;">
+                <div class="stat-icon">📘</div>
+                <div class="stat-value" id="sectionsSectionsCount">0</div>
+                <div class="stat-label">الشُعب</div>
+            </div>
+            
+            <div class="stat-card success stagger-item" onclick="location.href='/pages/sections-dashboard.html'" style="cursor: pointer;">
+                <div class="stat-icon">👨‍🎓</div>
+                <div class="stat-value" id="sectionsStudentsCount">0</div>
+                <div class="stat-label">الطلاب المسجلون</div>
+            </div>
+            
+            <div class="stat-card warning stagger-item" onclick="location.href='/pages/sections-dashboard.html'" style="cursor: pointer;">
+                <div class="stat-icon">✅</div>
+                <div class="stat-value" id="sectionsJoinedCount">0</div>
+                <div class="stat-label">انضموا للقروبات</div>
+            </div>
+        </div>
+
+        <!-- Recent Projects -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">📚 المشاريع الحديثة</h3>
+            </div>
+            <div class="card-body" id="recentProjects">
+                <div class="text-center" style="padding: 40px;">
+                    <div class="spinner" style="margin: 0 auto;"></div>
+                    <p class="mt-2 text-muted">جاري التحميل...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">⚡ إجراءات سريعة</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <button class="btn btn-primary btn-block" onclick="createProject()">
+                            ➕ إنشاء مشروع جديد
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-success btn-block" onclick="viewSubmissions()">
+                            📥 عرض التسليمات
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ Config يُحمّل أولاً -->
+    <script src="/assets/js/config.js"></script>
+    
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/ui.js"></script>
+    <script src="/assets/js/theme.js"></script>
+    <script src="/assets/js/auth.js"></script>
+    <script src="/assets/js/app.js"></script>
+    <script src="/assets/js/sections-api.js"></script>
+    <script src="/js/telegram-preview-modal.js"></script>
+    
+    <script>
+        // ✅ API_BASE تم تعريفه في config.js
+        
+        // حماية الصفحة
+        auth.protectPage();
+        
+        // تحديث معلومات المستخدم
+        const teacher = auth.getTeacher();
+        if (teacher) {
+            document.getElementById('userName').textContent = auth.getFirstName();
+            document.getElementById('userAvatar').textContent = auth.getInitials();
+            document.getElementById('teacherName').textContent = auth.getFirstName();
+        }
+        
+        // Toggle User Menu
+        function toggleUserMenu() {
+            const menu = document.getElementById('userMenuDropdown');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('userMenuDropdown');
+            const userMenu = document.querySelector('.user-menu');
+            
+            if (!userMenu.contains(e.target) && !menu.contains(e.target)) {
+                menu.style.display = 'none';
+            }
+        });
+        
+        // Load Dashboard Data
+        async function loadDashboard() {
+            try {
+                // Load projects
+                const projectsData = await api.getProjects();
+                const projects = projectsData.projects || [];
+                
+                // Update stats
+                document.getElementById('projectsCount').textContent = projects.length;
+                
+                // Calculate total students and submissions
+                let totalStudents = 0;
+                let totalSubmissions = 0;
+                let pendingSubmissions = 0;
+                
+                for (const project of projects) {
+                    // These would need actual API calls in production
+                    totalSubmissions += project.submissions_count || 0;
+                }
+                
+                document.getElementById('studentsCount').textContent = totalStudents;
+                document.getElementById('submissionsCount').textContent = totalSubmissions;
+                document.getElementById('pendingCount').textContent = pendingSubmissions;
+                
+                // Load sections stats
+                await loadSectionsStats();
+                
+                // Display recent projects
+                displayRecentProjects(projects.slice(0, 5));
+                
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                UI.showError('#recentProjects', 'فشل تحميل البيانات');
+            }
+        }
+
+        // Load sections statistics
+        async function loadSectionsStats() {
+            try {
+                const response = await sectionsAPI.getMyGrades();
+                const stats = response.stats || {};
+                
+                // Update sections stats
+                document.getElementById('sectionsGradesCount').textContent = stats.total_grades || 0;
+                document.getElementById('sectionsSectionsCount').textContent = stats.total_sections || 0;
+                document.getElementById('sectionsStudentsCount').textContent = stats.total_students || 0;
+                
+                // Calculate joined count (سنحسبه من خلال جمع البيانات)
+                let totalJoined = 0;
+                if (response.grades && response.grades.length > 0) {
+                    for (const grade of response.grades) {
+                        // Get sections for this grade
+                        try {
+                            const sectionsData = await sectionsAPI.getGradeSections(grade.id);
+                            if (sectionsData.sections) {
+                                for (const section of sectionsData.sections) {
+                                    totalJoined += section.joined_count || 0;
+                                }
+                            }
+                        } catch (err) {
+                            console.error('Error loading grade sections:', err);
+                        }
+                    }
+                }
+                
+                document.getElementById('sectionsJoinedCount').textContent = totalJoined;
+                
+            } catch (error) {
+                console.error('Error loading sections stats:', error);
+                // Don't show error, just keep default values
+                document.getElementById('sectionsGradesCount').textContent = '0';
+                document.getElementById('sectionsSectionsCount').textContent = '0';
+                document.getElementById('sectionsStudentsCount').textContent = '0';
+                document.getElementById('sectionsJoinedCount').textContent = '0';
+            }
+        }
+        
+        function displayRecentProjects(projects) {
+            const container = document.getElementById('recentProjects');
+            
+            if (projects.length === 0) {
+                UI.showEmpty(container, 'لا توجد مشاريع بعد', '📭');
+                return;
+            }
+            
+            let html = '<div class="table-container"><table class="table"><thead><tr>';
+            html += '<th>العنوان</th><th>المادة</th><th>الصف</th><th>الموعد النهائي</th><th>الحالة</th><th>إشعار التليجرام</th></tr></thead><tbody>';
+            
+            projects.forEach(project => {
+                const deadline = new Date(project.deadline);
+                const now = new Date();
+                const isExpired = deadline < now;
+                
+                html += `
+                    <tr>
+                        <td><strong>${project.title}</strong></td>
+                        <td>${project.subject}</td>
+                        <td>${project.grade_display || 'غير محدد'}</td>
+                        <td>${UI.formatDate(project.deadline)}</td>
+                        <td>
+                            <span class="badge ${project.is_active ? 'badge-success' : 'badge-secondary'}">
+                                ${project.is_active ? '✅ نشط' : '❌ غير نشط'}
+                            </span>
+                            ${isExpired ? '<span class="badge badge-danger">⏰ انتهى</span>' : ''}
+                        </td>
+                        <td>
+                            ${project.telegram_sent ? 
+                                `
+                                <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                                  <span class="badge badge-success" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 6px 12px;">✓ تم الإرسال</span>
+                                  <button onclick="resendTelegram(${project.id}, '${project.title.replace(/'/g, "\\'")}')" class="btn btn-sm btn-warning" style="padding: 6px 12px; font-size: 13px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border: none; border-radius: 6px; cursor: pointer;">
+                                    ↻ إعادة الإرسال
+                                  </button>
+                                </div>
+                                ` : 
+                                `<button onclick="sendTelegramNow(${project.id}, '${project.title.replace(/'/g, "\\'")}')" class="btn btn-sm btn-primary" style="padding: 6px 16px; font-size: 13px; background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); border: none; border-radius: 6px; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'"><span>📤 إرسال الآن</span></button>`
+                            }
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+        
+        function createProject() {
+            // الانتقال إلى صفحة إنشاء المشروع
+            window.location.href = 'create-project.html';
+        }
+        
+        function viewSubmissions() {
+            UI.showModal(
+                'التسليمات',
+                '<p>هذه الميزة ستكون متاحة في الإصدار القادم</p>',
+                [{ text: 'حسناً', class: 'btn-primary', onclick: 'UI.closeModal()' }]
+            );
+        }
+        
+        function showSection(section) {
+            UI.showToast(`سيتم الانتقال إلى ${section === 'projects' ? 'المشاريع' : 'التسليمات'} قريباً`, 'info');
+        }
+        
+        // ✅ Send Telegram Now - Open Progress Page in Browser
+        function sendTelegramNow(projectId, projectTitle) {
+            // فتح صفحة الإرسال في تاب جديد في المتصفح
+            const url = `telegram-send-direct.html?project_id=${projectId}`;
+            window.open(url, '_blank');
+        }
+        
+        // 🔁 Resend Telegram - Open Direct Send Page
+        function resendTelegram(projectId, projectTitle) {
+            const url = `telegram-send-direct.html?project_id=${projectId}`;
+            window.open(url, '_blank');
+        }
+        
+        // ✅ Telegram functions are now in telegram-preview-modal.js
+        
+        // Toggle Mobile Menu
+        function toggleMobileMenu() {
+            const mobileNav = document.getElementById('mobileNav');
+            const overlay = document.getElementById('mobileNavOverlay');
+            const isOpen = mobileNav.classList.contains('open');
+            
+            if (isOpen) {
+                mobileNav.classList.remove('open');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            } else {
+                mobileNav.classList.add('open');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+        
+        // Load dashboard on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            App.updateUserUI();
+            loadDashboard();
+        });
+    </script>
+
+    <!-- ✅ Dark Mode System -->
+    <script src="/assets/js/dark-mode-manager.js"></script>
+    <script src="/assets/js/dark-mode-init.js"></script>
+</body>
+</html>

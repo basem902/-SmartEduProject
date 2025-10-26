@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لا يوجد اتصال - مشروعي الذكي</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            direction: rtl;
+        }
+        
+        .offline-container {
+            text-align: center;
+            color: white;
+            padding: 40px;
+        }
+        
+        .offline-icon {
+            font-size: 120px;
+            margin-bottom: 30px;
+            animation: pulse 2s infinite;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        
+        p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 15px 40px;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: bold;
+            transition: transform 0.3s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-5px);
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="offline-icon">📡❌</div>
+        <h1>لا يوجد اتصال بالإنترنت</h1>
+        <p>يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى</p>
+        <a href="/" class="btn">إعادة المحاولة</a>
+    </div>
+    
+    <script>
+        // إعادة المحاولة تلقائياً عند عودة الاتصال
+        window.addEventListener('online', () => {
+            location.reload();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إنشاء قروبات تيليجرام - تجربة محسّنة</title>
+    <link rel="stylesheet" href="/assets/css/base.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2rem;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn-full {
+            width: 100%;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Progress Container */
+        .progress-container {
+            margin-top: 30px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .progress-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .progress-count {
+            font-size: 1.1rem;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .progress-bar-container {
+            background: #e0e0e0;
+            height: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Group Card */
+        .group-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
+        }
+
+        .group-card.active {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .group-card.completed {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+
+        .group-card.error {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+
+        .group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .group-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .group-status {
+            font-size: 1.5rem;
+        }
+
+        /* Steps List */
+        .steps-list {
+            margin: 15px 0;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+            transition: all 0.3s;
+        }
+
+        .step-icon {
+            font-size: 1.3rem;
+            min-width: 30px;
+        }
+
+        .step-text {
+            flex: 1;
+            color: #666;
+        }
+
+        .step-item.active .step-text {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .step-item.completed .step-text {
+            color: #28a745;
+        }
+
+        .step-item.error .step-text {
+            color: #dc3545;
+        }
+
+        /* Link Display */
+        .group-link {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            align-items: center;
+        }
+
+        .link-url {
+            flex: 1;
+            color: #667eea;
+            text-decoration: none;
+            word-break: break-all;
+        }
+
+        .btn-copy {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .btn-copy:hover {
+            background: #5568d3;
+        }
+
+        /* Countdown Timer */
+        .countdown-timer {
+            text-align: center;
+            padding: 15px;
+            background: #fff3cd;
+            border-radius: 8px;
+            margin-top: 15px;
+            border: 2px solid #ffc107;
+        }
+
+        .countdown-text {
+            font-size: 1.1rem;
+            color: #856404;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .countdown-bar {
+            background: #fff;
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .countdown-fill {
+            height: 100%;
+            background: #ffc107;
+            transition: width 1s linear;
+        }
+
+        /* Success Screen */
+        .success-screen {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .success-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            animation: bounce 1s;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-30px); }
+            60% { transform: translateY(-15px); }
+        }
+
+        .success-title {
+            font-size: 2rem;
+            color: #28a745;
+            margin-bottom: 10px;
+        }
+
+        .success-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .success-stats {
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>📱 إنشاء قروبات تيليجرام</h1>
+
+            <!-- Form Section -->
+            <div id="formSection">
+                <div class="form-group">
+                    <label>اسم الصف:</label>
+                    <input type="text" id="gradeName" value="الصف الثالث متوسط" placeholder="مثال: الصف الثالث متوسط">
+                </div>
+
+                <div class="form-group">
+                    <label>اسم المادة:</label>
+                    <input type="text" id="subjectName" value="المهارات الرقمية" placeholder="مثال: الرياضيات">
+                </div>
+
+                <div class="form-group">
+                    <label>عدد الشُعب:</label>
+                    <select id="sectionsCount">
+                        <option value="1">1 شُعبة</option>
+                        <option value="2">2 شُعب</option>
+                        <option value="3" selected>3 شُعب</option>
+                        <option value="4">4 شُعب</option>
+                        <option value="5">5 شُعب</option>
+                    </select>
+                </div>
+
+                <button class="btn btn-primary btn-full" id="createBtn" onclick="startCreation()">
+                    🚀 إنشاء القروبات الآن
+                </button>
+            </div>
+
+            <!-- Progress Section -->
+            <div id="progressSection" class="progress-container hidden">
+                <div class="progress-header">
+                    <div class="progress-title">⏳ جاري إنشاء القروبات...</div>
+                    <div class="progress-count" id="progressCount">0 من 3</div>
+                </div>
+
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="progressBar" style="width: 0%">0%</div>
+                </div>
+
+                <div id="groupsContainer"></div>
+
+                <div id="countdownTimer" class="countdown-timer hidden">
+                    <div class="countdown-text" id="countdownText"></div>
+                    <div class="countdown-bar">
+                        <div class="countdown-fill" id="countdownFill" style="width: 100%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Success Section -->
+            <div id="successSection" class="success-screen hidden">
+                <div class="success-icon">🎉</div>
+                <div class="success-title">اكتمل إنشاء القروبات!</div>
+                
+                <div class="success-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="successCount">0</div>
+                        <div class="stat-label">ناجح</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="failedCount">0</div>
+                        <div class="stat-label">فاشل</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalTime">0</div>
+                        <div class="stat-label">دقيقة</div>
+                    </div>
+                </div>
+
+                <div id="finalGroupsList"></div>
+
+                <button class="btn btn-primary btn-full" onclick="resetForm()">
+                    ✨ إنشاء قروبات جديدة
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000/api';
+        let currentGroupIndex = 0;
+        let totalGroups = 0;
+        let startTime = null;
+
+        const steps = [
+            { id: 'create', icon: '📝', text: 'إنشاء القروب' },
+            { id: 'welcome', icon: '💬', text: 'إرسال رسالة الترحيب' },
+            { id: 'convert', icon: '🔄', text: 'تحويل إلى Supergroup' },
+            { id: 'history', icon: '📜', text: 'تفعيل السجل للأعضاء الجدد' },
+            { id: 'pin', icon: '📌', text: 'تثبيت الرسالة' },
+            { id: 'readonly', icon: '🔒', text: 'تطبيق صلاحيات القراءة فقط' },
+            { id: 'bot', icon: '🤖', text: 'إضافة البوت' },
+            { id: 'promote', icon: '👑', text: 'ترقية البوت كمشرف' }
+        ];
+
+        async function startCreation() {
+            const gradeName = document.getElementById('gradeName').value.trim();
+            const subjectName = document.getElementById('subjectName').value.trim();
+            const count = parseInt(document.getElementById('sectionsCount').value);
+
+            if (!gradeName || !subjectName) {
+                alert('⚠️ يرجى إدخال جميع البيانات');
+                return;
+            }
+
+            // Hide form, show progress
+            document.getElementById('formSection').classList.add('hidden');
+            document.getElementById('progressSection').classList.remove('hidden');
+            
+            totalGroups = count;
+            currentGroupIndex = 0;
+            startTime = Date.now();
+
+            // Create group cards
+            const container = document.getElementById('groupsContainer');
+            container.innerHTML = '';
+
+            const arabicLetters = ['أ', 'ب', 'ج', 'د', 'هـ', 'و', 'ز', 'ح', 'ط', 'ي'];
+            
+            for (let i = 0; i < count; i++) {
+                const groupName = `${gradeName} ${arabicLetters[i]} - ${subjectName}`;
+                const card = createGroupCard(i, groupName);
+                container.appendChild(card);
+            }
+
+            // Start creating groups
+            createGroupsSequentially(gradeName, subjectName, count);
+        }
+
+        function createGroupCard(index, groupName) {
+            const card = document.createElement('div');
+            card.className = 'group-card slide-in';
+            card.id = `group-${index}`;
+
+            card.innerHTML = `
+                <div class="group-header">
+                    <div class="group-title">${index + 1}. ${groupName}</div>
+                    <div class="group-status" id="status-${index}">⏹️</div>
+                </div>
+                <div class="steps-list" id="steps-${index}">
+                    ${steps.map(step => `
+                        <div class="step-item" id="step-${index}-${step.id}">
+                            <div class="step-icon">${step.icon}</div>
+                            <div class="step-text">${step.text}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="group-link hidden" id="link-${index}">
+                    <a class="link-url" id="url-${index}" href="#" target="_blank"></a>
+                    <button class="btn-copy" onclick="copyLink(${index})">📋 نسخ</button>
+                </div>
+            `;
+
+            return card;
+        }
+
+        async function createGroupsSequentially(gradeName, subjectName, count) {
+            const arabicLetters = ['أ', 'ب', 'ج', 'د', 'هـ', 'و', 'ز', 'ح', 'ط', 'ي'];
+            const sections = arabicLetters.slice(0, count);
+
+            for (let i = 0; i < count; i++) {
+                currentGroupIndex = i;
+                updateProgress();
+
+                // Mark as active
+                document.getElementById(`group-${i}`).classList.add('active');
+                document.getElementById(`status-${i}`).textContent = '⏳';
+
+                // Create group
+                await simulateGroupCreation(i, sections[i]);
+
+                // Mark as completed
+                document.getElementById(`group-${i}`).classList.remove('active');
+                document.getElementById(`group-${i}`).classList.add('completed');
+                document.getElementById(`status-${i}`).textContent = '✅';
+
+                currentGroupIndex = i + 1;
+                updateProgress();
+
+                // Countdown before next group
+                if (i < count - 1) {
+                    await showCountdown(30);
+                }
+            }
+
+            // Show success screen
+            showSuccess();
+        }
+
+        async function simulateGroupCreation(index, section) {
+            for (const step of steps) {
+                const stepEl = document.getElementById(`step-${index}-${step.id}`);
+                stepEl.classList.add('active', 'pulse');
+                
+                await sleep(2000); // Simulate delay
+                
+                stepEl.classList.remove('active', 'pulse');
+                stepEl.classList.add('completed');
+            }
+
+            // Show link
+            const linkEl = document.getElementById(`link-${index}`);
+            const urlEl = document.getElementById(`url-${index}`);
+            urlEl.href = `https://t.me/+fake${index}`;
+            urlEl.textContent = `https://t.me/+fake${index}`;
+            linkEl.classList.remove('hidden');
+        }
+
+        function updateProgress() {
+            const percent = Math.round((currentGroupIndex / totalGroups) * 100);
+            document.getElementById('progressBar').style.width = `${percent}%`;
+            document.getElementById('progressBar').textContent = `${percent}%`;
+            document.getElementById('progressCount').textContent = `${currentGroupIndex} من ${totalGroups}`;
+        }
+
+        async function showCountdown(seconds) {
+            const timer = document.getElementById('countdownTimer');
+            const text = document.getElementById('countdownText');
+            const fill = document.getElementById('countdownFill');
+
+            timer.classList.remove('hidden');
+
+            for (let i = seconds; i > 0; i--) {
+                text.textContent = `⏱️ انتظار ${i} ثانية قبل القروب التالي...`;
+                fill.style.width = `${(i / seconds) * 100}%`;
+                await sleep(1000);
+            }
+
+            timer.classList.add('hidden');
+        }
+
+        function showSuccess() {
+            const elapsed = Math.round((Date.now() - startTime) / 60000);
+            
+            document.getElementById('progressSection').classList.add('hidden');
+            document.getElementById('successSection').classList.remove('hidden');
+            
+            document.getElementById('successCount').textContent = totalGroups;
+            document.getElementById('failedCount').textContent = '0';
+            document.getElementById('totalTime').textContent = elapsed || '1';
+
+            // Copy final groups list
+            const finalList = document.getElementById('finalGroupsList');
+            finalList.innerHTML = document.getElementById('groupsContainer').innerHTML;
+        }
+
+        function copyLink(index) {
+            const url = document.getElementById(`url-${index}`).textContent;
+            navigator.clipboard.writeText(url);
+            alert('✅ تم نسخ الرابط!');
+        }
+
+        function resetForm() {
+            document.getElementById('formSection').classList.remove('hidden');
+            document.getElementById('progressSection').classList.add('hidden');
+            document.getElementById('successSection').classList.add('hidden');
+            document.getElementById('groupsContainer').innerHTML = '';
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#00ADEF">
+    
+    <title>إدارة الصفوف والشُعب - مشروعي الذكي</title>
+    
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="/assets/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192x192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <link rel="stylesheet" href="/assets/css/base.css">
+    <link rel="stylesheet" href="/assets/css/dark-mode.css">
+    <link rel="stylesheet" href="/assets/css/animations.css">
+    <link rel="stylesheet" href="/assets/css/sections.css">
+    <link rel="stylesheet" href="/assets/css/mobile-responsive.css">
+</head>
+<body data-page-type="dashboard">
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-brand">
+                <h2>🏫 إدارة الصفوف والشُعب</h2>
+            </div>
+            <div class="navbar-menu">
+                <a href="/pages/sections-setup.html" class="btn btn-primary">+ إضافة صف جديد</a>
+                <a href="/pages/dashboard.html" class="btn btn-secondary">العودة</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="sections-container">
+        <!-- Stats Cards -->
+        <div class="summary-grid fade-in" id="statsCards">
+            <div class="summary-card">
+                <h4>إجمالي الصفوف</h4>
+                <div class="summary-value" id="totalGrades">0</div>
+                <div class="summary-label">صف دراسي</div>
+            </div>
+            <div class="summary-card">
+                <h4>إجمالي الشُعب</h4>
+                <div class="summary-value" id="totalSections">0</div>
+                <div class="summary-label">شعبة</div>
+            </div>
+            <div class="summary-card">
+                <h4>الطلاب المسجلون</h4>
+                <div class="summary-value" id="totalStudents">0</div>
+                <div class="summary-label">طالب</div>
+            </div>
+            <div class="summary-card">
+                <h4>نسبة الانضمام</h4>
+                <div class="summary-value" id="joinRate">0%</div>
+                <div class="summary-label">للقروبات</div>
+            </div>
+        </div>
+
+        <!-- Grades List -->
+        <div class="setup-form slide-up" style="margin-top: 30px;">
+            <div class="form-section">
+                <h3>📚 قائمة الصفوف الدراسية</h3>
+                
+                <div id="gradesList">
+                    <!-- Loading -->
+                    <div id="loadingGrades" style="text-align: center; padding: 40px;">
+                        <div class="loader" style="margin: 0 auto;"></div>
+                        <p style="color: var(--text-secondary); margin-top: 15px;">جاري التحميل...</p>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="emptyState" style="display: none; text-align: center; padding: 60px 20px;">
+                        <div style="font-size: 80px; margin-bottom: 20px;">📚</div>
+                        <h3 style="color: var(--text-primary); margin-bottom: 10px;">لا توجد صفوف بعد</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 30px;">ابدأ بإنشاء صف دراسي جديد</p>
+                        <a href="/pages/sections-setup.html" class="btn btn-primary">+ إضافة صف جديد</a>
+                    </div>
+
+                    <!-- Grades Container -->
+                    <div id="gradesContainer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section Detail Modal -->
+    <div id="sectionModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 id="modalTitle">تفاصيل الشعبة</h3>
+                <button class="modal-close" onclick="closeSectionModal()">×</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- سيتم ملؤها ديناميكياً -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Students List Modal -->
+    <div id="studentsModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h3 id="studentsModalTitle">👥 قائمة الطلاب</h3>
+                <button class="modal-close" onclick="closeStudentsModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <!-- Statistics -->
+                <div id="studentsStats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px;"></div>
+                
+                <!-- Search and Filter -->
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <input type="text" id="studentSearch" placeholder="🔍 بحث عن طالب..." 
+                           style="flex: 1; min-width: 200px; padding: 12px; border: 2px solid var(--border-color); border-radius: 10px; font-size: 14px;"
+                           onkeyup="filterStudents()">
+                    <select id="filterStatus" onchange="filterStudents()" 
+                            style="padding: 12px; border: 2px solid var(--border-color); border-radius: 10px; font-size: 14px;">
+                        <option value="all">الكل</option>
+                        <option value="joined">انضموا</option>
+                        <option value="not-joined">لم ينضموا</option>
+                    </select>
+                    <select id="sortOrder" onchange="sortStudents()" 
+                            style="padding: 12px; border: 2px solid var(--border-color); border-radius: 10px; font-size: 14px;">
+                        <option value="newest">الأحدث</option>
+                        <option value="oldest">الأقدم</option>
+                        <option value="name">أبجدياً</option>
+                    </select>
+                </div>
+
+                <!-- Students List -->
+                <div id="studentsListContainer" style="max-height: 400px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Telegram Groups Modal -->
+    <div id="telegramGroupsModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3 id="telegramModalTitle">📱 إنشاء قروبات تيليجرام</h3>
+                <button class="modal-close" onclick="closeTelegramGroupsModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <!-- Step 1: Phone Number Input -->
+                <div id="telegramStep1" style="display: block;">
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <div style="font-size: 60px; margin-bottom: 15px;">📱</div>
+                        <h3 style="margin-bottom: 10px; color: var(--primary-color);">إنشاء قروبات تيليجرام</h3>
+                        <p id="gradeInfoDisplay" style="font-weight: bold; font-size: 18px; margin-bottom: 5px;"></p>
+                        <p id="sectionsCountDisplay" style="color: var(--text-secondary);"></p>
+                    </div>
+
+                    <div style="background: var(--card-bg); padding: 25px; border-radius: 15px; border: 2px solid var(--primary-color); margin-bottom: 25px;">
+                        <label style="display: block; margin-bottom: 12px; font-weight: 600; font-size: 16px; color: var(--primary-color);">
+                            📞 أدخل رقم هاتفك المسجل في تيليجرام:
+                        </label>
+                        <input type="tel" id="telegramPhoneInput" 
+                               placeholder="مثال: +966544711074" 
+                               style="width: 100%; padding: 18px; border: 2px solid var(--border-color); border-radius: 12px; font-size: 18px; text-align: center; font-weight: bold;"
+                               value=""
+                               autofocus>
+                        <small style="display: block; margin-top: 12px; color: var(--text-secondary); text-align: center;">
+                            ℹ️ يجب أن يبدأ الرقم بـ + متبوعاً بكود الدولة
+                        </small>
+                    </div>
+
+                    <div style="background: var(--warning-bg); padding: 20px; border-radius: 12px; margin-bottom: 25px;">
+                        <h5 style="margin-bottom: 12px; color: var(--warning-color);">⚠️ قبل المتابعة، تأكد من:</h5>
+                        <div style="display: grid; gap: 10px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 20px;">✅</span>
+                                <span>الرقم مسجل في حسابك تيليجرام</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 20px;">✅</span>
+                                <span>Telegram Desktop مفتوح على هذا الجهاز</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 20px;">✅</span>
+                                <span>لديك اتصال إنترنت مستقر</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 12px; justify-content: center;">
+                        <button class="btn btn-secondary" onclick="closeTelegramGroupsModal()" style="min-width: 120px;">
+                            ❌ إلغاء
+                        </button>
+                        <button class="btn btn-primary" onclick="confirmCreateGroups()" style="min-width: 180px; font-size: 16px;">
+                            ✅ متابعة
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Confirmation -->
+                <div id="telegramStep2" style="display: none;">
+                    <div style="background: var(--success-bg); padding: 20px; border-radius: 10px; margin-bottom: 25px;">
+                        <h4 style="margin-bottom: 15px;">✅ مراجعة وتأكيد</h4>
+                        <p style="margin-bottom: 10px;">سيتم إنشاء القروبات التالية:</p>
+                        <div id="groupsListPreview" style="max-height: 200px; overflow-y: auto; padding: 15px; background: var(--card-bg); border-radius: 8px;"></div>
+                    </div>
+
+                    <div style="background: var(--info-bg); padding: 15px; border-radius: 10px; margin-bottom: 25px;">
+                        <h5 style="margin-bottom: 10px;">✨ سيتم تلقائياً:</h5>
+                        <ul style="margin: 0; padding-right: 20px;">
+                            <li>✅ إنشاء القروبات</li>
+                            <li>✅ تحويلها إلى Supergroup</li>
+                            <li>✅ إضافة البوت @SmartEduProjectBot</li>
+                            <li>✅ إرسال رسالة التعليمات</li>
+                            <li>✅ تطبيق صلاحيات read-only</li>
+                        </ul>
+                    </div>
+
+                    <div style="background: var(--warning-bg); padding: 15px; border-radius: 10px; margin-bottom: 25px;">
+                        <h5>⚠️ ملاحظة مهمة:</h5>
+                        <p style="margin: 5px 0;">بعد الإنشاء ستحتاج لترقية البوت يدوياً (سنشرح لك الطريقة)</p>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                        <button class="btn btn-secondary" onclick="backToStep1()">
+                            ← رجوع
+                        </button>
+                        <button class="btn btn-primary" id="createGroupsBtn" onclick="startCreatingGroups()">
+                            🚀 إنشاء الآن
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Progress -->
+                <div id="telegramStep3" style="display: none;">
+                    <div style="text-align: center; padding: 40px 20px;">
+                        <div class="loader" style="margin: 0 auto 20px;"></div>
+                        <h4>⏳ جاري إنشاء القروبات...</h4>
+                        <p style="color: var(--text-secondary); margin-top: 10px;">انتظر قليلاً...</p>
+                        <div id="progressInfo" style="margin-top: 20px; font-size: 14px;"></div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Results -->
+                <div id="telegramStep4" style="display: none;">
+                    <div style="text-align: center; margin-bottom: 25px;">
+                        <div id="resultsIcon" style="font-size: 60px; margin-bottom: 15px;">🎉</div>
+                        <h3 id="resultsTitle" style="color: var(--success-color); margin-bottom: 10px;">تم إنشاء القروبات بنجاح!</h3>
+                        <p id="resultsMessage" style="color: var(--text-secondary);"></p>
+                    </div>
+
+                    <div id="groupsResults" style="max-height: 300px; overflow-y: auto; margin-bottom: 25px;"></div>
+
+                    <div style="background: var(--warning-bg); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                        <h5 style="margin-bottom: 10px;">⚠️ خطوة مهمة متبقية:</h5>
+                        <p style="margin: 5px 0;">يجب ترقية البوت إلى مدير في كل قروب</p>
+                        <button class="btn btn-primary" onclick="showBotUpgradeGuide()" style="margin-top: 10px;">
+                            📖 شرح الترقية
+                        </button>
+                    </div>
+
+                    <div style="text-align: center;">
+                        <button class="btn btn-secondary" onclick="closeTelegramGroupsModal()">
+                            إغلاق
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/ui.js"></script>
+    <script src="/assets/js/auth.js"></script>
+    <script src="/assets/js/theme.js"></script>
+    <script src="/assets/js/app.js"></script>
+    <script src="/assets/js/sections-api.js"></script>
+
+    <script>
+        // State
+        let gradesData = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            auth.protectPage();
+            await loadGrades();
+        });
+
+        // Load grades
+        async function loadGrades() {
+            try {
+                const response = await sectionsAPI.getMyGrades();
+                gradesData = response.grades;
+                
+                // Update stats
+                updateStats(response.stats);
+                
+                // Show grades or empty state
+                if (gradesData.length === 0) {
+                    document.getElementById('loadingGrades').style.display = 'none';
+                    document.getElementById('emptyState').style.display = 'block';
+                } else {
+                    renderGrades();
+                }
+            } catch (error) {
+                UI.showToast('فشل تحميل البيانات: ' + error.message, 'error');
+                document.getElementById('loadingGrades').innerHTML = `
+                    <p style="color: var(--danger-color);">❌ فشل التحميل</p>
+                    <button class="btn btn-primary" onclick="location.reload()">🔄 إعادة المحاولة</button>
+                `;
+            }
+        }
+
+        // Update stats
+        function updateStats(stats) {
+            document.getElementById('totalGrades').textContent = stats.total_grades || 0;
+            document.getElementById('totalSections').textContent = stats.total_sections || 0;
+            document.getElementById('totalStudents').textContent = stats.total_students || 0;
+            
+            // Calculate join rate (placeholder - يحتاج API)
+            document.getElementById('joinRate').textContent = '85%';
+        }
+
+        // Render grades
+        function renderGrades() {
+            document.getElementById('loadingGrades').style.display = 'none';
+            const container = document.getElementById('gradesContainer');
+            container.innerHTML = '';
+
+            gradesData.forEach((grade, index) => {
+                const card = createGradeCard(grade, index);
+                container.appendChild(card);
+            });
+        }
+
+        // Create grade card
+        function createGradeCard(grade, index) {
+            const div = document.createElement('div');
+            div.className = 'grade-card stagger-item';
+            div.style.animationDelay = `${index * 0.1}s`;
+            
+            const levelIcons = {
+                'elementary': '📖',
+                'middle': '📘',
+                'high': '🎓'
+            };
+
+            div.innerHTML = `
+                <div style="background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 15px; padding: 25px; margin-bottom: 20px; transition: all 0.3s;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
+                        <div style="flex: 1;">
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                                <span style="font-size: 48px;">${levelIcons[grade.level] || '📚'}</span>
+                                <div>
+                                    <h3 style="color: var(--primary-color); margin-bottom: 5px;">
+                                        ${grade.school_name}
+                                    </h3>
+                                    <p style="color: var(--text-secondary); font-size: 16px;">
+                                        ${grade.level_display} - الصف ${grade.grade_number}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button class="btn btn-primary btn-icon" onclick="viewGradeSections(${grade.id})" title="عرض الشُعب">
+                                👁️ عرض
+                            </button>
+                            <button class="btn" style="background: #0088cc; color: white;" onclick="openCreateTelegramGroupsModal(${grade.id}, '${grade.display_name}', '${grade.school_name}')" title="إنشاء قروبات تيليجرام">
+                                📱 تيليجرام
+                            </button>
+                            <button class="btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;" onclick="openJoinLinkModal()" title="رابط تسجيل الطلاب">
+                                🔗 رابط الانضمام
+                            </button>
+                            <button class="btn btn-secondary btn-icon" onclick="editGrade(${grade.id})" title="تعديل">
+                                ✏️
+                            </button>
+                            <button class="btn" style="background: var(--danger-color); color: white;" onclick="deleteGrade(${grade.id})" title="حذف">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                        <div style="text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: var(--primary-color);">
+                                ${grade.sections_count || 0}
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">الشُعب</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: var(--success-color);">
+                                ${grade.is_active ? 'نشط' : 'غير نشط'}
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">الحالة</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 12px; font-weight: bold; color: var(--text-secondary);">
+                                ${formatDate(grade.created_at)}
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">تاريخ الإنشاء</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            return div;
+        }
+
+        // View grade sections
+        async function viewGradeSections(gradeId) {
+            try {
+                const response = await sectionsAPI.getGradeSections(gradeId);
+                showSectionsModal(response);
+            } catch (error) {
+                UI.showToast('فشل تحميل الشُعب: ' + error.message, 'error');
+            }
+        }
+
+        // Show sections modal
+        function showSectionsModal(data) {
+            const modal = document.getElementById('sectionModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+
+            modalTitle.textContent = `شُعب ${data.grade.display_name}`;
+
+            let html = '<div style="max-height: 500px; overflow-y: auto;">';
+
+            if (data.sections.length === 0) {
+                html += `
+                    <div style="text-align: center; padding: 40px;">
+                        <div style="font-size: 60px; margin-bottom: 15px;">📭</div>
+                        <p style="color: var(--text-secondary);">لا توجد شُعب</p>
+                    </div>
+                `;
+            } else {
+                data.sections.forEach(section => {
+                    const hasLink = section.link && section.link.join_link;
+                    const joinRate = section.joined_count && section.registrations_count 
+                        ? Math.round((section.joined_count / section.registrations_count) * 100)
+                        : 0;
+
+                    html += `
+                        <div style="border: 2px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 15px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                <h4 style="color: var(--primary-color); margin: 0;">
+                                    ${section.section_name}
+                                </h4>
+                                <span style="padding: 5px 15px; background: rgba(0, 173, 239, 0.1); color: var(--primary-color); border-radius: 20px; font-size: 12px;">
+                                    ${section.total_students} طالب
+                                </span>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px;">
+                                <div style="text-align: center; padding: 10px; background: var(--bg-color); border-radius: 8px;">
+                                    <div style="font-size: 18px; font-weight: bold; color: var(--text-primary);">
+                                        ${section.registrations_count || 0}
+                                    </div>
+                                    <div style="font-size: 11px; color: var(--text-secondary);">المسجلون</div>
+                                </div>
+                                <div style="text-align: center; padding: 10px; background: var(--bg-color); border-radius: 8px;">
+                                    <div style="font-size: 18px; font-weight: bold; color: var(--success-color);">
+                                        ${section.joined_count || 0}
+                                    </div>
+                                    <div style="font-size: 11px; color: var(--text-secondary);">المنضمون</div>
+                                </div>
+                                <div style="text-align: center; padding: 10px; background: var(--bg-color); border-radius: 8px;">
+                                    <div style="font-size: 18px; font-weight: bold; color: var(--primary-color);">
+                                        ${joinRate}%
+                                    </div>
+                                    <div style="font-size: 11px; color: var(--text-secondary);">النسبة</div>
+                                </div>
+                            </div>
+
+                            ${hasLink ? `
+                                <div style="background: rgba(0, 173, 239, 0.05); padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">
+                                        رابط الانضمام:
+                                    </div>
+                                    <div style="display: flex; gap: 10px;">
+                                        <input type="text" value="${section.link.join_link}" 
+                                               style="flex: 1; padding: 8px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 12px;" 
+                                               readonly onclick="this.select()">
+                                        <button class="btn btn-primary" onclick="copyLink('${section.link.join_link}')" style="padding: 8px 15px;">
+                                            📋 نسخ
+                                        </button>
+                                    </div>
+                                </div>
+                            ` : ''}
+
+                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                <button class="btn btn-primary" onclick="viewStudentsList(${section.id})" style="flex: 1;">
+                                    👥 الطلاب (${section.registrations_count || 0})
+                                </button>
+                                ${hasLink ? `
+                                    <button class="btn btn-secondary" onclick="viewLinkStats(${section.id})" style="flex: 1;">
+                                        📈 الإحصائيات
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            html += '</div>';
+            modalBody.innerHTML = html;
+            modal.style.display = 'flex';
+        }
+
+        // Close modal
+        function closeSectionModal() {
+            document.getElementById('sectionModal').style.display = 'none';
+        }
+
+        // Copy link
+        async function copyLink(link) {
+            try {
+                await sectionsAPI.copyToClipboard(link);
+                UI.showToast('✅ تم نسخ الرابط', 'success', 2000);
+            } catch (error) {
+                UI.showToast('فشل النسخ', 'error');
+            }
+        }
+
+        // View section detail
+        async function viewSectionDetail(sectionId) {
+            try {
+                const response = await sectionsAPI.getSectionDetail(sectionId);
+                alert('تفاصيل الشعبة:\n' + JSON.stringify(response.section, null, 2));
+            } catch (error) {
+                UI.showToast('فشل تحميل التفاصيل: ' + error.message, 'error');
+            }
+        }
+
+        // View link stats
+        async function viewLinkStats(sectionId) {
+            try {
+                const stats = await sectionsAPI.getSectionLinkStats(sectionId);
+                alert('إحصائيات الرابط:\n' + 
+                      `المشاهدات: ${stats.views}\n` +
+                      `الانضمامات: ${stats.joins}\n` +
+                      `النسبة: ${stats.join_rate}%`);
+            } catch (error) {
+                UI.showToast('فشل تحميل الإحصائيات: ' + error.message, 'error');
+            }
+        }
+
+        // Edit grade
+        function editGrade(gradeId) {
+            const newName = prompt('اسم المدرسة الجديد:');
+            if (newName) {
+                sectionsAPI.updateGrade(gradeId, { school_name: newName })
+                    .then(() => {
+                        UI.showToast('✅ تم التحديث', 'success');
+                        loadGrades();
+                    })
+                    .catch(error => UI.showToast('فشل التحديث: ' + error.message, 'error'));
+            }
+        }
+
+        // Delete grade
+        function deleteGrade(gradeId) {
+            if (confirm('هل أنت متأكد من حذف هذا الصف وجميع شُعبه؟')) {
+                sectionsAPI.deleteGrade(gradeId)
+                    .then(() => {
+                        UI.showToast('✅ تم الحذف', 'success');
+                        loadGrades();
+                    })
+                    .catch(error => UI.showToast('فشل الحذف: ' + error.message, 'error'));
+            }
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ar-SA', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        }
+
+        // Close modal on outside click
+        window.onclick = function(event) {
+            const modal = document.getElementById('sectionModal');
+            const studentsModal = document.getElementById('studentsModal');
+            if (event.target === modal) {
+                closeSectionModal();
+            }
+            if (event.target === studentsModal) {
+                closeStudentsModal();
+            }
+        }
+
+        // ==================== Students List Functions ====================
+        
+        let currentStudentsData = null;
+        let filteredStudents = [];
+
+        // View students list
+        async function viewStudentsList(sectionId) {
+            try {
+                const response = await sectionsAPI.getSectionStudents(sectionId);
+                currentStudentsData = response;
+                filteredStudents = [...response.students];
+                
+                showStudentsModal(response);
+            } catch (error) {
+                UI.showToast('فشل تحميل قائمة الطلاب: ' + error.message, 'error');
+            }
+        }
+
+        // Show students modal
+        function showStudentsModal(data) {
+            const modal = document.getElementById('studentsModal');
+            const title = document.getElementById('studentsModalTitle');
+            
+            title.textContent = `👥 طلاب ${data.section.name} - ${data.section.grade}`;
+            
+            // Display statistics
+            renderStudentsStats(data.statistics);
+            
+            // Display students list
+            renderStudentsList(filteredStudents);
+            
+            // Reset filters
+            document.getElementById('studentSearch').value = '';
+            document.getElementById('filterStatus').value = 'all';
+            document.getElementById('sortOrder').value = 'newest';
+            
+            modal.style.display = 'flex';
+        }
+
+        // Render students statistics
+        function renderStudentsStats(stats) {
+            const container = document.getElementById('studentsStats');
+            container.innerHTML = `
+                <div style="text-align: center; padding: 15px; background: var(--bg-color); border-radius: 10px;">
+                    <div style="font-size: 28px; font-weight: bold; color: var(--primary-color);">
+                        ${stats.total_registered}
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">إجمالي المسجلين</div>
+                </div>
+                <div style="text-align: center; padding: 15px; background: var(--bg-color); border-radius: 10px;">
+                    <div style="font-size: 28px; font-weight: bold; color: var(--success-color);">
+                        ${stats.joined_group}
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">انضموا للقروب</div>
+                </div>
+                <div style="text-align: center; padding: 15px; background: var(--bg-color); border-radius: 10px;">
+                    <div style="font-size: 28px; font-weight: bold; color: var(--warning-color);">
+                        ${stats.not_joined}
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">لم ينضموا بعد</div>
+                </div>
+            `;
+        }
+
+        // Render students list
+        function renderStudentsList(students) {
+            const container = document.getElementById('studentsListContainer');
+            
+            if (!students || students.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <div style="font-size: 60px; margin-bottom: 15px;">👥</div>
+                        <p style="color: var(--text-secondary);">لا يوجد طلاب</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            students.forEach(student => {
+                const statusIcon = student.joined_group ? '✅' : '⏳';
+                const statusText = student.joined_group ? 'انضم للقروب' : 'لم ينضم بعد';
+                const statusColor = student.joined_group ? 'var(--success-color)' : 'var(--warning-color)';
+                
+                const registeredDate = new Date(student.registered_at).toLocaleString('ar-SA', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                html += `
+                    <div style="border: 2px solid var(--border-color); border-radius: 12px; padding: 15px; margin-bottom: 12px; transition: all 0.3s;" 
+                         onmouseover="this.style.borderColor='var(--primary-color)'" 
+                         onmouseout="this.style.borderColor='var(--border-color)'">
+                        <div style="display: flex; justify-content: space-between; align-items: start; gap: 15px;">
+                            <div style="flex: 1;">
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                    <span style="font-weight: bold; color: var(--text-secondary); font-size: 14px;">
+                                        #${student.number}
+                                    </span>
+                                    <span style="font-size: 16px; font-weight: 600; color: var(--text-primary);">
+                                        ${student.full_name}
+                                    </span>
+                                </div>
+                                
+                                <div style="display: flex; gap: 15px; font-size: 13px; color: var(--text-secondary);">
+                                    <span>${statusIcon} <span style="color: ${statusColor};">${statusText}</span></span>
+                                    <span>📅 ${registeredDate}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Filter students
+        function filterStudents() {
+            if (!currentStudentsData) return;
+
+            const searchTerm = document.getElementById('studentSearch').value.toLowerCase();
+            const statusFilter = document.getElementById('filterStatus').value;
+
+            filteredStudents = currentStudentsData.students.filter(student => {
+                // Search filter
+                const matchesSearch = student.full_name.toLowerCase().includes(searchTerm);
+                
+                // Status filter
+                let matchesStatus = true;
+                if (statusFilter === 'joined') {
+                    matchesStatus = student.joined_group === true;
+                } else if (statusFilter === 'not-joined') {
+                    matchesStatus = student.joined_group === false;
+                }
+
+                return matchesSearch && matchesStatus;
+            });
+
+            sortStudents();
+        }
+
+        // Sort students
+        function sortStudents() {
+            const sortOrder = document.getElementById('sortOrder').value;
+
+            if (sortOrder === 'newest') {
+                filteredStudents.sort((a, b) => new Date(b.registered_at) - new Date(a.registered_at));
+            } else if (sortOrder === 'oldest') {
+                filteredStudents.sort((a, b) => new Date(a.registered_at) - new Date(b.registered_at));
+            } else if (sortOrder === 'name') {
+                filteredStudents.sort((a, b) => a.full_name.localeCompare(b.full_name, 'ar'));
+            }
+
+            renderStudentsList(filteredStudents);
+        }
+
+        // Close students modal
+        function closeStudentsModal() {
+            document.getElementById('studentsModal').style.display = 'none';
+            currentStudentsData = null;
+            filteredStudents = [];
+        }
+
+        // Export to Excel
+        async function exportToExcel() {
+            if (!filteredStudents || filteredStudents.length === 0) {
+                UI.showToast('لا يوجد طلاب للتصدير', 'warning');
+                return;
+            }
+
+            // Create CSV content
+            let csvContent = '\uFEFF'; // BOM for UTF-8
+            csvContent += 'الرقم,الاسم,الحالة,تاريخ التسجيل\n';
+            
+            filteredStudents.forEach(student => {
+                const status = student.joined_group ? 'انضم' : 'لم ينضم';
+                const date = new Date(student.registered_at).toLocaleDateString('ar-SA');
+                csvContent += `${student.number},"${student.full_name}",${status},${date}\n`;
+            });
+
+            // Download
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `students_${currentStudentsData.section.name}_${Date.now()}.csv`;
+            link.click();
+
+            UI.showToast('✅ تم التصدير بنجاح', 'success');
+        }
+
+        // Export to CSV
+        function exportToCSV() {
+            exportToExcel(); // Same implementation
+        }
+
+        // Copy students list
+        async function copyStudentsList() {
+            if (!filteredStudents || filteredStudents.length === 0) {
+                UI.showToast('لا يوجد طلاب للنسخ', 'warning');
+                return;
+            }
+
+            let text = `قائمة طلاب ${currentStudentsData.section.name}\n`;
+            text += `الإجمالي: ${filteredStudents.length} طالب\n\n`;
+            
+            filteredStudents.forEach(student => {
+                const status = student.joined_group ? '✅' : '⏳';
+                text += `${student.number}. ${student.full_name} ${status}\n`;
+            });
+
+            try {
+                await navigator.clipboard.writeText(text);
+                UI.showToast('✅ تم نسخ القائمة', 'success');
+            } catch (error) {
+                UI.showToast('فشل النسخ', 'error');
+            }
+        }
+
+        // ==================== Telegram Groups Modal Functions ====================
+        
+        let currentGradeForTelegram = null;
+        let currentGradeData = null;
+
+        function openCreateTelegramGroupsModal(gradeId, gradeName, schoolName) {
+            currentGradeForTelegram = gradeId;
+            currentGradeData = { gradeName, schoolName };
+            
+            // Reset modal to step 1
+            document.getElementById('telegramStep1').style.display = 'block';
+            document.getElementById('telegramStep2').style.display = 'none';
+            document.getElementById('telegramStep3').style.display = 'none';
+            document.getElementById('telegramStep4').style.display = 'none';
+            
+            // Update info
+            document.getElementById('gradeInfoDisplay').textContent = `${gradeName} - ${schoolName}`;
+            
+            // Get sections count
+            const grade = gradesData.find(g => g.id === gradeId);
+            if (grade) {
+                document.getElementById('sectionsCountDisplay').textContent = `عدد الشُعب: ${grade.sections_count}`;
+            }
+            
+            // Show modal
+            const modal = document.getElementById('telegramGroupsModal');
+            modal.style.display = 'flex';
+        }
+
+        function closeTelegramGroupsModal() {
+            document.getElementById('telegramGroupsModal').style.display = 'none';
+            currentGradeForTelegram = null;
+            currentGradeData = null;
+        }
+
+        function confirmCreateGroups() {
+            const phoneNumber = document.getElementById('telegramPhoneInput').value.trim();
+            
+            if (!phoneNumber) {
+                UI.showToast('الرجاء إدخال رقم الهاتف', 'warning');
+                return;
+            }
+            
+            if (!phoneNumber.startsWith('+')) {
+                UI.showToast('رقم الهاتف يجب أن يبدأ بـ +', 'warning');
+                return;
+            }
+            
+            // Preview groups list
+            const grade = gradesData.find(g => g.id === currentGradeForTelegram);
+            if (grade && grade.sections_count > 0) {
+                let html = '';
+                const arabicLetters = ['أ', 'ب', 'ج', 'د', 'ه', 'و', 'ز', 'ح', 'ط', 'ي'];
+                for (let i = 0; i < grade.sections_count; i++) {
+                    html += `<div style="padding: 10px; border-bottom: 1px solid var(--border-color);">
+                        📱 ${currentGradeData.gradeName} ${arabicLetters[i]} - ${currentGradeData.schoolName}
+                    </div>`;
+                }
+                document.getElementById('groupsListPreview').innerHTML = html;
+            }
+            
+            // Move to step 2
+            document.getElementById('telegramStep1').style.display = 'none';
+            document.getElementById('telegramStep2').style.display = 'block';
+        }
+
+        function backToStep1() {
+            document.getElementById('telegramStep2').style.display = 'none';
+            document.getElementById('telegramStep1').style.display = 'block';
+        }
+
+        async function startCreatingGroups() {
+            const phoneNumber = document.getElementById('telegramPhoneInput').value.trim();
+            
+            // Move to step 3 (progress)
+            document.getElementById('telegramStep2').style.display = 'none';
+            document.getElementById('telegramStep3').style.display = 'block';
+            
+            document.getElementById('progressInfo').textContent = 'جاري التواصل مع خادم...';
+            
+            try {
+                // ✅ الحصول على الـ token من localStorage
+                const token = localStorage.getItem('access_token');
+                
+                if (!token) {
+                    throw new Error('يجب تسجيل الدخول أولاً');
+                }
+                
+                const response = await fetch(`${API.baseURL}/sections/grade/${currentGradeForTelegram}/create-telegram-groups/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ phone_number: phoneNumber })
+                });
+                
+                const data = await response.json();
+                
+                // Move to step 4 (results)
+                document.getElementById('telegramStep3').style.display = 'none';
+                document.getElementById('telegramStep4').style.display = 'block';
+                
+                if (data.success) {
+                    document.getElementById('resultsIcon').textContent = '🎉';
+                    document.getElementById('resultsTitle').textContent = 'تم إنشاء القروبات بنجاح!';
+                    document.getElementById('resultsTitle').style.color = 'var(--success-color)';
+                    document.getElementById('resultsMessage').textContent = data.message;
+                    
+                    // Display results
+                    let html = '';
+                    data.results.forEach(result => {
+                        if (result.success) {
+                            html += `
+                                <div style="background: var(--success-bg); padding: 15px; border-radius: 10px; margin-bottom: 10px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                                        <div style="flex: 1;">
+                                            <h5 style="margin-bottom: 5px;">✅ ${result.group_name}</h5>
+                                            <a href="${result.invite_link}" target="_blank" style="color: var(--primary-color); word-break: break-all;">
+                                                ${result.invite_link}
+                                            </a>
+                                        </div>
+                                        <button class="btn btn-sm btn-secondary" onclick="copyToClipboard('${result.invite_link}')" style="margin-right: 10px;">
+                                            📋 نسخ
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            html += `
+                                <div style="background: var(--danger-bg); padding: 15px; border-radius: 10px; margin-bottom: 10px;">
+                                    <h5 style="margin-bottom: 5px;">❌ ${result.section_name}</h5>
+                                    <p style="color: var(--text-secondary); font-size: 14px;">${result.error || result.message}</p>
+                                </div>
+                            `;
+                        }
+                    });
+                    document.getElementById('groupsResults').innerHTML = html;
+                    
+                    // Reload grades to show telegram button state
+                    await loadGrades();
+                } else {
+                    document.getElementById('resultsIcon').textContent = '❌';
+                    document.getElementById('resultsTitle').textContent = 'حدث خطأ!';
+                    document.getElementById('resultsTitle').style.color = 'var(--danger-color)';
+                    document.getElementById('resultsMessage').textContent = data.error || data.message;
+                    document.getElementById('groupsResults').innerHTML = '';
+                }
+                
+            } catch (error) {
+                console.error('Error creating telegram groups:', error);
+                document.getElementById('telegramStep3').style.display = 'none';
+                document.getElementById('telegramStep4').style.display = 'block';
+                
+                document.getElementById('resultsIcon').textContent = '❌';
+                document.getElementById('resultsTitle').textContent = 'حدث خطأ!';
+                document.getElementById('resultsTitle').style.color = 'var(--danger-color)';
+                document.getElementById('resultsMessage').textContent = error.message;
+                document.getElementById('groupsResults').innerHTML = '';
+            }
+        }
+
+        function showBotUpgradeGuide() {
+            alert(`📖 كيفية ترقية البوت إلى مدير:
+
+1. افتح القروب في تيليجرام
+2. اضغط على اسم القروب في الأعلى
+3. ابحث عن @SmartEduProjectBot
+4. اضغط على البوت
+5. اضغط "Edit Admin Rights" أو "تعديل صلاحيات المدير"
+6. فعّل جميع الصلاحيات
+7. اضغط "Save" أو "حفظ"
+
+كرر هذه الخطوات لجميع القروبات`);
+        }
+
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                UI.showToast('✅ تم النسخ', 'success');
+            } catch (error) {
+                UI.showToast('فشل النسخ', 'error');
+            }
+        }
+    </script>
+
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 15px;
+            width: 90%;
+            max-height: 80vh;
+            overflow: hidden;
+            animation: slideUp 0.3s;
+        }
+
+        .modal-header {
+            padding: 20px 25px;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: var(--primary-color);
+        }
+
+        .modal-close {
+            font-size: 32px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-secondary);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .modal-close:hover {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(0, 173, 239, 0.2);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+        .stagger-item {
+            animation: slideUp 0.5s ease-out;
+            opacity: 0;
+            animation-fill-mode: forwards;
+        }
+    </style>
+
+    <!-- Join Link Modal -->
+    <div id="joinLinkModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>🔗 رابط تسجيل الطلاب</h3>
+                <button class="close-btn" onclick="closeJoinLinkModal()">&times;</button>
+            </div>
+            
+            <div class="modal-body" style="padding: 30px;">
+                <div style="margin-bottom: 25px;">
+                    <p style="color: var(--text-secondary); margin-bottom: 15px; text-align: center;">
+                        شارك هذا الرابط مع الطلاب للتسجيل في القروبات التعليمية
+                    </p>
+                    
+                    <div style="display: flex; gap: 10px; background: var(--bg-color); padding: 15px; border-radius: 12px; border: 2px solid var(--border-color);">
+                        <input 
+                            type="text" 
+                            id="joinLinkInput" 
+                            readonly 
+                            style="flex: 1; background: transparent; border: none; color: var(--primary-color); font-size: 14px; font-weight: 600; outline: none; cursor: pointer;"
+                            onclick="this.select()"
+                        >
+                        <button 
+                            class="btn btn-sm" 
+                            style="background: var(--primary-color); color: white; padding: 8px 16px; white-space: nowrap;"
+                            onclick="copyJoinLinkToClipboard()"
+                            title="نسخ الرابط">
+                            📋 نسخ
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 🔐 Password Protection Section -->
+                <div id="passwordSection" style="background: rgba(255, 193, 7, 0.1); padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 2px dashed rgba(255, 193, 7, 0.3);">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; flex: 1;">
+                            <input type="checkbox" id="enablePassword" style="width: 20px; height: 20px; cursor: pointer;">
+                            <span style="font-weight: 600; color: var(--text-primary);">🔐 حماية الرابط بكلمة مرور</span>
+                        </label>
+                        <span id="passwordStatus" style="font-size: 12px; padding: 4px 12px; border-radius: 20px; background: rgba(108, 117, 125, 0.2); color: var(--text-secondary);">
+                            غير محمي
+                        </span>
+                    </div>
+                    
+                    <div id="passwordInputGroup" style="display: none;">
+                        <div style="display: flex; gap: 10px; align-items: flex-start;">
+                            <input 
+                                type="text" 
+                                id="linkPassword" 
+                                placeholder="أدخل كلمة مرور (مثال: مدرستي2025)" 
+                                style="flex: 1; padding: 12px 15px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--bg-color); color: var(--text-primary); font-size: 14px;"
+                                maxlength="50"
+                            >
+                            <button 
+                                class="btn" 
+                                style="background: var(--primary-color); color: white; padding: 12px 24px; white-space: nowrap; font-weight: 600;"
+                                onclick="updateJoinLinkPassword()"
+                                title="تطبيق التغييرات">
+                                💾 تطبيق
+                            </button>
+                        </div>
+                        <div style="background: rgba(255, 193, 7, 0.1); padding: 12px; border-radius: 8px; margin-top: 10px; border-right: 3px solid #ffc107;">
+                            <p style="color: var(--text-secondary); font-size: 12px; margin: 0;">
+                                💡 <strong>تنبيه:</strong> سيطلب من الطلاب إدخال هذه الكلمة قبل التسجيل
+                            </p>
+                            <p style="color: var(--text-secondary); font-size: 12px; margin: 8px 0 0 0;">
+                                📝 لا تنسَ مشاركة كلمة المرور مع الطلاب (عبر واتساب أو الحصة)
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 25px;">
+                    <div style="background: rgba(102, 126, 234, 0.1); padding: 20px; border-radius: 12px; text-align: center;">
+                        <div style="font-size: 32px; font-weight: bold; color: var(--primary-color);" id="joinLinkViews">
+                            <div class="loader" style="width: 30px; height: 30px; margin: 0 auto;"></div>
+                        </div>
+                        <div style="color: var(--text-secondary); font-size: 14px; margin-top: 8px;">
+                            👁️ مشاهدة
+                        </div>
+                    </div>
+                    
+                    <div style="background: rgba(16, 185, 129, 0.1); padding: 20px; border-radius: 12px; text-align: center;">
+                        <div style="font-size: 32px; font-weight: bold; color: var(--success-color);" id="joinLinkRegistrations">
+                            <div class="loader" style="width: 30px; height: 30px; margin: 0 auto;"></div>
+                        </div>
+                        <div style="color: var(--text-secondary); font-size: 14px; margin-top: 8px;">
+                            ✅ طالب مسجل
+                        </div>
+                    </div>
+                    
+                    <div style="background: rgba(59, 130, 246, 0.1); padding: 20px; border-radius: 12px; text-align: center;">
+                        <div style="font-size: 32px; font-weight: bold; color: #3b82f6;" id="actualStudentCount">
+                            <div class="loader" style="width: 30px; height: 30px; margin: 0 auto;"></div>
+                        </div>
+                        <div style="color: var(--text-secondary); font-size: 14px; margin-top: 8px;">
+                            📊 فعلياً في DB
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Refresh Button -->
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <button 
+                        class="btn" 
+                        style="background: var(--secondary-color); color: white; padding: 8px 20px;"
+                        onclick="refreshJoinLinkStats()"
+                        title="تحديث الإحصائيات">
+                        🔄 تحديث الإحصائيات
+                    </button>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button 
+                        class="btn" 
+                        style="flex: 1; background: #25D366; color: white;"
+                        onclick="shareJoinLinkViaWhatsApp()"
+                        title="مشاركة عبر واتساب">
+                        💬 واتساب
+                    </button>
+                    <button 
+                        class="btn" 
+                        style="flex: 1; background: #0088cc; color: white;"
+                        onclick="shareJoinLinkViaTelegram()"
+                        title="مشاركة عبر تيليجرام">
+                        ✈️ تيليجرام
+                    </button>
+                    <button 
+                        class="btn" 
+                        style="flex: 1; background: var(--secondary-color); color: white;"
+                        onclick="shareJoinLinkGeneric()"
+                        title="مشاركة">
+                        📤 مشاركة
+                    </button>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeJoinLinkModal()">✖ إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Join Link Modal Functions
+        let currentJoinLink = null;
+
+        async function openJoinLinkModal() {
+            const modal = document.getElementById('joinLinkModal');
+            const input = document.getElementById('joinLinkInput');
+            const viewsEl = document.getElementById('joinLinkViews');
+            const regsEl = document.getElementById('joinLinkRegistrations');
+
+            // Show modal
+            modal.style.display = 'flex';
+
+            // Show loading
+            viewsEl.innerHTML = '<div class="loader" style="width: 30px; height: 30px; margin: 0 auto;"></div>';
+            regsEl.innerHTML = '<div class="loader" style="width: 30px; height: 30px; margin: 0 auto;"></div>';
+
+            try {
+                // ✅ الحصول على الـ token من localStorage (نفس طريقة sectionsAPI)
+                const token = localStorage.getItem('access_token');
+                
+                if (!token) {
+                    throw new Error('يجب تسجيل الدخول أولاً');
+                }
+                
+                console.log('🔐 Token found, calling API...');
+                
+                // 🔐 إعداد body مع كلمة المرور إذا مفعّلة
+                const body = {};
+                const enablePassword = document.getElementById('enablePassword');
+                const linkPassword = document.getElementById('linkPassword');
+                
+                if (enablePassword.checked && linkPassword.value.trim()) {
+                    body.password = linkPassword.value.trim();
+                    console.log('🔐 Password enabled for join link');
+                }
+                
+                const response = await fetch('http://localhost:8000/api/sections/teacher/join-link/generate/', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                console.log('📡 API Response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('❌ API Error:', errorData);
+                    throw new Error(errorData.error || errorData.detail || 'فشل توليد الرابط');
+                }
+
+                const data = await response.json();
+                console.log('✅ API Data:', data);
+
+                if (!data.success) {
+                    throw new Error(data.error || 'فشل توليد الرابط');
+                }
+
+                // Store link
+                currentJoinLink = data.full_url;
+
+                // Display link
+                input.value = data.full_url;
+
+                // Display stats
+                viewsEl.textContent = data.stats.views;
+                regsEl.textContent = data.stats.registrations;
+                
+                // 🔐 Update password status
+                updatePasswordStatus(data.has_password);
+                
+                // 📊 Load actual student count
+                await loadActualStudentCount();
+                
+                console.log('✅ رابط الانضمام جاهز:', data.full_url);
+
+            } catch (error) {
+                console.error('❌ Error in openJoinLinkModal:', error);
+                UI.showToast('فشل تحميل رابط الانضمام: ' + error.message, 'error');
+                closeJoinLinkModal();
+            }
+        }
+        
+        // 🔐 Update password status display
+        function updatePasswordStatus(hasPassword) {
+            const statusEl = document.getElementById('passwordStatus');
+            const enablePassword = document.getElementById('enablePassword');
+            
+            if (hasPassword) {
+                statusEl.textContent = '🔒 محمي';
+                statusEl.style.background = 'rgba(16, 185, 129, 0.2)';
+                statusEl.style.color = 'var(--success-color)';
+                enablePassword.checked = true;
+                document.getElementById('passwordInputGroup').style.display = 'block';
+            } else {
+                statusEl.textContent = 'غير محمي';
+                statusEl.style.background = 'rgba(108, 117, 125, 0.2)';
+                statusEl.style.color = 'var(--text-secondary)';
+            }
+        }
+
+        function closeJoinLinkModal() {
+            document.getElementById('joinLinkModal').style.display = 'none';
+            currentJoinLink = null;
+            
+            // Reset password fields
+            document.getElementById('enablePassword').checked = false;
+            document.getElementById('linkPassword').value = '';
+            document.getElementById('passwordInputGroup').style.display = 'none';
+        }
+        
+        // 🔐 Update join link password
+        async function updateJoinLinkPassword() {
+            try {
+                const enablePassword = document.getElementById('enablePassword');
+                const linkPassword = document.getElementById('linkPassword');
+                const token = localStorage.getItem('access_token');
+                
+                if (!token) {
+                    throw new Error('يجب تسجيل الدخول أولاً');
+                }
+                
+                // Validate password if enabled
+                if (enablePassword.checked && !linkPassword.value.trim()) {
+                    UI.showToast('⚠️ الرجاء إدخال كلمة مرور', 'warning');
+                    linkPassword.focus();
+                    return;
+                }
+                
+                // Prepare body
+                const body = {};
+                if (enablePassword.checked) {
+                    body.password = linkPassword.value.trim();
+                } else {
+                    body.password = null; // Remove password
+                }
+                
+                console.log('🔐 Updating join link password...');
+                
+                const response = await fetch('http://localhost:8000/api/sections/teacher/join-link/generate/', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'فشل تحديث كلمة المرور');
+                }
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'فشل تحديث كلمة المرور');
+                }
+                
+                // Update UI
+                updatePasswordStatus(data.has_password);
+                UI.showToast('✅ تم تحديث إعدادات الرابط بنجاح', 'success');
+                
+                console.log('✅ Password updated, has_password:', data.has_password);
+                
+            } catch (error) {
+                console.error('❌ Error updating password:', error);
+                UI.showToast('❌ ' + error.message, 'error');
+            }
+        }
+        
+        // 📊 Load actual student count from database
+        async function loadActualStudentCount() {
+            const countEl = document.getElementById('actualStudentCount');
+            
+            try {
+                const token = localStorage.getItem('access_token');
+                if (!token) return;
+                
+                const response = await fetch('http://localhost:8000/api/sections/students/count/', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    countEl.textContent = data.total || 0;
+                    console.log('📊 Actual student count:', data.total);
+                } else {
+                    countEl.textContent = '0';
+                }
+            } catch (error) {
+                console.error('Error loading student count:', error);
+                countEl.textContent = '0';
+            }
+        }
+        
+        // 🔄 Refresh join link statistics
+        async function refreshJoinLinkStats() {
+            const viewsEl = document.getElementById('joinLinkViews');
+            const regsEl = document.getElementById('joinLinkRegistrations');
+            const countEl = document.getElementById('actualStudentCount');
+            
+            // Show loading
+            viewsEl.innerHTML = '<div class="loader" style="width: 20px; height: 20px; margin: 0 auto;"></div>';
+            regsEl.innerHTML = '<div class="loader" style="width: 20px; height: 20px; margin: 0 auto;"></div>';
+            countEl.innerHTML = '<div class="loader" style="width: 20px; height: 20px; margin: 0 auto;"></div>';
+            
+            try {
+                const token = localStorage.getItem('access_token');
+                if (!token) {
+                    throw new Error('يجب تسجيل الدخول أولاً');
+                }
+                
+                // Fetch join link stats
+                const response = await fetch('http://localhost:8000/api/sections/teacher/join-link/generate/', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    viewsEl.textContent = data.stats.views;
+                    regsEl.textContent = data.stats.registrations;
+                }
+                
+                // Fetch actual student count
+                await loadActualStudentCount();
+                
+                UI.showToast('✅ تم تحديث الإحصائيات', 'success');
+                
+            } catch (error) {
+                console.error('Error refreshing stats:', error);
+                UI.showToast('❌ فشل تحديث الإحصائيات', 'error');
+                viewsEl.textContent = '0';
+                regsEl.textContent = '0';
+                countEl.textContent = '0';
+            }
+        }
+        
+        // 🔐 Toggle password input
+        document.addEventListener('DOMContentLoaded', () => {
+            const enablePassword = document.getElementById('enablePassword');
+            const passwordInputGroup = document.getElementById('passwordInputGroup');
+            
+            enablePassword?.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    passwordInputGroup.style.display = 'block';
+                    document.getElementById('linkPassword').focus();
+                } else {
+                    passwordInputGroup.style.display = 'none';
+                    document.getElementById('linkPassword').value = '';
+                }
+            });
+        });
+
+        async function copyJoinLinkToClipboard() {
+            const input = document.getElementById('joinLinkInput');
+            
+            try {
+                await navigator.clipboard.writeText(input.value);
+                UI.showToast('✅ تم نسخ الرابط بنجاح', 'success');
+                
+                // Visual feedback
+                input.select();
+                setTimeout(() => {
+                    window.getSelection().removeAllRanges();
+                }, 300);
+            } catch (error) {
+                // Fallback
+                input.select();
+                document.execCommand('copy');
+                UI.showToast('✅ تم نسخ الرابط', 'success');
+            }
+        }
+
+        function shareJoinLinkViaWhatsApp() {
+            if (!currentJoinLink) return;
+            
+            const text = encodeURIComponent(`مرحباً! 👋\n\nتم إنشاء رابط التسجيل الخاص بك:\n\n${currentJoinLink}\n\nسجّل الآن للانضمام إلى القروب التعليمي 📚`);
+            window.open(`https://wa.me/?text=${text}`, '_blank');
+        }
+
+        function shareJoinLinkViaTelegram() {
+            if (!currentJoinLink) return;
+            
+            const text = encodeURIComponent(`مرحباً! 👋\n\nرابط التسجيل:\n${currentJoinLink}\n\nسجّل الآن 📚`);
+            window.open(`https://t.me/share/url?url=${encodeURIComponent(currentJoinLink)}&text=${text}`, '_blank');
+        }
+
+        async function shareJoinLinkGeneric() {
+            if (!currentJoinLink) return;
+            
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: 'رابط التسجيل - SmartEdu',
+                        text: 'سجّل الآن للانضمام إلى القروب التعليمي',
+                        url: currentJoinLink
+                    });
+                } catch (error) {
+                    if (error.name !== 'AbortError') {
+                        copyJoinLinkToClipboard();
+                    }
+                }
+            } else {
+                copyJoinLinkToClipboard();
+            }
+        }
+
+        // Close modal on outside click
+        document.getElementById('joinLinkModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeJoinLinkModal();
+            }
+        });
+    </script>
+
+    <!-- ✅ Dark Mode System -->
+    <script src="/assets/js/dark-mode-manager.js"></script>
+    <script src="/assets/js/dark-mode-init.js"></script>
+</body>
+</html>

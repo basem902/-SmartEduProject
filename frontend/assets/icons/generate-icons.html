@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>إنشاء الأيقونات</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            text-align: center;
+        }
+        button {
+            background: #00ADEF;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover {
+            background: #0088CC;
+        }
+        #canvases {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .canvas-container {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎓 إنشاء أيقونات SmartEduProject</h1>
+    <p>اضغط الزر لإنشاء جميع الأيقونات المطلوبة</p>
+    
+    <button onclick="generateIcons()">إنشاء الأيقونات</button>
+    
+    <div id="canvases"></div>
+    
+    <script>
+        const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+        
+        function generateIcons() {
+            const container = document.getElementById('canvases');
+            container.innerHTML = '';
+            
+            sizes.forEach(size => {
+                const canvasContainer = document.createElement('div');
+                canvasContainer.className = 'canvas-container';
+                
+                const canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size;
+                
+                const ctx = canvas.getContext('2d');
+                
+                // خلفية زرقاء متدرجة
+                const gradient = ctx.createLinearGradient(0, 0, size, size);
+                gradient.addColorStop(0, '#00ADEF');
+                gradient.addColorStop(1, '#0088CC');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, size, size);
+                
+                // رسم أيقونة تخرج (قبعة)
+                ctx.fillStyle = 'white';
+                
+                // القبعة
+                const centerX = size / 2;
+                const centerY = size / 2;
+                const scale = size / 100;
+                
+                // قاعدة القبعة
+                ctx.beginPath();
+                ctx.moveTo(centerX - 30 * scale, centerY + 5 * scale);
+                ctx.lineTo(centerX + 30 * scale, centerY + 5 * scale);
+                ctx.lineTo(centerX + 35 * scale, centerY + 10 * scale);
+                ctx.lineTo(centerX - 35 * scale, centerY + 10 * scale);
+                ctx.closePath();
+                ctx.fill();
+                
+                // أعلى القبعة
+                ctx.beginPath();
+                ctx.moveTo(centerX - 35 * scale, centerY - 5 * scale);
+                ctx.lineTo(centerX, centerY - 25 * scale);
+                ctx.lineTo(centerX + 35 * scale, centerY - 5 * scale);
+                ctx.lineTo(centerX, centerY + 5 * scale);
+                ctx.closePath();
+                ctx.fill();
+                
+                // الشرابة
+                ctx.beginPath();
+                ctx.arc(centerX + 25 * scale, centerY - 25 * scale, 3 * scale, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2 * scale;
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY - 25 * scale);
+                ctx.lineTo(centerX + 25 * scale, centerY - 25 * scale);
+                ctx.stroke();
+                
+                canvasContainer.appendChild(canvas);
+                
+                const label = document.createElement('p');
+                label.textContent = `${size}x${size}`;
+                canvasContainer.appendChild(label);
+                
+                const downloadBtn = document.createElement('button');
+                downloadBtn.textContent = 'تحميل';
+                downloadBtn.style.fontSize = '14px';
+                downloadBtn.style.padding = '8px 16px';
+                downloadBtn.onclick = () => downloadCanvas(canvas, size);
+                canvasContainer.appendChild(downloadBtn);
+                
+                container.appendChild(canvasContainer);
+            });
+            
+            alert('تم إنشاء جميع الأيقونات! اضغط "تحميل" على كل أيقونة لحفظها.');
+        }
+        
+        function downloadCanvas(canvas, size) {
+            const link = document.createElement('a');
+            link.download = `icon-${size}x${size}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+    </script>
+</body>
+</html>

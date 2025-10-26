@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#00ADEF">
+    
+    <title>الإعدادات - مشروعي الذكي</title>
+    
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="/assets/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192x192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <link rel="stylesheet" href="/assets/css/base.css">
+    <link rel="stylesheet" href="/assets/css/dark-mode.css">
+    <link rel="stylesheet" href="/assets/css/dashboard.css">
+    <link rel="stylesheet" href="/assets/css/animations.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">🎓</div>
+                <div class="logo-text">
+                    <h1>مشروعي الذكي</h1>
+                    <p>SmartEduProject</p>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <a href="/pages/dashboard.html" class="btn btn-outline" style="color: white; border-color: white; display: inline-flex; align-items: center; gap: 8px;">
+                    <span>←</span>
+                    <span>لوحة التحكم</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="card fade-in">
+            <div class="card-header">
+                <h2 class="card-title">⚙️ الإعدادات</h2>
+            </div>
+            
+            <div class="card-body">
+                <!-- Profile Section -->
+                <div style="border-bottom: 2px solid var(--border-color); padding-bottom: 30px; margin-bottom: 30px;">
+                    <h3 style="color: var(--primary-color); margin-bottom: 20px;">👤 المعلومات الشخصية</h3>
+                    
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">الاسم الكامل</label>
+                                <input type="text" id="fullName" class="form-control" readonly>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">البريد الإلكتروني</label>
+                                <input type="email" id="email" class="form-control" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">رقم الجوال</label>
+                                <input type="tel" id="phone" class="form-control" readonly>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">اسم المدرسة</label>
+                                <input type="text" id="schoolName" class="form-control" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Change Password Section -->
+                <div style="border-bottom: 2px solid var(--border-color); padding-bottom: 30px; margin-bottom: 30px;">
+                    <h3 style="color: var(--primary-color); margin-bottom: 20px;">🔐 تغيير كلمة المرور</h3>
+                    
+                    <form id="changePasswordForm">
+                        <div class="form-group">
+                            <label class="form-label">كلمة المرور الحالية *</label>
+                            <div style="position: relative;">
+                                <input type="password" id="oldPassword" class="form-control" 
+                                       placeholder="••••••••••" required>
+                                <span class="password-toggle" onclick="togglePassword('oldPassword')" 
+                                      style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 20px;">
+                                    👁️
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">كلمة المرور الجديدة *</label>
+                            <div style="position: relative;">
+                                <input type="password" id="newPassword" class="form-control" 
+                                       placeholder="••••••••••" required minlength="10">
+                                <span class="password-toggle" onclick="togglePassword('newPassword')" 
+                                      style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 20px;">
+                                    👁️
+                                </span>
+                            </div>
+                            <div id="passwordStrength" style="margin-top: 5px; font-size: 12px;"></div>
+                            <small class="text-muted">
+                                يجب أن تحتوي على: 10 أحرف على الأقل، حرف كبير، حرف صغير، رقم، ورمز خاص (@$!%*?&#)
+                            </small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">تأكيد كلمة المرور الجديدة *</label>
+                            <div style="position: relative;">
+                                <input type="password" id="confirmPassword" class="form-control" 
+                                       placeholder="••••••••••" required>
+                                <span class="password-toggle" onclick="togglePassword('confirmPassword')" 
+                                      style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 20px;">
+                                    👁️
+                                </span>
+                            </div>
+                            <div id="passwordMatch" style="margin-top: 5px; font-size: 12px;"></div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary" id="changePasswordBtn">
+                            تغيير كلمة المرور
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Quick Links Section -->
+                <div style="border-bottom: 2px solid var(--border-color); padding-bottom: 30px; margin-bottom: 30px;">
+                    <h3 style="color: var(--primary-color); margin-bottom: 20px;">⚡ روابط سريعة</h3>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                        <a href="/pages/sections-setup.html" class="quick-link-card" style="text-decoration: none; display: flex; align-items: center; gap: 15px; padding: 20px; background: var(--bg-color); border: 2px solid var(--border-color); border-radius: 12px; transition: all 0.3s; cursor: pointer;" onmouseover="this.style.borderColor='var(--primary-color)'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px var(--shadow-color)'" onmouseout="this.style.borderColor='var(--border-color)'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                            <div style="font-size: 36px;">📚</div>
+                            <div>
+                                <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 5px;">إعداد الصفوف</div>
+                                <div style="font-size: 12px; color: var(--text-secondary);">إنشاء صفوف وشُعب جديدة</div>
+                            </div>
+                        </a>
+                        
+                        <a href="/pages/sections-manage.html" class="quick-link-card" style="text-decoration: none; display: flex; align-items: center; gap: 15px; padding: 20px; background: var(--bg-color); border: 2px solid var(--border-color); border-radius: 12px; transition: all 0.3s; cursor: pointer;" onmouseover="this.style.borderColor='var(--primary-color)'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px var(--shadow-color)'" onmouseout="this.style.borderColor='var(--border-color)'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                            <div style="font-size: 36px;">🏫</div>
+                            <div>
+                                <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 5px;">إدارة الشُعب</div>
+                                <div style="font-size: 12px; color: var(--text-secondary);">عرض وتعديل الشُعب</div>
+                            </div>
+                        </a>
+                        
+                        <a href="/pages/sections-dashboard.html" class="quick-link-card" style="text-decoration: none; display: flex; align-items: center; gap: 15px; padding: 20px; background: var(--bg-color); border: 2px solid var(--border-color); border-radius: 12px; transition: all 0.3s; cursor: pointer;" onmouseover="this.style.borderColor='var(--primary-color)'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px var(--shadow-color)'" onmouseout="this.style.borderColor='var(--border-color)'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                            <div style="font-size: 36px;">📊</div>
+                            <div>
+                                <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 5px;">الإحصائيات</div>
+                                <div style="font-size: 12px; color: var(--text-secondary);">تقارير وتحليلات</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Preferences Section -->
+                <div>
+                    <h3 style="color: var(--primary-color); margin-bottom: 20px;">🎨 التفضيلات</h3>
+                    
+                    <div class="form-group">
+                        <label class="form-label">السمة (Theme)</label>
+                        <select id="themeSelect" class="form-control">
+                            <option value="light">💡 فاتح (Light)</option>
+                            <option value="dark">🌙 داكن (Dark)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">اللغة</label>
+                        <select id="languageSelect" class="form-control">
+                            <option value="ar">🇸🇦 العربية</option>
+                            <option value="en" disabled>🇬🇧 English (قريباً)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                            <input type="checkbox" id="notificationsEnabled">
+                            <span>🔔 تفعيل الإشعارات</span>
+                        </label>
+                    </div>
+                    
+                    <button class="btn btn-success" id="savePreferencesBtn">
+                        حفظ التفضيلات
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="card" style="border-right: 4px solid var(--danger-color);">
+            <div class="card-header">
+                <h3 style="color: var(--danger-color);">⚠️ منطقة الخطر</h3>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    العمليات التالية لا يمكن التراجع عنها. يرجى التأكد قبل تنفيذها.
+                </p>
+                <button class="btn btn-danger" onclick="deleteAccount()">
+                    🗑️ حذف الحساب نهائياً
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/ui.js"></script>
+    <script src="/assets/js/theme.js"></script>
+    <script src="/assets/js/auth.js"></script>
+    <script src="/assets/js/app.js"></script>
+    
+    <script>
+        // حماية الصفحة
+        auth.protectPage();
+        
+        // تحميل معلومات المعلم
+        const teacher = auth.getTeacher();
+        if (teacher) {
+            document.getElementById('fullName').value = teacher.full_name;
+            document.getElementById('email').value = teacher.email;
+            document.getElementById('phone').value = teacher.phone;
+            document.getElementById('schoolName').value = teacher.school_name;
+        }
+        
+        // تحميل الإعدادات
+        async function loadSettings() {
+            try {
+                const response = await api.getSettings();
+                const settings = response.settings;
+                
+                document.getElementById('themeSelect').value = settings.theme || 'light';
+                document.getElementById('languageSelect').value = settings.language || 'ar';
+                document.getElementById('notificationsEnabled').checked = settings.notifications_enabled !== false;
+                
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+        }
+        
+        // دالة إظهار/إخفاء كلمة المرور
+        window.togglePassword = function(inputId) {
+            const input = document.getElementById(inputId);
+            const toggle = event.target;
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                toggle.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                toggle.textContent = '👁️';
+            }
+        }
+        
+        // مؤشر تطابق كلمة المرور
+        function checkPasswordMatch() {
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const matchDiv = document.getElementById('passwordMatch');
+            
+            if (!confirmPassword) {
+                matchDiv.textContent = '';
+                return;
+            }
+            
+            if (newPassword === confirmPassword) {
+                matchDiv.innerHTML = '<span style="color: #28a745;">✅ كلمات المرور متطابقة</span>';
+            } else {
+                matchDiv.innerHTML = '<span style="color: #dc3545;">❌ كلمات المرور غير متطابقة</span>';
+            }
+        }
+        
+        document.getElementById('newPassword').addEventListener('input', checkPasswordMatch);
+        document.getElementById('confirmPassword').addEventListener('input', checkPasswordMatch);
+        
+        // مؤشر قوة كلمة المرور
+        document.getElementById('newPassword').addEventListener('input', (e) => {
+            const password = e.target.value;
+            const strengthDiv = document.getElementById('passwordStrength');
+            
+            if (!password) {
+                strengthDiv.textContent = '';
+                return;
+            }
+            
+            let strength = 0;
+            let messages = [];
+            
+            if (password.length >= 10) {
+                strength++;
+            } else {
+                messages.push(`❌ ${password.length}/10 أحرف`);
+            }
+            
+            if (/[a-z]/.test(password)) strength++;
+            else messages.push('❌ حرف صغير');
+            
+            if (/[A-Z]/.test(password)) strength++;
+            else messages.push('❌ حرف كبير');
+            
+            if (/\d/.test(password)) strength++;
+            else messages.push('❌ رقم');
+            
+            if (/[@$!%*?&#]/.test(password)) strength++;
+            else messages.push('❌ رمز خاص');
+            
+            const colors = ['#dc3545', '#fd7e14', '#ffc107', '#28a745', '#28a745'];
+            const labels = ['ضعيفة جداً', 'ضعيفة', 'متوسطة', 'قوية', 'قوية جداً'];
+            
+            strengthDiv.innerHTML = `
+                <span style="color: ${colors[strength]};">⚡ القوة: ${labels[strength]}</span>
+                ${messages.length > 0 ? '<br><span style="color: #dc3545;">' + messages.join(' • ') + '</span>' : '<br><span style="color: #28a745;">✅ كلمة مرور قوية!</span>'}
+            `;
+        });
+        
+        // تغيير كلمة المرور
+        document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const oldPassword = document.getElementById('oldPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // التحقق من تطابق كلمات المرور
+            if (newPassword !== confirmPassword) {
+                UI.showToast('كلمات المرور غير متطابقة', 'error');
+                return;
+            }
+            
+            // التحقق من متطلبات كلمة المرور
+            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{10,}$/;
+            
+            if (!passwordRegex.test(newPassword)) {
+                UI.showToast(
+                    'كلمة المرور يجب أن تحتوي على: حرف كبير، حرف صغير، رقم، ورمز خاص (@$!%*?&#) وأن تكون 10 أحرف على الأقل',
+                    'error',
+                    6000
+                );
+                return;
+            }
+            
+            const btn = document.getElementById('changePasswordBtn');
+            btn.disabled = true;
+            btn.textContent = 'جاري التغيير...';
+            
+            try {
+                await auth.changePassword(oldPassword, newPassword);
+                
+                // مسح الحقول
+                document.getElementById('oldPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+                
+            } catch (error) {
+                // Error already shown by auth.changePassword
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'تغيير كلمة المرور';
+            }
+        });
+        
+        // حفظ التفضيلات
+        document.getElementById('savePreferencesBtn').addEventListener('click', async () => {
+            const theme = document.getElementById('themeSelect').value;
+            const language = document.getElementById('languageSelect').value;
+            const notificationsEnabled = document.getElementById('notificationsEnabled').checked;
+            
+            const btn = document.getElementById('savePreferencesBtn');
+            btn.disabled = true;
+            btn.textContent = 'جاري الحفظ...';
+            
+            try {
+                await api.updateSettings({
+                    theme: theme,
+                    language: language,
+                    notifications_enabled: notificationsEnabled
+                });
+                
+                // تطبيق الثيم فوراً
+                if (theme !== themeManager.getTheme()) {
+                    themeManager.toggle();
+                }
+                
+                UI.showToast('تم حفظ التفضيلات بنجاح', 'success');
+                
+            } catch (error) {
+                UI.showToast(error.message || 'فشل حفظ التفضيلات', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'حفظ التفضيلات';
+            }
+        });
+        
+        // حذف الحساب
+        function deleteAccount() {
+            UI.showModal(
+                '⚠️ تأكيد حذف الحساب',
+                `
+                <p style="color: var(--danger-color); font-weight: bold;">
+                    هل أنت متأكد من حذف حسابك نهائياً؟
+                </p>
+                <p class="text-muted">
+                    سيتم حذف جميع مشاريعك وبياناتك بشكل دائم ولا يمكن استرجاعها.
+                </p>
+                <div class="form-group mt-3">
+                    <label class="form-label">اكتب "حذف الحساب" للتأكيد:</label>
+                    <input type="text" id="deleteConfirm" class="form-control" placeholder="حذف الحساب">
+                </div>
+                `,
+                [
+                    {
+                        text: 'نعم، احذف حسابي',
+                        class: 'btn-danger',
+                        onclick: `
+                            const confirm = document.getElementById('deleteConfirm').value;
+                            if (confirm === 'حذف الحساب') {
+                                UI.closeModal();
+                                UI.showToast('هذه الميزة ستكون متاحة قريباً', 'info');
+                            } else {
+                                UI.showToast('يرجى كتابة "حذف الحساب" للتأكيد', 'warning');
+                            }
+                        `
+                    },
+                    {
+                        text: 'إلغاء',
+                        class: 'btn-secondary',
+                        onclick: 'UI.closeModal()'
+                    }
+                ]
+            );
+        }
+        
+        // تحميل الإعدادات عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+        });
+    </script>
+</body>
+</html>

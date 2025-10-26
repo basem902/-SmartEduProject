@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 مركز الاختبارات</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            padding: 40px 20px;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.3rem;
+            opacity: 0.95;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .test-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .test-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .test-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        }
+
+        .test-card .icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .test-card h2 {
+            color: #667eea;
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+        }
+
+        .test-card p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .test-card .features {
+            list-style: none;
+            margin-bottom: 20px;
+        }
+
+        .test-card .features li {
+            padding: 8px 0;
+            padding-right: 25px;
+            position: relative;
+            color: #555;
+            font-size: 0.95rem;
+        }
+
+        .test-card .features li::before {
+            content: '✓';
+            position: absolute;
+            right: 0;
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .test-card .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .test-card:hover .btn {
+            transform: scale(1.05);
+        }
+
+        .status-banner {
+            background: white;
+            border-radius: 15px;
+            padding: 20px 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.green {
+            background: #28a745;
+            box-shadow: 0 0 10px #28a745;
+        }
+
+        .status-indicator.yellow {
+            background: #ffc107;
+            box-shadow: 0 0 10px #ffc107;
+        }
+
+        .status-indicator.red {
+            background: #dc3545;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .quick-links {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .quick-links h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .quick-link {
+            padding: 12px 20px;
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #333;
+            text-align: center;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .quick-link:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+            padding: 20px;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .status-banner {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🧪 مركز الاختبارات</h1>
+            <p>جميع أدوات الاختبار في مكان واحد</p>
+        </div>
+
+        <!-- Status Banner -->
+        <div class="status-banner">
+            <div class="status-item">
+                <div class="status-indicator green"></div>
+                <strong>Backend:</strong> Running
+            </div>
+            <div class="status-item">
+                <div class="status-indicator green"></div>
+                <strong>Bot:</strong> Active
+            </div>
+            <div class="status-item">
+                <div class="status-indicator green"></div>
+                <strong>Frontend:</strong> Online
+            </div>
+            <div class="status-item">
+                <strong>📊 جاهز للاختبار</strong>
+            </div>
+        </div>
+
+        <!-- Test Cards -->
+        <div class="cards-grid">
+            <!-- Card 1: OTP Test -->
+            <a href="otp-test.html" class="test-card">
+                <span class="icon">🔐</span>
+                <h2>اختبار OTP</h2>
+                <p>اختبار شامل لنظام توليد والتحقق من OTP</p>
+                <ul class="features">
+                    <li>توليد OTP</li>
+                    <li>التحقق من OTP</li>
+                    <li>رفع ملف تجريبي</li>
+                    <li>سجل الاختبارات</li>
+                    <li>إحصائيات فورية</li>
+                </ul>
+                <button class="btn">ابدأ الاختبار →</button>
+            </a>
+
+            <!-- Card 2: Bot Test -->
+            <a href="bot-test.html" class="test-card">
+                <span class="icon">✈️</span>
+                <h2>اختبار البوت</h2>
+                <p>دليل شامل لاختبار Telegram Bot</p>
+                <ul class="features">
+                    <li>دليل خطوة بخطوة</li>
+                    <li>أوامر البوت</li>
+                    <li>سيناريوهات الاختبار</li>
+                    <li>حل المشاكل</li>
+                    <li>روابط سريعة</li>
+                </ul>
+                <button class="btn">دليل البوت →</button>
+            </a>
+
+            <!-- Card 3: Project Submit -->
+            <a href="submit-project.html?project_id=1" class="test-card">
+                <span class="icon">📤</span>
+                <h2>رفع مشروع</h2>
+                <p>صفحة رفع المشروع الفعلية مع جميع الميزات</p>
+                <ul class="features">
+                    <li>Wizard سهل الاستخدام</li>
+                    <li>التحقق من OTP</li>
+                    <li>رفع ملف متقدم</li>
+                    <li>Validation شامل</li>
+                    <li>نتائج مفصلة</li>
+                </ul>
+                <button class="btn">رفع مشروع →</button>
+            </a>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="quick-links">
+            <h3>🔗 روابط سريعة</h3>
+            <div class="links-grid">
+                <a href="../index.html" class="quick-link">🏠 الصفحة الرئيسية</a>
+                <a href="login.html" class="quick-link">🔐 تسجيل دخول</a>
+                <a href="dashboard.html" class="quick-link">📊 لوحة التحكم</a>
+                <a href="create-project.html" class="quick-link">➕ إنشاء مشروع</a>
+                <a href="sections-manage.html" class="quick-link">📚 إدارة الشُعب</a>
+                <a href="/admin/" class="quick-link">⚙️ لوحة الإدارة</a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>SmartEdu Project</strong> - OTP System Testing Center</p>
+            <p style="margin-top: 10px; font-size: 0.9rem;">
+                📚 راجع 
+                <a href="../../TESTING_README.md" style="color: white; text-decoration: underline;">TESTING_README.md</a>
+                للمزيد من التفاصيل
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Check Backend Status
+        async function checkBackendStatus() {
+            try {
+                const response = await fetch('http://localhost:8000/api/otp/init/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+                // If we get any response (even error), backend is running
+                updateStatus('backend', true);
+            } catch (error) {
+                updateStatus('backend', false);
+            }
+        }
+
+        function updateStatus(service, isOnline) {
+            const indicators = document.querySelectorAll('.status-indicator');
+            const index = service === 'backend' ? 0 : service === 'bot' ? 1 : 2;
+            
+            if (!isOnline) {
+                indicators[index].classList.remove('green');
+                indicators[index].classList.add('red');
+            }
+        }
+
+        function openDocs() {
+            const docs = [
+                '../../TESTING_README.md',
+                '../../TESTING_COMPLETE_GUIDE.md',
+                '../../OTP_SYSTEM_FINAL_SUMMARY.md',
+                '../../DEPLOYMENT_CHECKLIST.md'
+            ];
+            
+            const docsList = docs.map(d => `- ${d}`).join('\n');
+            alert('📚 الوثائق المتوفرة:\n\n' + docsList + '\n\nافتح من File Explorer');
+        }
+
+        function runAutomatedTests() {
+            alert('🤖 لتشغيل الاختبارات الآلية:\n\n' +
+                  '1. افتح Terminal\n' +
+                  '2. نفذ: pip install colorama requests\n' +
+                  '3. نفذ: python run_tests.py\n\n' +
+                  'سيتم اختبار جميع APIs تلقائياً!');
+        }
+
+        // Log page view
+        console.log('%c🧪 Testing Center Loaded', 'font-size: 20px; color: #667eea; font-weight: bold;');
+        console.log('%cAvailable Tests:', 'font-size: 14px; font-weight: bold;');
+        console.log('1. OTP Test - otp-test.html');
+        console.log('2. Bot Test - bot-test.html');
+        console.log('3. Project Submit - submit-project.html');
+        console.log('\n%cAutomated Testing:', 'font-size: 14px; font-weight: bold;');
+        console.log('Run: python run_tests.py');
+
+        // Check backend on load
+        checkBackendStatus();
+
+        // Auto-refresh status every 30 seconds
+        setInterval(checkBackendStatus, 30000);
+    </script>
+</body>
+</html>

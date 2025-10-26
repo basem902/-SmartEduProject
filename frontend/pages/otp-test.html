@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار نظام OTP</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card h2::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: #667eea;
+            border-radius: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .result.info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        .result pre {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0,0,0,0.05);
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 0.9rem;
+        }
+
+        .logs-area {
+            height: 400px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .log-entry {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+            background: white;
+            font-size: 0.9rem;
+        }
+
+        .log-entry .timestamp {
+            color: #666;
+            font-size: 0.8rem;
+        }
+
+        .log-entry .method {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            margin-left: 5px;
+        }
+
+        .log-entry .method.POST {
+            background: #28a745;
+            color: white;
+        }
+
+        .log-entry .method.GET {
+            background: #007bff;
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-box .number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-box .label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(102, 126, 234, 0.3);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .quick-actions button {
+            flex: 1;
+            min-width: 120px;
+            padding: 10px;
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .quick-actions button:hover {
+            background: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 اختبار نظام OTP</h1>
+            <p>اختبار شامل لجميع مكونات النظام</p>
+        </div>
+
+        <!-- Important Notice -->
+        <div class="card" style="background: #fff3cd; border: 2px solid #ffc107;">
+            <h3 style="color: #856404; margin-bottom: 10px;">⚠️ ملاحظة مهمة</h3>
+            <p style="color: #856404; margin-bottom: 10px;">
+                <strong>نظام OTP متكامل مع Sections System:</strong>
+            </p>
+            <ol style="color: #856404; padding-right: 20px; line-height: 1.8;">
+                <li>يجب أن يكون لديك <strong>مشروع مرتبط بشُعبة</strong></li>
+                <li>احصل على <strong>Payload</strong> من صفحة الانضمام:
+                    <a href="sections-setup.html" style="color: #0066cc;">إنشاء شُعبة جديدة</a> أو
+                    <a href="sections-manage.html" style="color: #0066cc;">إدارة الشُعب</a>
+                </li>
+                <li>الـ Payload يحتوي على معلومات مشفرة (p=1&sig=xxx&exp=123)</li>
+            </ol>
+            <div style="background: white; padding: 10px; border-radius: 5px; margin-top: 10px;">
+                <strong>💡 للاختبار السريع:</strong><br>
+                1. افتح <a href="sections-setup.html" style="color: #0066cc;">sections-setup.html</a><br>
+                2. أنشئ Grade + Section<br>
+                3. احصل على Join Link<br>
+                4. استخرج الـ payload منه
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <h2>⚡ إجراءات سريعة</h2>
+            <div class="quick-actions">
+                <button onclick="testFullFlow()">🔄 اختبار كامل</button>
+                <button onclick="clearLogs()">🗑️ مسح السجل</button>
+                <button onclick="loadStats()">📊 تحديث الإحصائيات</button>
+                <button onclick="window.location.href='submit-project.html?project_id=1'">📤 رفع مشروع</button>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- Test 1: Generate OTP -->
+            <div class="card">
+                <h2>1️⃣ توليد OTP</h2>
+                <form id="generateForm" onsubmit="testGenerate(event)">
+                    <div class="form-group">
+                        <label>Project ID:</label>
+                        <input type="number" id="projectId" value="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>اسم الطالب:</label>
+                        <input type="text" id="studentName" placeholder="محمد أحمد علي" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Payload (من رابط الانضمام):</label>
+                        <input type="text" id="payload" placeholder="p=1&sig=xxx&exp=123" required>
+                        <small style="color: #666; font-size: 0.85rem;">💡 احصل عليه من صفحة الانضمام</small>
+                    </div>
+                    <button type="submit" class="btn">توليد OTP</button>
+                    <div class="loading"><div class="spinner"></div></div>
+                </form>
+                <div id="generateResult" class="result"></div>
+            </div>
+
+            <!-- Test 2: Validate OTP -->
+            <div class="card">
+                <h2>2️⃣ التحقق من OTP</h2>
+                <form id="validateForm" onsubmit="testValidate(event)">
+                    <div class="form-group">
+                        <label>OTP Code:</label>
+                        <input type="text" id="otpCode" placeholder="أدخل رمز OTP" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Project ID:</label>
+                        <input type="number" id="validateProjectId" value="1" required>
+                    </div>
+                    <button type="submit" class="btn">التحقق</button>
+                    <div class="loading"><div class="spinner"></div></div>
+                </form>
+                <div id="validateResult" class="result"></div>
+            </div>
+
+            <!-- Test 3: Upload File -->
+            <div class="card">
+                <h2>3️⃣ رفع ملف</h2>
+                <form id="uploadForm" onsubmit="testUpload(event)">
+                    <div class="form-group">
+                        <label>OTP Token:</label>
+                        <input type="text" id="uploadToken" placeholder="Token من التحقق" required>
+                    </div>
+                    <div class="form-group">
+                        <label>الملف:</label>
+                        <input type="file" id="uploadFile" required>
+                    </div>
+                    <button type="submit" class="btn">رفع الملف</button>
+                    <div class="loading"><div class="spinner"></div></div>
+                </form>
+                <div id="uploadResult" class="result"></div>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="card">
+            <h2>📊 إحصائيات</h2>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="number" id="statTotal">0</div>
+                    <div class="label">إجمالي الطلبات</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number" id="statSuccess">0</div>
+                    <div class="label">نجح</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number" id="statError">0</div>
+                    <div class="label">فشل</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number" id="statRate">0%</div>
+                    <div class="label">نسبة النجاح</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs -->
+        <div class="card">
+            <h2>📝 سجل الاختبارات</h2>
+            <div class="logs-area" id="logsArea"></div>
+        </div>
+    </div>
+
+    <script src="/assets/js/config.js"></script>
+    
+    <script>
+        // ✅ API_BASE تم تعريفه في config.js
+        let testStats = {
+            total: 0,
+            success: 0,
+            error: 0
+        };
+        let lastToken = null;
+
+        // Test 1: Generate OTP
+        async function testGenerate(event) {
+            event.preventDefault();
+            const form = event.target;
+            const btn = form.querySelector('.btn');
+            const loading = form.querySelector('.loading');
+            const result = document.getElementById('generateResult');
+            
+            btn.disabled = true;
+            loading.classList.add('active');
+            result.style.display = 'none';
+
+            try {
+                const data = {
+                    project_id: parseInt(document.getElementById('projectId').value),
+                    student_name: document.getElementById('studentName').value,
+                    payload: document.getElementById('payload').value
+                };
+
+                const response = await fetch(`${API_BASE}/otp/init/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const json = await response.json();
+
+                if (response.ok) {
+                    showResult(result, 'success', 'تم توليد OTP بنجاح!', json);
+                    document.getElementById('otpCode').value = json.otp_code;
+                    logTest('POST', '/otp/init/', true, json);
+                    updateStats(true);
+                } else {
+                    showResult(result, 'error', 'فشل توليد OTP', json);
+                    logTest('POST', '/otp/init/', false, json);
+                    updateStats(false);
+                }
+            } catch (error) {
+                showResult(result, 'error', 'خطأ في الاتصال', { error: error.message });
+                logTest('POST', '/otp/init/', false, { error: error.message });
+                updateStats(false);
+            } finally {
+                btn.disabled = false;
+                loading.classList.remove('active');
+            }
+        }
+
+        // Test 2: Validate OTP
+        async function testValidate(event) {
+            event.preventDefault();
+            const form = event.target;
+            const btn = form.querySelector('.btn');
+            const loading = form.querySelector('.loading');
+            const result = document.getElementById('validateResult');
+            
+            btn.disabled = true;
+            loading.classList.add('active');
+            result.style.display = 'none';
+
+            try {
+                const data = {
+                    otp_code: document.getElementById('otpCode').value,
+                    project_id: document.getElementById('validateProjectId').value
+                };
+
+                const response = await fetch(`${API_BASE}/otp/verify/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const json = await response.json();
+
+                if (response.ok) {
+                    showResult(result, 'success', 'OTP صحيح!', json);
+                    document.getElementById('uploadToken').value = json.token;
+                    lastToken = json.token;
+                    logTest('POST', '/otp/verify/', true, json);
+                    updateStats(true);
+                } else {
+                    showResult(result, 'error', 'OTP غير صحيح', json);
+                    logTest('POST', '/otp/verify/', false, json);
+                    updateStats(false);
+                }
+            } catch (error) {
+                showResult(result, 'error', 'خطأ في الاتصال', { error: error.message });
+                logTest('POST', '/otp/verify/', false, { error: error.message });
+                updateStats(false);
+            } finally {
+                btn.disabled = false;
+                loading.classList.remove('active');
+            }
+        }
+
+        // Test 3: Upload File
+        async function testUpload(event) {
+            event.preventDefault();
+            const form = event.target;
+            const btn = form.querySelector('.btn');
+            const loading = form.querySelector('.loading');
+            const result = document.getElementById('uploadResult');
+            
+            const token = document.getElementById('uploadToken').value;
+            const file = document.getElementById('uploadFile').files[0];
+
+            if (!file) {
+                alert('الرجاء اختيار ملف');
+                return;
+            }
+
+            btn.disabled = true;
+            loading.classList.add('active');
+            result.style.display = 'none';
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('token', token);
+
+                const response = await fetch(`${API_BASE}/projects/submit/`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const json = await response.json();
+
+                if (response.ok) {
+                    showResult(result, 'success', 'تم رفع الملف بنجاح!', json);
+                    logTest('POST', '/projects/submit/', true, json);
+                    updateStats(true);
+                } else {
+                    showResult(result, 'error', 'فشل رفع الملف', json);
+                    logTest('POST', '/projects/submit/', false, json);
+                    updateStats(false);
+                }
+            } catch (error) {
+                showResult(result, 'error', 'خطأ في الاتصال', { error: error.message });
+                logTest('POST', '/projects/submit/', false, { error: error.message });
+                updateStats(false);
+            } finally {
+                btn.disabled = false;
+                loading.classList.remove('active');
+            }
+        }
+
+        // Full Flow Test
+        async function testFullFlow() {
+            if (!confirm('سيتم اختبار السيناريو الكامل. هل تريد المتابعة؟')) {
+                return;
+            }
+
+            alert('🚀 بدء الاختبار الكامل...\n\n1. توليد OTP\n2. التحقق من OTP\n3. (يحتاج رفع ملف يدوياً)');
+
+            // Step 1: Generate
+            document.getElementById('generateForm').dispatchEvent(new Event('submit'));
+
+            // Wait and validate
+            setTimeout(() => {
+                const otpCode = document.getElementById('otpCode').value;
+                if (otpCode) {
+                    document.getElementById('validateForm').dispatchEvent(new Event('submit'));
+                }
+            }, 2000);
+        }
+
+        // Helper Functions
+        function showResult(element, type, message, data) {
+            element.className = `result ${type}`;
+            element.innerHTML = `
+                <strong>${message}</strong>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+            element.style.display = 'block';
+        }
+
+        function logTest(method, endpoint, success, data) {
+            const logsArea = document.getElementById('logsArea');
+            const timestamp = new Date().toLocaleTimeString('ar-SA');
+            const status = success ? '✅' : '❌';
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `
+                <div class="timestamp">${timestamp}</div>
+                <span class="method ${method}">${method}</span>
+                <strong>${endpoint}</strong>
+                ${status}
+                <pre style="margin-top: 5px; font-size: 0.85rem;">${JSON.stringify(data, null, 2)}</pre>
+            `;
+            
+            logsArea.insertBefore(logEntry, logsArea.firstChild);
+        }
+
+        function updateStats(success) {
+            testStats.total++;
+            if (success) {
+                testStats.success++;
+            } else {
+                testStats.error++;
+            }
+
+            const rate = testStats.total > 0 
+                ? Math.round((testStats.success / testStats.total) * 100) 
+                : 0;
+
+            document.getElementById('statTotal').textContent = testStats.total;
+            document.getElementById('statSuccess').textContent = testStats.success;
+            document.getElementById('statError').textContent = testStats.error;
+            document.getElementById('statRate').textContent = rate + '%';
+        }
+
+        function clearLogs() {
+            if (confirm('هل تريد مسح السجل؟')) {
+                document.getElementById('logsArea').innerHTML = '';
+                testStats = { total: 0, success: 0, error: 0 };
+                updateStats(false);
+            }
+        }
+
+        function loadStats() {
+            alert('تم تحديث الإحصائيات');
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            console.log('🧪 صفحة اختبار OTP جاهزة');
+        });
+    </script>
+</body>
+</html>

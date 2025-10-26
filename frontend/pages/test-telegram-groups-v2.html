@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إنشاء قروبات تيليجرام مع Sessionإدارة</title>
+    <link rel="stylesheet" href="/assets/css/base.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        /* Session Status Card */
+        .session-status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .session-status.connected {
+            background: #d4edda;
+            border: 2px solid #c3e6cb;
+        }
+        
+        .session-status.disconnected {
+            background: #fff3cd;
+            border: 2px solid #ffeaa7;
+        }
+        
+        .status-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .status-icon {
+            font-size: 2rem;
+        }
+        
+        .status-text h3 {
+            margin: 0 0 5px 0;
+            color: #333;
+        }
+        
+        .status-text p {
+            margin: 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        /* Progress Container */
+        .progress-container {
+            margin-top: 30px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .progress-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .progress-count {
+            font-size: 1.1rem;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .progress-bar-container {
+            background: #e0e0e0;
+            height: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Group Card */
+        .group-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
+        }
+
+        .group-card.active {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .group-card.completed {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+
+        .group-card.error {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+
+        .group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .group-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .group-status {
+            font-size: 1.5rem;
+        }
+
+        /* Steps List */
+        .steps-list {
+            margin: 15px 0;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+            transition: all 0.3s;
+        }
+
+        .step-icon {
+            font-size: 1.3rem;
+            min-width: 30px;
+        }
+
+        .step-text {
+            flex: 1;
+            color: #666;
+        }
+
+        .step-item.active .step-text {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .step-item.completed .step-text {
+            color: #28a745;
+        }
+
+        .step-item.error .step-text {
+            color: #dc3545;
+        }
+
+        /* Link Display */
+        .group-link {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            align-items: center;
+        }
+
+        .link-url {
+            flex: 1;
+            color: #667eea;
+            text-decoration: none;
+            word-break: break-all;
+        }
+
+        .btn-copy {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .btn-copy:hover {
+            background: #5568d3;
+        }
+
+        /* Countdown Timer */
+        .countdown-timer {
+            text-align: center;
+            padding: 15px;
+            background: #fff3cd;
+            border-radius: 8px;
+            margin-top: 15px;
+            border: 2px solid #ffc107;
+        }
+
+        .countdown-text {
+            font-size: 1.1rem;
+            color: #856404;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .countdown-bar {
+            background: #fff;
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .countdown-fill {
+            height: 100%;
+            background: #ffc107;
+            transition: width 1s linear;
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-30px); }
+            60% { transform: translateY(-15px); }
+        }
+
+        /* Form Groups */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .btn-full {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1rem;
+        }
+        
+        /* Steps */
+        .steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        
+        .step {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            border-bottom: 3px solid #e0e0e0;
+            color: #999;
+        }
+        
+        .step.active {
+            border-bottom-color: #667eea;
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .step.completed {
+            border-bottom-color: #28a745;
+            color: #28a745;
+        }
+        
+        /* Hidden sections */
+        .hidden {
+            display: none;
+        }
+        
+        /* Results */
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        .result.success {
+            background: #d4edda;
+            border: 2px solid #c3e6cb;
+        }
+        
+        .result.error {
+            background: #f8d7da;
+            border: 2px solid #f5c6cb;
+        }
+        
+        /* Group Links */
+        .groups-list {
+            margin-top: 20px;
+        }
+        
+        .group-item {
+            background: white;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .group-item h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        
+        .group-link {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .group-link input {
+            flex: 1;
+            padding: 8px;
+        }
+        
+        .group-link button {
+            padding: 8px 16px;
+        }
+        
+        /* Alert Box */
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        
+        .alert-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Card 1: حالة الربط -->
+        <div class="card">
+            <h1>🤖 إنشاء قروبات تيليجرام (نسخة محسّنة)</h1>
+            <p class="subtitle">مع نظام إدارة Sessions - ترقية البوت تلقائياً!</p>
+            
+            <!-- حالة الربط -->
+            <div id="sessionStatus" class="session-status disconnected">
+                <div class="status-info">
+                    <div class="status-icon">⚠️</div>
+                    <div class="status-text">
+                        <h3>غير متصل</h3>
+                        <p>يرجى ربط حسابك بتيليجرام أولاً</p>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="showConnectForm()">ربط الحساب</button>
+            </div>
+            
+            <!-- نموذج الربط -->
+            <div id="connectForm" class="hidden">
+                <div class="alert alert-info">
+                    <strong>💡 لماذا نحتاج الربط؟</strong><br>
+                    بعد ربط حسابك مرة واحدة، سيتمكن النظام من:<br>
+                    ✅ إنشاء القروبات تلقائياً<br>
+                    ✅ ترقية البوت إلى مدير تلقائياً (بدون تدخل يدوي!)<br>
+                    ✅ إدارة القروبات نيابة عنك<br><br>
+                    <strong>🔒 الأمان:</strong> جميع البيانات مشفرة ولا تُستخدم إلا لإدارة قروباتك.
+                </div>
+                
+                <div class="form-group">
+                    <label>رقم الهاتف (المسجل في تيليجرام):</label>
+                    <input type="tel" id="connectPhone" placeholder="+966558048004">
+                </div>
+                
+                <div id="codeInput" class="hidden">
+                    <div class="form-group">
+                        <label>كود التحقق (المرسل إلى تيليجرام):</label>
+                        <input type="text" id="verificationCode" placeholder="12345">
+                    </div>
+                    <button class="btn btn-success btn-full" onclick="verifyCode()">✅ تأكيد الكود</button>
+                </div>
+                
+                <div id="passwordInput" class="hidden">
+                    <div class="alert" style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin-bottom: 15px;">
+                        🔒 <strong>التحقق بخطوتين:</strong> حسابك محمي. أدخل كلمة المرور.
+                    </div>
+                    <div class="form-group">
+                        <label>كلمة مرور التحقق بخطوتين:</label>
+                        <input type="password" id="twoStepPassword" placeholder="••••••••">
+                    </div>
+                    <button class="btn btn-success btn-full" onclick="verifyPassword()">✅ تأكيد كلمة المرور</button>
+                </div>
+                
+                <button id="sendCodeBtn" class="btn btn-primary btn-full" onclick="sendCode()">📱 إرسال كود التحقق</button>
+                <button class="btn btn-secondary btn-full" onclick="hideConnectForm()" style="margin-top: 10px;">إلغاء</button>
+            </div>
+        </div>
+        
+        <!-- Card 2: إنشاء القروبات -->
+        <div id="createGroupsCard" class="card hidden">
+            <h2 style="text-align: center; color: #667eea;">📱 إنشاء قروبات تيليجرام</h2>
+            
+            <form id="createForm" onsubmit="createGroups(event)">
+                <div class="form-group">
+                    <label>اسم الصف:</label>
+                    <input type="text" id="gradeName" value="الصف الثالث متوسط" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>اسم المادة:</label>
+                    <input type="text" id="subjectName" value="المهارات الرقمية" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>عدد الشُعب:</label>
+                    <select id="sectionsCount">
+                        <option value="2">2 شُعب</option>
+                        <option value="3" selected>3 شُعب</option>
+                        <option value="5">5 شُعب</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-full" id="createBtn">
+                    🚀 إنشاء القروبات وترقية البوت تلقائياً
+                </button>
+            </form>
+            
+            <!-- Progress Section -->
+            <div id="progressSection" class="progress-container hidden">
+                <div class="progress-header">
+                    <div class="progress-title">⏳ جاري إنشاء القروبات...</div>
+                    <div class="progress-count" id="progressCount">0 من 0</div>
+                </div>
+
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="progressBar" style="width: 0%">0%</div>
+                </div>
+
+                <div id="groupsContainer"></div>
+            </div>
+            
+            <div id="createResult" class="result hidden"></div>
+            
+            <div id="groupsList" class="groups-list hidden"></div>
+        </div>
+    </div>
+
+    <script src="/assets/js/ui.js"></script>
+    <script src="/assets/js/auth.js"></script>
+    
+    <script>
+        // حماية الصفحة
+        try {
+            auth.protectPage();
+        } catch (e) {
+            console.log('Auth protection skipped:', e);
+        }
+        
+        const API_URL = 'http://localhost:8000/api';
+        let phoneNumber = '';
+        let phoneCodeHash = '';
+        
+        // التحقق من حالة الربط عند تحميل الصفحة
+        async function checkSessionStatus() {
+            const phone = localStorage.getItem('telegram_phone') || '+966558048004';
+            
+            try {
+                const token = localStorage.getItem('access_token');
+                const response = await fetch(`${API_URL}/sections/telegram/session/status/?phone_number=${phone}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.is_connected) {
+                    showConnectedStatus(phone);
+                } else {
+                    showDisconnectedStatus();
+                }
+            } catch (error) {
+                console.error('Error checking session:', error);
+                showDisconnectedStatus();
+            }
+        }
+        
+        function showConnectedStatus(phone) {
+            const statusDiv = document.getElementById('sessionStatus');
+            statusDiv.className = 'session-status connected';
+            statusDiv.innerHTML = `
+                <div class="status-info">
+                    <div class="status-icon">✅</div>
+                    <div class="status-text">
+                        <h3>متصل</h3>
+                        <p>حسابك مربوط: <strong>${phone}</strong></p>
+                        <p style="font-size: 0.85rem; color: #666; margin-top: 5px;">
+                            يمكنك الآن إنشاء القروبات تلقائياً
+                        </p>
+                    </div>
+                </div>
+                <button class="btn btn-danger" onclick="disconnect()" title="فصل ربط حساب ${phone}">
+                    🔌 فصل الربط
+                </button>
+            `;
+            
+            // حفظ رقم الهاتف في localStorage (للتأكد)
+            localStorage.setItem('telegram_phone', phone);
+            
+            // إظهار نموذج إنشاء القروبات
+            document.getElementById('createGroupsCard').classList.remove('hidden');
+        }
+        
+        function showDisconnectedStatus() {
+            const statusDiv = document.getElementById('sessionStatus');
+            statusDiv.className = 'session-status disconnected';
+            statusDiv.innerHTML = `
+                <div class="status-info">
+                    <div class="status-icon">⚠️</div>
+                    <div class="status-text">
+                        <h3>غير متصل</h3>
+                        <p>يرجى ربط حسابك بتيليجرام أولاً</p>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="showConnectForm()">ربط الحساب</button>
+                <button class="btn btn-secondary" onclick="clearLocalData()" style="margin-top: 10px; background: #6c757d; font-size: 0.9rem;">
+                    🗑️ مسح البيانات المحلية
+                </button>
+            `;
+            
+            // إخفاء نموذج إنشاء القروبات
+            document.getElementById('createGroupsCard').classList.add('hidden');
+        }
+        
+        function clearLocalData() {
+            if (confirm('هل تريد مسح جميع البيانات المحلية؟\n\nسيتم مسح:\n• رقم الهاتف المحفوظ\n• جميع البيانات المؤقتة\n\nستحتاج لإعادة الربط من جديد.')) {
+                localStorage.removeItem('telegram_phone');
+                alert('✅ تم مسح البيانات المحلية بنجاح');
+                showDisconnectedStatus();
+            }
+        }
+        
+        function showConnectForm() {
+            document.getElementById('connectForm').classList.remove('hidden');
+        }
+        
+        function hideConnectForm() {
+            document.getElementById('connectForm').classList.add('hidden');
+        }
+        
+        async function sendCode() {
+            const phone = document.getElementById('connectPhone').value.trim();
+            
+            if (!phone) {
+                alert('الرجاء إدخال رقم الهاتف');
+                return;
+            }
+            
+            phoneNumber = phone;  // حفظ في المتغير العام
+            
+            const btn = document.getElementById('sendCodeBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ جاري الإرسال...';
+            
+            try {
+                const token = localStorage.getItem('access_token');
+                const response = await fetch(`${API_URL}/sections/telegram/session/login/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ phone_number: phoneNumber })
+                });
+                
+                const data = await response.json();
+                
+                // تسجيل Response للتحقق
+                console.log('Backend Response:', data);
+                
+                if (data.status === 'already_connected') {
+                    alert('✅ ' + data.message);
+                    localStorage.setItem('telegram_phone', phoneNumber);
+                    hideConnectForm();
+                    showConnectedStatus(phoneNumber);
+                } else if (data.status === 'code_required' || data.phone_code_hash) {
+                    phoneCodeHash = data.phone_code_hash;
+                    alert('✅ تم إرسال كود التحقق إلى تيليجرام!\nافتح تيليجرام وانسخ الكود.');
+                    document.getElementById('codeInput').classList.remove('hidden');
+                    btn.classList.add('hidden');
+                } else {
+                    alert('❌ خطأ: ' + (data.error || data.message));
+                    console.log('Full data:', JSON.stringify(data));
+                }
+            } catch (error) {
+                alert('❌ خطأ: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '📱 إرسال كود التحقق';
+            }
+        }
+        
+        async function verifyCode() {
+            const code = document.getElementById('verificationCode').value.trim();
+            
+            if (!code) {
+                alert('الرجاء إدخال كود التحقق');
+                return;
+            }
+            
+            try {
+                const token = localStorage.getItem('access_token');
+                const response = await fetch(`${API_URL}/sections/telegram/session/verify/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        phone_number: phoneNumber,
+                        code: code,
+                        phone_code_hash: phoneCodeHash
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'password_required') {
+                    // يحتاج كلمة مرور Two-Step Verification
+                    document.getElementById('codeInput').classList.add('hidden');
+                    document.getElementById('passwordInput').classList.remove('hidden');
+                    document.getElementById('sendCodeBtn').classList.add('hidden');
+                    return;
+                }
+                
+                if (data.status === 'success') {
+                    alert('✅ تم ربط حسابك بنجاح!');
+                    localStorage.setItem('telegram_phone', phoneNumber);
+                    hideConnectForm();
+                    showConnectedStatus(phoneNumber);
+                } else {
+                    alert('❌ خطأ: ' + (data.error || data.message));
+                }
+            } catch (error) {
+                alert('❌ خطأ: ' + error.message);
+            }
+        }
+        
+        async function verifyPassword() {
+            const password = document.getElementById('twoStepPassword').value.trim();
+            
+            if (!password) {
+                alert('الرجاء إدخال كلمة المرور');
+                return;
+            }
+            
+            try {
+                const token = localStorage.getItem('access_token');
+                const response = await fetch(`${API_URL}/sections/telegram/session/password/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        phone_number: phoneNumber,
+                        password: password
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    alert('✅ تم ربط حسابك بنجاح!');
+                    localStorage.setItem('telegram_phone', phoneNumber);
+                    hideConnectForm();
+                    showConnectedStatus(phoneNumber);
+                } else {
+                    alert('❌ خطأ: ' + (data.error || data.message));
+                }
+            } catch (error) {
+                alert('❌ خطأ: ' + error.message);
+            }
+        }
+        
+        async function disconnect() {
+            const phone = localStorage.getItem('telegram_phone');
+            
+            // التحقق من وجود رقم الهاتف
+            if (!phone) {
+                alert('❌ خطأ: لم يتم العثور على رقم الهاتف المحفوظ');
+                showDisconnectedStatus();
+                return;
+            }
+            
+            if (!confirm(`هل تريد فصل ربط حسابك بتيليجرام؟\nالرقم: ${phone}`)) {
+                return;
+            }
+            
+            try {
+                const token = localStorage.getItem('access_token');
+                
+                console.log('Disconnecting phone:', phone);
+                
+                const response = await fetch(`${API_URL}/sections/telegram/session/disconnect/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ phone_number: phone })
+                });
+                
+                console.log('Response status:', response.status);
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                if (response.ok && data.success) {
+                    alert('✅ تم فصل الحساب بنجاح');
+                    localStorage.removeItem('telegram_phone');
+                    showDisconnectedStatus();
+                } else {
+                    const errorMsg = data.error || data.message || 'خطأ غير معروف';
+                    alert('❌ خطأ: ' + errorMsg);
+                    
+                    // إذا كان الخطأ "لا يوجد حساب مربوط" - نحذف من localStorage
+                    if (errorMsg.includes('لا يوجد') || response.status === 404) {
+                        localStorage.removeItem('telegram_phone');
+                        showDisconnectedStatus();
+                    }
+                }
+            } catch (error) {
+                console.error('Disconnect error:', error);
+                alert('❌ خطأ في الاتصال: ' + error.message);
+            }
+        }
+        
+        const steps = [
+            { id: 'create', icon: '📝', text: 'إنشاء القروب' },
+            { id: 'welcome', icon: '💬', text: 'إرسال رسالة الترحيب' },
+            { id: 'convert', icon: '🔄', text: 'تحويل إلى Supergroup' },
+            { id: 'history', icon: '📜', text: 'تفعيل السجل للأعضاء الجدد' },
+            { id: 'pin', icon: '📌', text: 'تثبيت الرسالة' },
+            { id: 'readonly', icon: '🔒', text: 'تطبيق صلاحيات القراءة فقط' },
+            { id: 'bot', icon: '🤖', text: 'إضافة البوت' },
+            { id: 'promote', icon: '👑', text: 'ترقية البوت كمشرف' }
+        ];
+
+        let currentGroupIndex = 0;
+        let totalGroups = 0;
+
+        async function createGroups(e) {
+            e.preventDefault();
+            
+            const gradeName = document.getElementById('gradeName').value.trim();
+            const subjectName = document.getElementById('subjectName').value.trim();
+            const count = parseInt(document.getElementById('sectionsCount').value);
+            
+            if (!gradeName || !subjectName) {
+                alert('⚠️ يرجى إدخال جميع البيانات');
+                return;
+            }
+
+            // Hide form, show progress
+            document.getElementById('createForm').style.display = 'none';
+            document.getElementById('progressSection').classList.remove('hidden');
+            
+            totalGroups = count;
+            currentGroupIndex = 0;
+
+            // Create group cards
+            const container = document.getElementById('groupsContainer');
+            container.innerHTML = '';
+
+            const arabicLetters = ['أ', 'ب', 'ج', 'د', 'هـ', 'و', 'ز', 'ح', 'ط', 'ي'];
+            const sections = arabicLetters.slice(0, count);
+            
+            for (let i = 0; i < count; i++) {
+                const groupName = `${gradeName} ${arabicLetters[i]} - ${subjectName}`;
+                const card = createGroupCard(i, groupName);
+                container.appendChild(card);
+            }
+
+            // Update progress
+            updateProgress();
+
+            // Call API sequentially for each group
+            const phone = localStorage.getItem('telegram_phone');
+            const token = localStorage.getItem('access_token');
+            
+            const results = [];
+            
+            // Process each group sequentially
+            for (let i = 0; i < sections.length; i++) {
+                const section = sections[i];
+                const card = document.getElementById(`group-${i}`);
+                const statusIcon = document.getElementById(`status-${i}`);
+                
+                // Mark card as active
+                card.classList.add('active');
+                statusIcon.textContent = '⏳';
+                
+                try {
+                    // Call API for single group
+                    const result = await createSingleGroup(gradeName, subjectName, section, phone, token, i);
+                    results.push(result);
+                    
+                    // Mark card as completed or error
+                    card.classList.remove('active');
+                    
+                    if (result.success) {
+                        card.classList.add('completed');
+                        statusIcon.textContent = '✅';
+                        
+                        // Show link
+                        const linkEl = document.getElementById(`link-${i}`);
+                        const urlEl = document.getElementById(`url-${i}`);
+                        urlEl.href = result.group.invite_link;
+                        urlEl.textContent = result.group.invite_link;
+                        linkEl.classList.remove('hidden');
+                        linkEl.classList.add('slide-in');
+                    } else {
+                        card.classList.add('error');
+                        statusIcon.textContent = '❌';
+                    }
+                    
+                    currentGroupIndex = i + 1;
+                    updateProgress();
+                    
+                } catch (error) {
+                    console.error(`Error creating group ${section}:`, error);
+                    console.error('Error details:', result);
+                    
+                    card.classList.remove('active');
+                    card.classList.add('error');
+                    statusIcon.textContent = '❌';
+                    
+                    // عرض سبب الخطأ
+                    let errorText = error.message;
+                    if (result && result.error) {
+                        errorText = result.error;
+                        
+                        // إذا كان الخطأ FloodWait
+                        if (errorText.includes('FLOOD_WAIT') || errorText.includes('flood')) {
+                            errorText = '⏳ تيليجرام يطلب الانتظار\nيرجى المحاولة بعد دقيقة';
+                        }
+                    }
+                    
+                    results.push({
+                        success: false,
+                        section: section,
+                        error: errorText
+                    });
+                }
+                
+                // Small delay between groups
+                if (i < sections.length - 1) {
+                    await sleep(1000);
+                }
+            }
+            
+            // Show success screen
+            await showSuccessScreen(results);
+        }
+
+        async function createSingleGroup(gradeName, subjectName, section, phone, token, index) {
+            // Animate steps while calling API
+            const stepsPromise = animateSteps(index);
+            
+            // Call API
+            const apiPromise = fetch(`${API_URL}/sections/telegram/create-single-group/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    grade_name: gradeName,
+                    subject_name: subjectName,
+                    section: section,
+                    phone_number: phone
+                })
+            }).then(response => response.json());
+            
+            // Wait for both
+            const [_, data] = await Promise.all([stepsPromise, apiPromise]);
+            
+            return data;
+        }
+
+        function createGroupCard(index, groupName) {
+            const card = document.createElement('div');
+            card.className = 'group-card slide-in';
+            card.id = `group-${index}`;
+
+            card.innerHTML = `
+                <div class="group-header">
+                    <div class="group-title">${index + 1}. ${groupName}</div>
+                    <div class="group-status" id="status-${index}">⏹️</div>
+                </div>
+                <div class="steps-list" id="steps-${index}">
+                    ${steps.map(step => `
+                        <div class="step-item" id="step-${index}-${step.id}">
+                            <div class="step-icon">${step.icon}</div>
+                            <div class="step-text">${step.text}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="group-link hidden" id="link-${index}">
+                    <a class="link-url" id="url-${index}" href="#" target="_blank"></a>
+                    <button class="btn-copy" onclick="copyGroupLink(${index})">📋 نسخ</button>
+                </div>
+            `;
+
+            return card;
+        }
+
+        async function animateSteps(index) {
+            // Animate each step while API is working
+            for (let i = 0; i < steps.length; i++) {
+                const step = steps[i];
+                const stepEl = document.getElementById(`step-${index}-${step.id}`);
+                
+                if (!stepEl) continue;
+                
+                // Mark as active (with pulse)
+                stepEl.classList.add('active', 'pulse');
+                
+                // Simulate processing time
+                const delay = getStepDelay(step.id);
+                await sleep(delay);
+                
+                // Mark as completed
+                stepEl.classList.remove('active', 'pulse');
+                stepEl.classList.add('completed');
+
+                // Update progress after each step
+                const stepProgress = ((index * steps.length + i + 1) / (totalGroups * steps.length)) * 100;
+                document.getElementById('progressBar').style.width = `${stepProgress}%`;
+                document.getElementById('progressBar').textContent = `${Math.round(stepProgress)}%`;
+            }
+        }
+
+        async function showSuccessScreen(results) {
+            // Hide progress section
+            document.getElementById('progressSection').classList.add('hidden');
+            
+            // Calculate stats
+            const successCount = results.filter(r => r.success).length;
+            const failedCount = results.filter(r => !r.success).length;
+            const totalTime = results.reduce((sum, r) => sum + (r.group?.elapsed_time || 0), 0);
+            
+            // Create success screen
+            const successDiv = document.createElement('div');
+            successDiv.id = 'successScreen';
+            successDiv.className = 'slide-in';
+            successDiv.style.cssText = 'text-align: center; padding: 40px 20px;';
+            
+            successDiv.innerHTML = `
+                <div style="font-size: 5rem; margin-bottom: 20px; animation: bounce 1s;">🎉</div>
+                <h2 style="color: #28a745; font-size: 2rem; margin-bottom: 20px;">تم بنجاح!</h2>
+                
+                <div style="display: flex; justify-content: center; gap: 40px; margin: 30px 0; flex-wrap: wrap;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 2.5rem; font-weight: 700; color: #28a745;">${successCount}</div>
+                        <div style="color: #666; margin-top: 5px;">ناجح</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 2.5rem; font-weight: 700; color: #dc3545;">${failedCount}</div>
+                        <div style="color: #666; margin-top: 5px;">فاشل</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 2.5rem; font-weight: 700; color: #667eea;">${Math.round(totalTime)}</div>
+                        <div style="color: #666; margin-top: 5px;">ثانية</div>
+                    </div>
+                </div>
+                
+                <div style="text-align: right; margin-top: 40px;">
+                    <h3 style="color: #333; margin-bottom: 20px;">📋 القروبات المُنشأة:</h3>
+                    <div id="finalGroupsList"></div>
+                </div>
+                
+                <button class="btn btn-primary btn-full" onclick="resetForm()" style="margin-top: 30px;">
+                    ✨ إنشاء قروبات جديدة
+                </button>
+            `;
+            
+            document.querySelector('.card').appendChild(successDiv);
+            
+            // Show groups in final list
+            const finalList = document.getElementById('finalGroupsList');
+            results.forEach((result, i) => {
+                if (result.success) {
+                    const groupDiv = document.createElement('div');
+                    groupDiv.className = 'group-card completed slide-in';
+                    groupDiv.style.marginBottom = '15px';
+                    groupDiv.id = `final-group-${i}`;
+                    groupDiv.innerHTML = `
+                        <div class="group-header">
+                            <div class="group-title">${i + 1}. ${result.group.group_name}</div>
+                            <div class="group-status">✅</div>
+                        </div>
+                        <div class="group-link">
+                            <a class="link-url" href="${result.group.invite_link}" target="_blank">${result.group.invite_link}</a>
+                            <button class="btn-copy" onclick="copyText('${result.group.invite_link}')">📋 نسخ</button>
+                            <button class="btn-copy" id="activate-btn-${i}" onclick="activatePermissions(${i}, '${result.group.chat_id}')" style="background: #28a745;">
+                                ⚙️ تفعيل الصلاحيات
+                            </button>
+                        </div>
+                        <div id="permissions-status-${i}" class="hidden" style="margin-top: 10px; padding: 10px; background: #d4edda; border-radius: 6px; font-size: 0.9rem;">
+                            💡 الصلاحيات:
+                            <div style="margin-top: 5px; color: #155724;">
+                                ✓ قراءة فقط للأعضاء | ✓ السجل مرئي | ✓ البوت له صلاحيات كاملة
+                            </div>
+                        </div>
+                    `;
+                    finalList.appendChild(groupDiv);
+                } else {
+                    // عرض القروبات الفاشلة أيضاً
+                    const groupDiv = document.createElement('div');
+                    groupDiv.className = 'group-card error slide-in';
+                    groupDiv.style.marginBottom = '15px';
+                    groupDiv.innerHTML = `
+                        <div class="group-header">
+                            <div class="group-title">${i + 1}. شعبة ${result.section} (فشل)</div>
+                            <div class="group-status">❌</div>
+                        </div>
+                        <div style="padding: 10px; background: #f8d7da; border-radius: 6px; color: #721c24; font-size: 0.9rem;">
+                            <strong>السبب:</strong> ${result.error || 'خطأ غير معروف'}
+                        </div>
+                    `;
+                    finalList.appendChild(groupDiv);
+                }
+            });
+        }
+
+        async function activatePermissions(index, chatId) {
+            const btn = document.getElementById(`activate-btn-${index}`);
+            const originalText = btn.innerHTML;
+            
+            // تعطيل الزر وعرض loading
+            btn.disabled = true;
+            btn.innerHTML = '⏳ جاري التفعيل...';
+            btn.classList.add('pulse');
+            
+            try {
+                const phone = localStorage.getItem('telegram_phone');
+                const token = localStorage.getItem('access_token');
+                
+                const response = await fetch(`${API_URL}/sections/telegram/activate-permissions/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        chat_id: chatId,
+                        phone_number: phone
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // تحديث الزر
+                    btn.innerHTML = '✅ تم التفعيل';
+                    btn.style.background = '#28a745';
+                    btn.disabled = true;
+                    btn.classList.remove('pulse');
+                    
+                    // إظهار حالة الصلاحيات
+                    const statusDiv = document.getElementById(`permissions-status-${index}`);
+                    statusDiv.classList.remove('hidden');
+                    statusDiv.classList.add('slide-in');
+                    
+                    // رسالة نجاح
+                    alert('✅ تم تفعيل الصلاحيات بنجاح!\n\n✓ قراءة فقط للأعضاء\n✓ السجل مرئي\n✓ البوت له صلاحيات كاملة');
+                } else {
+                    // رسالة خطأ
+                    let errorMsg = '❌ فشل التفعيل\n\n';
+                    if (data.error === 'bot_not_found') {
+                        errorMsg += 'السبب: البوت غير موجود في القروب\n';
+                        errorMsg += 'الحل: أضف @Eduautomationbot إلى القروب أولاً';
+                    } else if (data.error === 'bot_not_admin') {
+                        errorMsg += 'السبب: البوت ليس مشرفاً\n';
+                        errorMsg += 'الحل: اجعل البوت مشرفاً في القروب أولاً';
+                    } else if (data.error === 'session_not_found') {
+                        errorMsg += 'السبب: الجلسة منتهية\n';
+                        errorMsg += 'الحل: أعد تسجيل الدخول بحسابك';
+                    } else {
+                        errorMsg += 'السبب: ' + (data.message || data.error);
+                    }
+                    alert(errorMsg);
+                    
+                    // إرجاع الزر للحالة الأصلية
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                    btn.classList.remove('pulse');
+                }
+            } catch (error) {
+                console.error('Error activating permissions:', error);
+                
+                let errorMsg = '❌ حدث خطأ أثناء التفعيل\n\n';
+                if (error.message.includes('Failed to fetch')) {
+                    errorMsg += 'السبب: فشل الاتصال بالخادم\n';
+                    errorMsg += 'الحل: تأكد من اتصال الإنترنت وحاول مرة أخرى';
+                } else {
+                    errorMsg += error.message;
+                }
+                
+                alert(errorMsg);
+                
+                // إرجاع الزر للحالة الأصلية
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                btn.classList.remove('pulse');
+            }
+        }
+
+        function resetForm() {
+            location.reload();
+        }
+
+        function copyText(text) {
+            navigator.clipboard.writeText(text);
+            alert('✅ تم نسخ الرابط!');
+        }
+
+        function getStepDelay(stepId) {
+            // Different delays for different steps (in milliseconds)
+            const delays = {
+                'create': 2000,      // 2s - إنشاء القروب
+                'welcome': 2000,     // 2s - إرسال رسالة
+                'convert': 3000,     // 3s - تحويل لـ Supergroup
+                'history': 2000,     // 2s - تفعيل السجل
+                'pin': 2000,         // 2s - تثبيت
+                'readonly': 2000,    // 2s - صلاحيات
+                'bot': 3000,         // 3s - إضافة بوت
+                'promote': 2000      // 2s - ترقية
+            };
+            return delays[stepId] || 2000;
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function updateProgress() {
+            const percent = Math.round((currentGroupIndex / totalGroups) * 100);
+            document.getElementById('progressBar').style.width = `${percent}%`;
+            document.getElementById('progressBar').textContent = `${percent}%`;
+            document.getElementById('progressCount').textContent = `${currentGroupIndex} من ${totalGroups}`;
+        }
+
+        function copyGroupLink(index) {
+            const url = document.getElementById(`url-${index}`).textContent;
+            navigator.clipboard.writeText(url);
+            alert('✅ تم نسخ الرابط!');
+        }
+        
+        function displayGroups(results) {
+            const listDiv = document.getElementById('groupsList');
+            let html = '<h3>📱 القروبات:</h3>';
+            
+            results.forEach((group, index) => {
+                if (group.success) {
+                    // تحديد الأيقونة والحالة
+                    const statusIcon = group.already_exists ? '♻️' : '✨';
+                    const statusText = group.already_exists ? 'موجود مسبقاً' : 'تم الإنشاء';
+                    const readOnlyBadge = group.read_only ? '<span style="background: #28a745; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 5px;">🔒 للقراءة فقط</span>' : '';
+                    
+                    html += `
+                        <div class="group-item" style="border-left: 4px solid ${group.already_exists ? '#ffc107' : '#28a745'}">
+                            <h4>${statusIcon} ${index + 1}. ${group.group_name}</h4>
+                            <p style="font-size: 12px; color: #666; margin: 5px 0;">
+                                ${statusText} ${readOnlyBadge}
+                            </p>
+                            <div class="group-link">
+                                <input type="text" value="${group.invite_link}" readonly>
+                                <button class="btn btn-primary" onclick="copyLink('${group.invite_link}')">نسخ</button>
+                                <button class="btn btn-success" onclick="openLink('${group.invite_link}')">فتح</button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // عرض الأخطاء
+                    html += `
+                        <div class="group-item" style="border-left: 4px solid #dc3545">
+                            <h4>❌ ${index + 1}. ${group.group_name}</h4>
+                            <p style="color: #dc3545; font-size: 12px;">${group.error}</p>
+                        </div>
+                    `;
+                }
+            });
+            
+            listDiv.innerHTML = html;
+            listDiv.classList.remove('hidden');
+        }
+        
+        async function applyPermissions() {
+            try {
+                const token = localStorage.getItem('access_token');
+                const response = await fetch(`${API_URL}/sections/telegram/apply-permissions/`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                console.log('Permissions applied:', data);
+            } catch (error) {
+                console.error('Error applying permissions:', error);
+            }
+        }
+        
+        function copyLink(link) {
+            navigator.clipboard.writeText(link);
+            alert('✅ تم نسخ الرابط!');
+        }
+        
+        function openLink(link) {
+            window.open(link, '_blank');
+        }
+        
+        // التحقق من الحالة عند تحميل الصفحة
+        checkSessionStatus();
+    </script>
+</body>
+</html>

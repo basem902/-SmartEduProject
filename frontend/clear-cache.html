@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مسح Cache</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #00ADEF 0%, #0088CC 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            text-align: center;
+        }
+        h1 {
+            color: #00ADEF;
+            margin-bottom: 20px;
+        }
+        p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        button {
+            background: linear-gradient(135deg, #00ADEF 0%, #0088CC 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 10px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 173, 239, 0.4);
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧹 مسح Cache و Service Worker</h1>
+        <p>
+            إذا كانت الصفحة لا تعمل بشكل صحيح، اضغط على الأزرار أدناه لحذف Cache القديم وتحديث Service Worker.
+        </p>
+        
+        <button onclick="clearAll()">🗑️ حذف كل شيء</button>
+        <button onclick="clearServiceWorker()">🔄 حذف Service Worker فقط</button>
+        <button onclick="clearCache()">📦 حذف Cache فقط</button>
+        <button onclick="goToJoin()">↩️ العودة لصفحة الانضمام</button>
+        
+        <div id="status" class="status"></div>
+    </div>
+
+    <script>
+        const statusDiv = document.getElementById('status');
+
+        function showStatus(message, type = 'success') {
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            setTimeout(() => {
+                statusDiv.className = 'status';
+            }, 5000);
+        }
+
+        async function clearServiceWorker() {
+            try {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                for (let registration of registrations) {
+                    await registration.unregister();
+                }
+                showStatus('✅ تم حذف Service Workers بنجاح!', 'success');
+            } catch (error) {
+                showStatus('❌ فشل حذف Service Workers: ' + error.message, 'error');
+            }
+        }
+
+        async function clearCache() {
+            try {
+                const cacheNames = await caches.keys();
+                for (let cacheName of cacheNames) {
+                    await caches.delete(cacheName);
+                }
+                showStatus('✅ تم حذف Cache بنجاح!', 'success');
+            } catch (error) {
+                showStatus('❌ فشل حذف Cache: ' + error.message, 'error');
+            }
+        }
+
+        async function clearAll() {
+            try {
+                await clearServiceWorker();
+                await clearCache();
+                showStatus('✅ تم حذف كل شيء بنجاح! يمكنك الآن إعادة تحميل الصفحة.', 'success');
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            } catch (error) {
+                showStatus('❌ حدث خطأ: ' + error.message, 'error');
+            }
+        }
+
+        function goToJoin() {
+            const token = new URLSearchParams(window.location.search).get('token');
+            if (token) {
+                window.location.href = `/pages/join.html?token=${token}`;
+            } else {
+                window.location.href = '/pages/join.html?token=WLdO53U5IRsRpNYLWTblKPSfdZzteFY6VtzYEl4tRJg';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+# WebSocket Support
+channels==4.0.0
+channels-redis==4.1.0
+daphne==4.0.0
+
+# Redis (alternative: use in-memory channel layer for development)
+# redis==5.0.0

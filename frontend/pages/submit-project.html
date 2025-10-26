@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسليم المشروع - SmartEdu</title>
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/submit-project.css">
+    <link rel="stylesheet" href="/assets/css/mobile-responsive.css">
+    
+    <!-- PWA -->
+    <link rel="manifest" href="../manifest.json">
+    <link rel="icon" type="image/png" href="/assets/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192x192.png">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body data-page-type="default">
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <i class="icon">📚</i>
+                <span>SmartEdu</span>
+            </div>
+            <nav class="nav">
+                <a href="/pages/dashboard.html" style="display: inline-flex; align-items: center; gap: 6px;">
+                    <span>←</span>
+                    <span>لوحة التحكم</span>
+                </a>
+                <a href="../index.html">الرئيسية</a>
+                <a href="#" class="active">تسليم مشروع</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Project Info Section -->
+            <section id="projectInfo" class="project-info">
+                <div class="info-card">
+                    <div class="info-header">
+                        <h1 id="projectTitle">جاري التحميل...</h1>
+                        <span id="projectDeadline" class="deadline"></span>
+                    </div>
+                    <div class="info-body">
+                        <div class="info-item">
+                            <label>المادة:</label>
+                            <span id="projectSubject">-</span>
+                        </div>
+                        <div class="info-item">
+                            <label>الصف:</label>
+                            <span id="projectGrade">-</span>
+                        </div>
+                        <div class="info-item">
+                            <label>المعلم:</label>
+                            <span id="projectTeacher">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Instructions -->
+                <div class="instructions-card" id="instructionsCard">
+                    <h3>📋 تعليمات المشروع</h3>
+                    <div id="projectInstructions" class="content">
+                        لا توجد تعليمات محددة
+                    </div>
+                </div>
+
+                <!-- Requirements -->
+                <div class="requirements-card" id="requirementsCard">
+                    <h3>✅ شروط التسليم</h3>
+                    <div id="projectRequirements" class="content">
+                        لا توجد شروط محددة
+                    </div>
+                </div>
+
+                <!-- File Constraints -->
+                <div class="constraints-card">
+                    <h3>📁 متطلبات الملف</h3>
+                    <ul id="fileConstraints">
+                        <li>الحد الأقصى للحجم: <strong id="maxSize">-</strong></li>
+                        <li>الأنواع المسموحة: <strong id="allowedTypes">-</strong></li>
+                        <li>سيتم فحص الملف من الفيروسات</li>
+                        <li>سيتم التحقق من المحتوى بالذكاء الاصطناعي</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Progress Steps -->
+            <div class="progress-steps">
+                <div class="step active" data-step="1">
+                    <div class="step-number">1</div>
+                    <div class="step-label">معلومات الطالب</div>
+                </div>
+                <div class="step" data-step="2">
+                    <div class="step-number">2</div>
+                    <div class="step-label">رمز التحقق OTP</div>
+                </div>
+                <div class="step" data-step="3">
+                    <div class="step-number">3</div>
+                    <div class="step-label">رفع الملف</div>
+                </div>
+                <div class="step" data-step="4">
+                    <div class="step-number">4</div>
+                    <div class="step-label">تأكيد</div>
+                </div>
+            </div>
+
+            <!-- Step 1: Student Info -->
+            <section id="step1" class="form-section active">
+                <div class="form-card">
+                    <h2>معلومات الطالب</h2>
+                    <form id="studentForm">
+                        <div class="form-group">
+                            <label for="studentName">الاسم الكامل *</label>
+                            <input type="text" id="studentName" required 
+                                   placeholder="أدخل اسمك الكامل">
+                        </div>
+                        <div class="form-group">
+                            <label for="studentId">الرقم الأكاديمي *</label>
+                            <input type="text" id="studentId" required 
+                                   placeholder="أدخل رقمك الأكاديمي">
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="history.back()">
+                                رجوع
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                التالي: الحصول على رمز OTP
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Step 2: OTP Verification -->
+            <section id="step2" class="form-section">
+                <div class="form-card">
+                    <h2>التحقق عبر Telegram</h2>
+                    <div class="otp-instructions">
+                        <p>لضمان أنك طالب مسجل في الشعبة:</p>
+                        <ol>
+                            <li>اضغط على الزر أدناه لفتح البوت</li>
+                            <li>سيتحقق البوت من عضويتك في القروب</li>
+                            <li>سيرسل لك رمز التحقق (OTP)</li>
+                            <li>أدخل الرمز في الحقل أدناه</li>
+                        </ol>
+                    </div>
+                    
+                    <div class="otp-action">
+                        <button id="openBotBtn" class="btn btn-telegram" disabled>
+                            <span class="icon">✈️</span>
+                            فتح بوت Telegram
+                        </button>
+                        <p class="hint">سيُفتح في نافذة جديدة</p>
+                    </div>
+
+                    <div class="divider">
+                        <span>ثم</span>
+                    </div>
+
+                    <form id="otpForm">
+                        <div class="form-group">
+                            <label for="otpCode">رمز التحقق (OTP) *</label>
+                            <input type="text" id="otpCode" required 
+                                   placeholder="أدخل الرمز المكون من 6 أرقام"
+                                   maxlength="6" pattern="[0-9]{6}">
+                            <small class="hint">الرمز صالح لمدة 10 دقائق</small>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="prevStep()">
+                                رجوع
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                التالي: رفع الملف
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Step 3: File Upload -->
+            <section id="step3" class="form-section">
+                <div class="form-card">
+                    <h2>رفع ملف المشروع</h2>
+                    
+                    <!-- File Drop Zone -->
+                    <div class="file-drop-zone" id="dropZone">
+                        <input type="file" id="fileInput" accept="*" hidden>
+                        <div class="drop-content">
+                            <div class="icon">📁</div>
+                            <h3>اسحب الملف هنا أو اضغط للاختيار</h3>
+                            <p>الحد الأقصى: <span id="maxSizeText">-</span></p>
+                        </div>
+                    </div>
+
+                    <!-- File Preview -->
+                    <div id="filePreview" class="file-preview hidden">
+                        <div class="file-info">
+                            <div class="file-icon">📄</div>
+                            <div class="file-details">
+                                <div class="file-name" id="fileName">-</div>
+                                <div class="file-size" id="fileSize">-</div>
+                            </div>
+                            <button type="button" class="btn-remove" onclick="removeFile()">
+                                ✕
+                            </button>
+                        </div>
+
+                        <!-- Validation Progress -->
+                        <div id="validationProgress" class="validation-progress hidden">
+                            <h4>جاري التحقق من الملف...</h4>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                            </div>
+                            <div class="validation-steps">
+                                <div class="validation-step" id="checkSize">
+                                    <span class="icon">⏳</span>
+                                    <span>التحقق من الحجم</span>
+                                </div>
+                                <div class="validation-step" id="checkType">
+                                    <span class="icon">⏳</span>
+                                    <span>التحقق من النوع</span>
+                                </div>
+                                <div class="validation-step" id="checkVirus">
+                                    <span class="icon">⏳</span>
+                                    <span>فحص الفيروسات</span>
+                                </div>
+                                <div class="validation-step" id="checkAI">
+                                    <span class="icon">⏳</span>
+                                    <span>التحقق بالذكاء الاصطناعي</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Validation Results -->
+                        <div id="validationResults" class="validation-results hidden">
+                            <!-- سيتم ملؤها ديناميكياً -->
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="prevStep()">
+                            رجوع
+                        </button>
+                        <button type="button" id="uploadBtn" class="btn btn-primary" disabled>
+                            رفع المشروع
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Step 4: Success -->
+            <section id="step4" class="form-section">
+                <div class="success-card">
+                    <div class="success-icon">✅</div>
+                    <h2>تم التسليم بنجاح!</h2>
+                    <p>تم رفع مشروعك بنجاح وسيتم مراجعته قريباً</p>
+                    
+                    <div class="submission-details" id="submissionDetails">
+                        <!-- سيتم ملؤها ديناميكياً -->
+                    </div>
+
+                    <div class="form-actions">
+                        <a href="../index.html" class="btn btn-primary">
+                            العودة للرئيسية
+                        </a>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="loading-spinner"></div>
+        <p id="loadingText">جاري التحميل...</p>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../js/api-config.js"></script>
+    <script src="../js/submit-project.js"></script>
+
+    <!-- ✅ Dark Mode System -->
+    <script src="/assets/js/dark-mode-manager.js"></script>
+    <script src="/assets/js/dark-mode-init.js"></script>
+</body>
+</html>

@@ -1,0 +1,2969 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#00ADEF">
+    
+    <title>إعداد الصفوف والشُعب - مشروعي الذكي</title>
+    
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="/assets/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192x192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <link rel="stylesheet" href="/assets/css/base.css">
+    <link rel="stylesheet" href="/assets/css/dark-mode.css">
+    <link rel="stylesheet" href="/assets/css/animations.css">
+    <link rel="stylesheet" href="/assets/css/sections.css">
+    <link rel="stylesheet" href="/assets/css/mobile-responsive.css">
+    
+    <style>
+        /* Telegram Session Status */
+        .telegram-session-status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 25px;
+            border-radius: 12px;
+            border: 2px solid;
+            transition: all 0.3s ease;
+        }
+        
+        .telegram-session-status.connected {
+            background: #d4edda;
+            border-color: #c3e6cb;
+        }
+        
+        .telegram-session-status.disconnected {
+            background: #fff3cd;
+            border-color: #ffc107;
+        }
+        
+        .telegram-session-status .status-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .telegram-session-status .status-icon {
+            font-size: 2.5rem;
+            line-height: 1;
+        }
+        
+        .telegram-session-status .status-text h4 {
+            margin: 0 0 5px 0;
+            font-size: 1.1rem;
+            color: #333;
+        }
+        
+        .telegram-session-status .status-text p {
+            margin: 0;
+            color: #666;
+            font-size: 0.95rem;
+        }
+        
+        .telegram-session-status .status-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            backdrop-filter: blur(4px);
+        }
+        
+        .modal-dialog {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px;
+        }
+        
+        .modal-dialog .modal-content {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .modal-header h3 {
+            color: #333;
+            font-size: 1.4rem;
+        }
+        
+        .modal-body {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        /* Spinner */
+        .spinner-border {
+            display: inline-block;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: currentColor;
+            border-radius: 50%;
+            animation: spinner-border 1s linear infinite;
+        }
+        
+        @keyframes spinner-border {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Result Items */
+        .result-item {
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-left: 4px solid;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        
+        .result-item.success {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+        
+        .result-item.error {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+        
+        .result-item .result-text {
+            flex: 1;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .result-item .result-link {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        
+        .result-item .result-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body data-page-type="wizard">
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-brand">
+                <h2>📚 إعداد الصفوف والشُعب</h2>
+            </div>
+            <div class="navbar-menu">
+                <a href="/pages/dashboard.html" class="btn btn-secondary">العودة للوحة التحكم</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="sections-container">
+        <!-- Header -->
+        <div class="sections-header fade-in">
+            <h1>🎯 إعداد الصفوف والشُعب</h1>
+            <p>قم بإعداد صفوفك الدراسية وإنشاء روابط ذكية لكل شعبة لاستقبال الطلاب</p>
+        </div>
+
+        <!-- Setup Steps -->
+        <div class="setup-steps fade-in">
+            <div class="step active" data-step="1">
+                <div class="step-number">1</div>
+                <div class="step-title">اختيار المرحلة</div>
+            </div>
+            <div class="step" data-step="2">
+                <div class="step-number">2</div>
+                <div class="step-title">اختيار الصف</div>
+            </div>
+            <div class="step" data-step="3">
+                <div class="step-number">3</div>
+                <div class="step-title">عدد ونوع الشُعب</div>
+            </div>
+            <div class="step" data-step="4">
+                <div class="step-number">4</div>
+                <div class="step-title">اختيار الشُعب</div>
+            </div>
+            <div class="step" data-step="5">
+                <div class="step-number">5</div>
+                <div class="step-title">إنشاء القروبات</div>
+            </div>
+            <div class="step" data-step="6">
+                <div class="step-number">6</div>
+                <div class="step-title">المراجعة والحفظ</div>
+            </div>
+        </div>
+
+        <!-- Step 1: اختيار المرحلة -->
+        <div class="setup-form slide-in" id="step1" style="display: block;">
+            <div class="form-section">
+                <h3>🏫 اختر المرحلة الدراسية</h3>
+                
+                <div class="level-selector">
+                    <label class="level-option">
+                        <input type="radio" name="level" value="elementary">
+                        <div class="level-card">
+                            <span class="level-icon">📖</span>
+                            <div class="level-name">ابتدائي</div>
+                            <div class="level-grades">الصفوف 1-6</div>
+                        </div>
+                    </label>
+
+                    <label class="level-option">
+                        <input type="radio" name="level" value="middle">
+                        <div class="level-card">
+                            <span class="level-icon">📘</span>
+                            <div class="level-name">متوسط</div>
+                            <div class="level-grades">الصفوف 1-3</div>
+                        </div>
+                    </label>
+
+                    <label class="level-option">
+                        <input type="radio" name="level" value="high">
+                        <div class="level-card">
+                            <span class="level-icon">🎓</span>
+                            <div class="level-name">ثانوي</div>
+                            <div class="level-grades">الصفوف 1-3</div>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="form-group" style="margin-top: 30px;">
+                    <label class="form-label">اسم المدرسة *</label>
+                    <input type="text" id="schoolName" class="form-control" 
+                           placeholder="مثال: مدرسة الخمرة المتوسطة الأولى" required>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-primary" id="nextStep1">
+                    التالي →
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 2: اختيار الصف -->
+        <div class="setup-form slide-in" id="step2" style="display: none;">
+            <div class="form-section">
+                <h3>📚 اختر الصف الدراسي</h3>
+                
+                <div class="grade-selector" id="gradeSelector">
+                    <!-- سيتم ملؤها ديناميكياً -->
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" id="prevStep2">
+                    ← السابق
+                </button>
+                <button type="button" class="btn btn-primary" id="nextStep2">
+                    التالي →
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 3: إدخال المادة الدراسية -->
+        <div class="setup-form slide-in" id="step3" style="display: none;">
+            <div class="form-section">
+                <h3>📖 ما هي المادة الدراسية؟</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 30px;">
+                    أدخل اسم المادة التي تدرسها لهذا الصف
+                </p>
+
+                <div class="form-group">
+                    <label for="subjectName">
+                        <span class="icon">📝</span>
+                        اسم المادة
+                    </label>
+                    <input 
+                        type="text" 
+                        id="subjectName" 
+                        class="form-control" 
+                        placeholder="مثال: المهارات الرقمية، الرياضيات، العلوم..."
+                        required
+                    >
+                    <small style="color: var(--text-secondary); display: block; margin-top: 8px;">
+                        💡 ستُستخدم في تسمية القروبات والمشاريع
+                    </small>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" id="prevStep3">
+                    ← السابق
+                </button>
+                <button type="button" class="btn btn-primary" id="nextStep3">
+                    التالي →
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 4: عدد الشُعب ونوع الترقيم -->
+        <div class="setup-form slide-in" id="step4" style="display: none;">
+            <div class="form-section">
+                <h3>🔢 حدد عدد الشُعب ونوع الترقيم</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 30px;">
+                    كم عدد الشُعب وكيف تريد ترقيمها؟
+                </p>
+
+                <!-- عدد الشُعب -->
+                <div style="margin-bottom: 30px;">
+                    <h4 style="margin-bottom: 15px; color: var(--primary-color);">📊 عدد الشُعب:</h4>
+                    <div class="sections-count-input">
+                        <button type="button" class="count-btn" id="decreaseCount">-</button>
+                        <div class="count-display" id="sectionsCount">5</div>
+                        <button type="button" class="count-btn" id="increaseCount">+</button>
+                    </div>
+                    <div style="text-align: center; margin-top: 15px; color: var(--text-secondary);">
+                        <small>الحد الأدنى: 1 | الحد الأقصى: 20</small>
+                    </div>
+                </div>
+
+                <!-- نوع الترقيم -->
+                <div style="margin-bottom: 30px;">
+                    <h4 style="margin-bottom: 15px; color: var(--primary-color);">🏷️ نوع الترقيم:</h4>
+                    <div style="display: grid; gap: 15px; max-width: 500px; margin: 0 auto;">
+                        <label style="display: flex; align-items: center; padding: 20px; background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 12px; cursor: pointer; transition: all 0.3s;">
+                            <input type="radio" name="sectionType" value="arabic" checked
+                                   style="width: 24px; height: 24px; margin-left: 15px; cursor: pointer;">
+                            <div>
+                                <div style="font-size: 18px; font-weight: 600; margin-bottom: 5px;">حروف عربية</div>
+                                <div style="font-size: 14px; color: var(--text-secondary);">أ، ب، ج، د، ه...</div>
+                            </div>
+                        </label>
+                        <label style="display: flex; align-items: center; padding: 20px; background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 12px; cursor: pointer; transition: all 0.3s;">
+                            <input type="radio" name="sectionType" value="numbers"
+                                   style="width: 24px; height: 24px; margin-left: 15px; cursor: pointer;">
+                            <div>
+                                <div style="font-size: 18px; font-weight: 600; margin-bottom: 5px;">أرقام</div>
+                                <div style="font-size: 14px; color: var(--text-secondary);">1، 2، 3، 4، 5...</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" id="prevStep4">
+                    ← السابق
+                </button>
+                <button type="button" class="btn btn-primary" id="nextStep4">
+                    التالي →
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 5: اختيار الشُعب المحددة -->
+        <div class="setup-form slide-in" id="step5" style="display: none;">
+            <div class="form-section">
+                <h3>✅ اختر الشُعب المطلوبة</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    اختر شعبة واحدة أو أكثر أو جميع الشُعب
+                </p>
+
+                <!-- زر تحديد الكل / إلغاء الكل -->
+                <div style="margin-bottom: 20px; text-align: center;">
+                    <button type="button" class="btn btn-secondary" id="selectAllSections" style="margin: 0 5px;">
+                        ☑️ تحديد الكل
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="deselectAllSections" style="margin: 0 5px;">
+                        ☐ إلغاء الكل
+                    </button>
+                </div>
+                
+                <!-- قائمة الشُعب -->
+                <div id="sectionsCheckboxList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; max-width: 800px; margin: 0 auto;">
+                    <!-- سيتم ملؤها ديناميكياً -->
+                </div>
+
+                <div style="text-align: center; margin-top: 25px; padding: 15px; background: var(--info-bg); border-radius: 10px;">
+                    <p style="margin: 0; color: var(--text-secondary);">
+                        <strong id="selectedSectionsCount">0</strong> شُعبة مختارة
+                    </p>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" id="prevStep5">
+                    ← السابق
+                </button>
+                <button type="button" class="btn btn-primary" id="nextStep5" disabled>
+                    التالي →
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 6: إنشاء قروبات Telegram -->
+        <div class="setup-form slide-in" id="step6" style="display: none;">
+            <div class="form-section">
+                <h3>📱 إنشاء قروبات Telegram</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 25px;">
+                    ربط حسابك وإنشاء قروب تلقائي لكل شعبة
+                </p>
+
+                <!-- Session Status Card -->
+                <div id="telegramSessionStatus" class="telegram-session-status disconnected" style="margin: 25px 0;">
+                    <div class="status-info">
+                        <div class="status-icon">⚠️</div>
+                        <div class="status-text">
+                            <h4 style="margin: 0 0 5px 0;">حالة الاتصال</h4>
+                            <p id="sessionStatusMessage" style="margin: 0; color: #666;">جاري التحقق...</p>
+                        </div>
+                    </div>
+                    <div class="status-actions">
+                        <button type="button" class="btn btn-primary" id="linkAccountBtn" onclick="showLinkAccountModal()">
+                            ربط حساب Telegram
+                        </button>
+                        <button type="button" class="btn btn-danger" id="disconnectBtn" style="display: none;" onclick="disconnectTelegram()">
+                            فصل الربط
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Groups Creation Section -->
+                <div id="createGroupsSection" style="opacity: 0.5; pointer-events: none; transition: all 0.3s;">
+                    <!-- ملخص -->
+                    <div class="creation-summary" style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                        <h4 style="margin: 0 0 15px 0; color: #333;">📋 ملخص الإنشاء:</h4>
+                        <div style="display: grid; gap: 10px;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <strong>الصف:</strong>
+                                <span id="summaryGrade">-</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <strong>المادة:</strong>
+                                <span id="summarySubject">-</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <strong>عدد القروبات:</strong>
+                                <span id="summaryCount">-</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <strong>الشُعب:</strong>
+                                <span id="summarySections">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- زر الإنشاء -->
+                    <div style="text-align: center; margin: 30px 0;">
+                        <button type="button" class="btn btn-success" id="createGroupsBtn" 
+                                style="padding: 18px 50px; font-size: 1.2rem; background: #28a745; border: none; border-radius: 12px;">
+                            <span id="createGroupsText">🚀 إنشاء القروبات الآن</span>
+                            <span id="createGroupsSpinner" style="display: none;">
+                                <span class="spinner-border spinner-border-sm"></span> جاري الإنشاء...
+                            </span>
+                        </button>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div id="creationProgress" style="display: none; margin: 20px 0;">
+                        <div class="progress-header" style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span class="progress-title" style="font-weight: 600;">جاري الإنشاء...</span>
+                            <span class="progress-count" id="progressCount">0/0</span>
+                        </div>
+                        <div style="background: #f0f0f0; height: 30px; border-radius: 5px; overflow: hidden;">
+                            <div id="progressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #28a745, #20c997); transition: width 0.3s; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                                <span id="progressText">0%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Results -->
+                    <div id="creationResults" style="display: none; margin-top: 20px;">
+                        <h4 style="color: #28a745; margin-bottom: 15px;">✅ نتائج الإنشاء:</h4>
+                        <div id="resultsList" style="display: grid; gap: 10px;">
+                            <!-- سيتم ملؤها ديناميكياً -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" id="prevStep6">
+                    ← السابق
+                </button>
+                <button type="button" class="btn btn-primary" id="nextStep6" disabled>
+                    التالي →
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 7: المراجعة والحفظ -->
+        <div class="setup-form slide-in" id="step7" style="display: none;">
+            <div class="form-section">
+                <h3>✅ مراجعة البيانات</h3>
+                
+                <div class="summary-grid" id="summaryGrid">
+                    <!-- سيتم ملؤها ديناميكياً -->
+                </div>
+
+                <!-- Sections Preview Table -->
+                <div id="sectionsPreviewContainer" style="margin-top: 30px;">
+                    <h4 style="color: var(--primary-color); margin-bottom: 15px; text-align: center;">
+                        📋 معاينة الشُعب وروابط التيليجرام
+                    </h4>
+                    <div style="overflow-x: auto; border-radius: 12px; border: 2px solid var(--border-color);">
+                        <table id="sectionsPreviewTable" style="width: 100%; border-collapse: collapse; background: var(--card-bg);">
+                            <thead>
+                                <tr style="background: var(--primary-color); color: white;">
+                                    <th style="padding: 12px; text-align: center; border-bottom: 2px solid var(--border-color);">#</th>
+                                    <th style="padding: 12px; text-align: center; border-bottom: 2px solid var(--border-color);">الصف</th>
+                                    <th style="padding: 12px; text-align: center; border-bottom: 2px solid var(--border-color);">الشعبة</th>
+                                    <th style="padding: 12px; text-align: center; border-bottom: 2px solid var(--border-color);">رابط التيليجرام</th>
+                                    <th style="padding: 12px; text-align: center; border-bottom: 2px solid var(--border-color);">الحالة</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sectionsPreviewTableBody">
+                                <!-- سيتم ملؤها ديناميكياً -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <p style="margin-top: 15px; padding: 12px; background: rgba(0, 173, 239, 0.05); border-radius: 8px; text-align: center; color: var(--text-secondary); font-size: 14px;">
+                        💡 تأكد من صحة جميع الروابط قبل الحفظ
+                    </p>
+                </div>
+
+                <!-- Sections list after save -->
+                <div id="sectionsResultsList" style="display: none; margin-top: 30px;">
+                    <h3 style="color: var(--primary-color); margin-bottom: 20px; text-align: center;">
+                        ✅ تم إنشاء الشُعب بنجاح
+                    </h3>
+                    <div id="sectionsCards">
+                        <!-- سيتم ملؤها بعد الحفظ -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" id="prevStep7">
+                    ← السابق
+                </button>
+                <button type="button" class="btn btn-primary" id="saveSetup">
+                    💾 حفظ الصف والشُعب
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+            <div class="spinner"></div>
+            <p>جاري الحفظ...</p>
+        </div>
+    </div>
+
+    <!-- Link Telegram Account Modal -->
+    <div id="linkAccountModal" class="modal-overlay" style="display: none;">
+        <div class="modal-dialog" style="max-width: 500px;">
+            <div class="modal-content">
+                <!-- Header -->
+                <div class="modal-header" style="border-bottom: 1px solid #dee2e6; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin: 0;">📱 ربط حساب Telegram</h3>
+                    <button type="button" onclick="closeLinkAccountModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">&times;</button>
+                </div>
+
+                <!-- Body -->
+                <div class="modal-body" style="padding: 30px;">
+                    <!-- Step 1: إدخال الرقم -->
+                    <div id="linkStep1" style="display: block;">
+                        <p style="color: #666; margin-bottom: 20px; text-align: center;">
+                            أدخل رقم هاتفك المسجل في Telegram
+                        </p>
+                        
+                        <div class="form-group">
+                            <input type="tel" id="linkPhoneNumber" class="form-control" 
+                                   placeholder="+966544711074" 
+                                   style="padding: 15px; font-size: 1.1rem; text-align: center; border: 2px solid #667eea; border-radius: 10px;">
+                            <small style="color: #666; display: block; margin-top: 8px; text-align: center;">
+                                يجب أن يبدأ بـ + متبوعاً بكود الدولة
+                            </small>
+                        </div>
+
+                        <button type="button" onclick="sendVerificationCode()" class="btn btn-primary" 
+                                style="width: 100%; margin-top: 20px; padding: 15px; font-size: 1.1rem;">
+                            📤 إرسال كود التحقق
+                        </button>
+                    </div>
+
+                    <!-- Step 2: إدخال الكود -->
+                    <div id="linkStep2" style="display: none;">
+                        <div style="text-align: center; margin-bottom: 25px;">
+                            <div style="font-size: 48px; margin-bottom: 15px;">📬</div>
+                            <p style="color: #666; margin-bottom: 10px;">
+                                تم إرسال كود التحقق إلى:
+                            </p>
+                            <p id="linkPhoneDisplay" style="font-size: 1.2rem; font-weight: 600; color: #333;">
+                                +966***
+                            </p>
+                        </div>
+
+                        <div class="form-group">
+                            <input type="text" id="linkVerificationCode" class="form-control" 
+                                   placeholder="12345" maxlength="5"
+                                   style="padding: 15px; font-size: 2rem; text-align: center; letter-spacing: 10px; border: 2px solid #667eea; border-radius: 10px; font-weight: 600;">
+                        </div>
+
+                        <div id="linkTimer" style="text-align: center; margin: 15px 0; font-size: 1.1rem; font-weight: 600; color: #667eea;">
+                            ⏱️ <span id="linkTimerValue">01:00</span>
+                        </div>
+
+                        <button type="button" onclick="verifyCode()" class="btn btn-primary" 
+                                style="width: 100%; margin-top: 20px; padding: 15px; font-size: 1.1rem;">
+                            ✅ تحقق من الكود
+                        </button>
+                    </div>
+
+                    <!-- Step 3: كلمة مرور 2FA -->
+                    <div id="linkStep3" style="display: none;">
+                        <div style="text-align: center; margin-bottom: 25px;">
+                            <div style="font-size: 48px; margin-bottom: 15px;">🔒</div>
+                            <h4 style="color: #333; margin-bottom: 10px;">التحقق بخطوتين</h4>
+                            <p style="color: #666;">
+                                حسابك محمي بكلمة مرور. يرجى إدخالها للمتابعة.
+                            </p>
+                        </div>
+
+                        <div class="form-group">
+                            <input type="password" id="link2FAPassword" class="form-control" 
+                                   placeholder="كلمة المرور"
+                                   style="padding: 15px; font-size: 1.1rem; text-align: center; border: 2px solid #667eea; border-radius: 10px;">
+                        </div>
+
+                        <button type="button" onclick="verify2FAPassword()" class="btn btn-primary" 
+                                style="width: 100%; margin-top: 20px; padding: 15px; font-size: 1.1rem;">
+                            ✅ تحقق من كلمة المرور
+                        </button>
+                    </div>
+
+                    <!-- Step 4: نجاح -->
+                    <div id="linkStep4" style="display: none; text-align: center;">
+                        <div style="font-size: 64px; margin-bottom: 20px;">✅</div>
+                        <h3 style="color: #28a745; margin-bottom: 15px;">تم الربط بنجاح!</h3>
+                        <p style="color: #666; margin-bottom: 25px;">
+                            يمكنك الآن إنشاء القروبات تلقائياً
+                        </p>
+                        <button type="button" onclick="closeLinkAccountModal()" class="btn btn-success" 
+                                style="padding: 12px 40px;">
+                            متابعة
+                        </button>
+                    </div>
+
+                    <!-- Loading -->
+                    <div id="linkLoading" style="display: none; text-align: center; padding: 30px 0;">
+                        <div class="spinner-border" style="width: 3rem; height: 3rem; color: #667eea;" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                        <p style="margin-top: 15px; color: #666;">جاري المعالجة...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Telegram Code Verification Modal (القديم - للإنشاء المباشر) -->
+    <div id="telegramCodeModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px; text-align: center;">
+            <h2 style="margin-bottom: 20px;">📱 تحقق من رقم الهاتف</h2>
+            
+            <div id="codeStep1" style="display: block;">
+                <p style="color: var(--text-secondary); margin-bottom: 25px;">
+                    تم إرسال كود التحقق المكون من <strong>5 أرقام</strong> إلى هاتفك
+                </p>
+                <p style="font-size: 18px; font-weight: 600; margin-bottom: 30px;" id="phoneDisplay">
+                    +966***
+                </p>
+                
+                <div style="margin-bottom: 25px;">
+                    <input type="text" id="verificationCode" 
+                           placeholder="أدخل الكود (12345)" 
+                           maxlength="5"
+                           style="width: 200px; font-size: 24px; text-align: center; letter-spacing: 8px; padding: 15px; border: 2px solid var(--primary-color); border-radius: 10px; font-weight: 600;">
+                </div>
+                
+                <div style="margin-bottom: 25px; color: var(--text-secondary);">
+                    <div id="timerDisplay" style="font-size: 16px; font-weight: 600; color: var(--primary-color);">
+                        ⏱️ 01:00
+                    </div>
+                    <p style="font-size: 14px; margin-top: 10px;">
+                        يمكنك التخطي بعد انتهاء العداد
+                    </p>
+                </div>
+                
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button type="button" class="btn btn-primary" id="verifyCodeBtn" disabled>
+                        ✅ تحقق
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="skipCodeBtn" disabled>
+                        ⏭️ تخطي
+                    </button>
+                </div>
+            </div>
+            
+            <div id="codeStep2" style="display: none;">
+                <div style="font-size: 48px; margin-bottom: 20px;">✅</div>
+                <h3 style="color: #28a745; margin-bottom: 15px;">تم التحقق بنجاح!</h3>
+                <p style="color: var(--text-secondary);">جاري إنشاء القروبات...</p>
+                <div class="spinner" style="margin: 20px auto;"></div>
+            </div>
+            
+            <div id="passwordStep" style="display: none;">
+                <div style="font-size: 48px; margin-bottom: 20px;">🔒</div>
+                <h3 style="color: var(--text-primary); margin-bottom: 15px;">التحقق بخطوتين</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    حسابك محمي بالتحقق بخطوتين. يرجى إدخال كلمة المرور.
+                </p>
+                
+                <div style="margin-bottom: 20px;">
+                    <input 
+                        type="password" 
+                        id="twoStepPassword" 
+                        placeholder="كلمة المرور"
+                        style="width: 100%; padding: 12px; font-size: 16px; border: 1px solid #ddd; border-radius: 8px; text-align: center;"
+                    />
+                </div>
+                
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button onclick="skipPasswordVerification()" style="padding: 12px 30px; border: 1px solid #ddd; border-radius: 8px; background: white; cursor: pointer;">
+                        ❌ تخطي
+                    </button>
+                    <button id="verifyPasswordBtn" onclick="verifyTwoStepPassword()" style="padding: 12px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer;">
+                        ✅ تحقق
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/ui.js"></script>
+    <script src="/assets/js/auth.js"></script>
+    <script src="/assets/js/theme.js"></script>
+    <script src="/assets/js/app.js"></script>
+    <script src="/assets/js/sections-api.js"></script>
+    
+    <script>
+        // State Management
+        const setupState = {
+            level: '',
+            gradeNumber: 0,
+            schoolName: '',
+            subject: '', // المادة الدراسية
+            sectionsCount: 5,
+            sectionType: 'arabic', // نوع الترقيم: arabic أو numbers
+            selectedSections: [], // الشُعب المختارة (مثال: ['أ', 'ب', 'ج'] أو [1, 2, 3])
+            sectionLinks: []
+        };
+
+        // ============================================
+        // localStorage Helper Functions
+        // ============================================
+        
+        const STORAGE_KEY = 'pending_section_links';
+        const MAX_AGE_HOURS = 24;
+        
+        /**
+         * حفظ الروابط في localStorage
+         */
+        function saveLinksToLocalStorage(links) {
+            const data = {
+                timestamp: Date.now(),
+                version: '1.0',
+                grade_info: {
+                    level: setupState.level,
+                    gradeNumber: setupState.gradeNumber,
+                    schoolName: setupState.schoolName
+                },
+                sections: setupState.selectedSections,
+                sectionType: setupState.sectionType,
+                links: links
+            };
+            
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+                console.log('💾 localStorage: تم حفظ الروابط بنجاح');
+                console.log('   عدد الروابط:', links.length);
+                console.log('   البيانات:', data);
+                return true;
+            } catch (error) {
+                console.error('❌ localStorage: فشل الحفظ', error);
+                return false;
+            }
+        }
+        
+        /**
+         * قراءة الروابط من localStorage
+         */
+        function loadLinksFromLocalStorage() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            
+            if (!stored) {
+                console.log('ℹ️ localStorage: لا توجد بيانات محفوظة');
+                return null;
+            }
+            
+            try {
+                const data = JSON.parse(stored);
+                
+                console.log('📂 localStorage: تم العثور على بيانات محفوظة');
+                console.log('   الصف المحفوظ:', data.grade_info);
+                console.log('   الصف الحالي:', {
+                    level: setupState.level,
+                    gradeNumber: setupState.gradeNumber,
+                    schoolName: setupState.schoolName
+                });
+                
+                // Validation: التحقق من تطابق الصف
+                if (data.grade_info.level !== setupState.level ||
+                    data.grade_info.gradeNumber !== setupState.gradeNumber) {
+                    console.warn('⚠️ localStorage: البيانات المحفوظة لصف مختلف');
+                    return null;
+                }
+                
+                // Age check: التحقق من عمر البيانات
+                const ageInHours = (Date.now() - data.timestamp) / 3600000;
+                console.log(`   عمر البيانات: ${ageInHours.toFixed(1)} ساعة`);
+                
+                if (ageInHours > MAX_AGE_HOURS) {
+                    console.warn(`⚠️ localStorage: البيانات قديمة (>${MAX_AGE_HOURS}h)`);
+                    clearPendingLinks();
+                    return null;
+                }
+                
+                console.log('✅ localStorage: البيانات صالحة');
+                console.log('   عدد الروابط:', data.links.length);
+                return data.links;
+                
+            } catch (error) {
+                console.error('❌ localStorage: خطأ في القراءة', error);
+                return null;
+            }
+        }
+        
+        /**
+         * حذف الروابط المؤقتة من localStorage
+         */
+        function clearPendingLinks() {
+            try {
+                localStorage.removeItem(STORAGE_KEY);
+                console.log('🧹 localStorage: تم حذف الروابط المؤقتة');
+                return true;
+            } catch (error) {
+                console.error('❌ localStorage: فشل الحذف', error);
+                return false;
+            }
+        }
+        
+        /**
+         * استخراج الروابط من نتائج الإنشاء
+         */
+        function extractLinksFromResults(results) {
+            console.log('🔗 extractLinksFromResults - بدء الاستخراج');
+            console.log('   عدد النتائج:', results.length);
+            
+            const links = results
+                .filter(r => r.success)
+                .map((r, index) => {
+                    // محاولة إيجاد الرابط من جميع الحقول الممكنة
+                    const link = r.invite_link || r.link || r.telegram_link || r.group_link || '';
+                    const groupId = r.chat_id || r.group_id || r.id;
+                    
+                    console.log(`   شعبة ${r.section}:`, {
+                        has_invite_link: !!r.invite_link,
+                        has_link: !!r.link,
+                        has_telegram_link: !!r.telegram_link,
+                        has_group_link: !!r.group_link,
+                        final_link: link ? link.substring(0, 30) + '...' : '(فارغ)',
+                        chat_id: groupId
+                    });
+                    
+                    return {
+                        section_name: r.section,
+                        platform: 'telegram',
+                        telegram_link: link,
+                        chat_id: groupId,
+                        needs_link: !link  // علامة أن الرابط مفقود
+                    };
+                });
+            
+            console.log('🔗 النتيجة النهائية:', {
+                total_results: results.length,
+                successful: results.filter(r => r.success).length,
+                extracted_links: links.length,
+                with_links: links.filter(l => l.telegram_link).length,
+                without_links: links.filter(l => !l.telegram_link).length
+            });
+            
+            // تحذير إذا لم نجد أي روابط
+            if (links.length > 0 && links.filter(l => l.telegram_link).length === 0) {
+                console.warn('⚠️ تحذير: جميع الشُعب بدون روابط!');
+                console.warn('💡 السبب المحتمل: API لا يرجع حقل invite_link');
+                console.warn('🔍 تحقق من Backend Response في الـ Console أعلاه');
+            }
+            
+            return links;
+        }
+
+        // Grade configurations
+        const gradeConfig = {
+            elementary: { count: 6, label: 'ابتدائي' },
+            middle: { count: 3, label: 'متوسط' },
+            high: { count: 3, label: 'ثانوي' }
+        };
+
+        // Current step
+        let currentStep = 1;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            auth.protectPage();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Step 1
+            document.querySelectorAll('input[name="level"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    setupState.level = e.target.value;
+                });
+            });
+
+            document.getElementById('nextStep1').addEventListener('click', () => {
+                if (validateStep1()) {
+                    setupState.schoolName = document.getElementById('schoolName').value.trim();
+                    showGradeSelector();
+                    nextStep();
+                }
+            });
+
+            // Step 2
+            document.getElementById('prevStep2').addEventListener('click', () => prevStep());
+            document.getElementById('nextStep2').addEventListener('click', () => {
+                if (validateStep2()) {
+                    nextStep();
+                }
+            });
+
+            // Step 3 (المادة)
+            document.getElementById('prevStep3').addEventListener('click', () => prevStep());
+            document.getElementById('nextStep3').addEventListener('click', () => {
+                if (validateStep3()) {
+                    setupState.subject = document.getElementById('subjectName').value.trim();
+                    nextStep();
+                }
+            });
+
+            // Step 4 (عدد الشُعب)
+            document.getElementById('prevStep4').addEventListener('click', () => prevStep());
+            document.getElementById('decreaseCount').addEventListener('click', () => changeSectionsCount(-1));
+            document.getElementById('increaseCount').addEventListener('click', () => changeSectionsCount(1));
+            document.getElementById('nextStep4').addEventListener('click', () => {
+                setupState.sectionsCount = parseInt(document.getElementById('sectionsCount').textContent);
+                const sectionType = document.querySelector('input[name="sectionType"]:checked').value;
+                setupState.sectionType = sectionType;
+                createSectionsCheckboxes(setupState.sectionsCount, sectionType);
+                nextStep();
+            });
+
+            // Step 5 (اختيار الشُعب)
+            document.getElementById('prevStep5').addEventListener('click', () => prevStep());
+            document.getElementById('selectAllSections').addEventListener('click', selectAllSections);
+            document.getElementById('deselectAllSections').addEventListener('click', deselectAllSections);
+            document.getElementById('nextStep5').addEventListener('click', () => {
+                if (validateSectionSelection()) {
+                    nextStep();
+                    // التحقق من session عند الدخول لـ Step 6
+                    setTimeout(checkTelegramSession, 300);
+                    // تفعيل زر التالي في Step 6
+                    setTimeout(() => {
+                        document.getElementById('nextStep6').disabled = false;
+                    }, 500);
+                }
+            });
+
+            // Step 6 (Telegram)
+            document.getElementById('prevStep6').addEventListener('click', () => prevStep());
+            document.getElementById('nextStep6').addEventListener('click', () => {
+                showSummary();
+                nextStep();
+            });
+
+            // Step 7 (المراجعة والحفظ)
+            document.getElementById('prevStep7').addEventListener('click', () => prevStep());
+            document.getElementById('saveSetup').addEventListener('click', saveSetup);
+        }
+
+        function validateStep1() {
+            if (!setupState.level) {
+                UI.showToast('يرجى اختيار المرحلة الدراسية', 'warning');
+                return false;
+            }
+            const schoolName = document.getElementById('schoolName').value.trim();
+            if (!schoolName) {
+                UI.showToast('يرجى إدخال اسم المدرسة', 'warning');
+                return false;
+            }
+            return true;
+        }
+
+        function validateStep2() {
+            if (!setupState.gradeNumber) {
+                UI.showToast('يرجى اختيار الصف الدراسي', 'warning');
+                return false;
+            }
+            return true;
+        }
+
+        function validateStep3() {
+            const subjectName = document.getElementById('subjectName').value.trim();
+            if (!subjectName) {
+                UI.showToast('يرجى إدخال اسم المادة', 'warning');
+                return false;
+            }
+            if (subjectName.length < 3) {
+                UI.showToast('اسم المادة يجب أن يكون 3 أحرف على الأقل', 'warning');
+                return false;
+            }
+            return true;
+        }
+
+        function validateStep4() {
+            // التحقق من أن كل شعبة لديها رابط واحد على الأقل
+            const missingLinks = setupState.sectionLinks.filter(link => 
+                !link.whatsapp_link && !link.telegram_link
+            );
+            
+            if (missingLinks.length > 0) {
+                UI.showToast('يرجى إضافة رابط واحد على الأقل لكل شعبة', 'warning');
+                return false;
+            }
+            return true;
+        }
+
+        function showGradeSelector() {
+            const config = gradeConfig[setupState.level];
+            const selector = document.getElementById('gradeSelector');
+            selector.innerHTML = '';
+
+            for (let i = 1; i <= config.count; i++) {
+                const html = `
+                    <label class="grade-option">
+                        <input type="radio" name="grade" value="${i}">
+                        <div class="grade-card">
+                            <span class="grade-number">${i}</span>
+                            <span class="grade-label">الصف ${i}</span>
+                        </div>
+                    </label>
+                `;
+                selector.insertAdjacentHTML('beforeend', html);
+            }
+
+            // Add event listeners
+            document.querySelectorAll('input[name="grade"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    setupState.gradeNumber = parseInt(e.target.value);
+                });
+            });
+        }
+
+        // تغيير عدد الشُعب
+        function changeSectionsCount(delta) {
+            const display = document.getElementById('sectionsCount');
+            let count = parseInt(display.textContent) + delta;
+            count = Math.max(1, Math.min(20, count));
+            display.textContent = count;
+        }
+
+        // إنشاء checkboxes للشُعب
+        function createSectionsCheckboxes(count, type) {
+            const arabicLetters = ['أ', 'ب', 'ج', 'د', 'ه', 'و', 'ز', 'ح', 'ط', 'ي', 'ك', 'ل', 'م', 'ن', 'س', 'ع', 'ف', 'ص', 'ق', 'ر'];
+            const container = document.getElementById('sectionsCheckboxList');
+            container.innerHTML = '';
+            
+            // إنشاء checkboxes بناءً على العدد والنوع
+            for (let i = 0; i < count; i++) {
+                const label = type === 'arabic' ? arabicLetters[i] : (i + 1);
+                const checked = 'checked'; // جميعها محددة افتراضياً
+                const html = `
+                    <label style="display: flex; align-items: center; padding: 15px; background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 10px; cursor: pointer; transition: all 0.3s;">
+                        <input type="checkbox" class="section-checkbox" value="${label}" ${checked} 
+                               style="width: 20px; height: 20px; margin-left: 10px; cursor: pointer;"
+                               onchange="updateSelectedSectionsCount()">
+                        <span style="font-size: 18px; font-weight: 600;">شعبة ${label}</span>
+                    </label>
+                `;
+                container.insertAdjacentHTML('beforeend', html);
+            }
+            
+            updateSelectedSectionsCount();
+        }
+        
+        // تحديد جميع الشُعب
+        function selectAllSections() {
+            document.querySelectorAll('.section-checkbox').forEach(checkbox => {
+                checkbox.checked = true;
+            });
+            updateSelectedSectionsCount();
+        }
+        
+        // إلغاء تحديد جميع الشُعب
+        function deselectAllSections() {
+            document.querySelectorAll('.section-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            updateSelectedSectionsCount();
+        }
+        
+        // تحديث عدد الشُعب المختارة
+        function updateSelectedSectionsCount() {
+            const selected = document.querySelectorAll('.section-checkbox:checked');
+            document.getElementById('selectedSectionsCount').textContent = selected.length;
+            
+            // تفعيل/تعطيل زر التالي
+            document.getElementById('nextStep5').disabled = selected.length === 0;
+        }
+        
+        // التحقق من اختيار الشُعب
+        function validateSectionSelection() {
+            const selected = document.querySelectorAll('.section-checkbox:checked');
+            if (selected.length === 0) {
+                UI.showToast('يرجى اختيار شعبة واحدة على الأقل', 'warning');
+                return false;
+            }
+            
+            // حفظ الشُعب المختارة
+            setupState.selectedSections = Array.from(selected).map(cb => cb.value);
+            
+            console.log('✅ تم حفظ الشُعب المختارة:', setupState.selectedSections);
+            console.log('📊 setupState الكامل:', setupState);
+            
+            return true;
+        }
+
+        // دالة إنشاء القروبات تلقائياً
+        // متغيرات عامة لـ session management
+        let pendingPhoneNumber = '';
+        let pendingPhoneCodeHash = '';
+        let pendingGroupsData = null;
+        
+        async function autoCreateTelegramGroups() {
+            const subjectName = document.getElementById('subjectName').value.trim();
+            const phoneNumber = document.getElementById('phoneNumber').value.trim();
+            
+            // Validation
+            if (!subjectName) {
+                UI.showToast('يجب إدخال اسم المادة', 'warning');
+                document.getElementById('subjectName').focus();
+                return;
+            }
+            
+            if (!phoneNumber) {
+                UI.showToast('يجب إدخال رقم الجوال', 'warning');
+                document.getElementById('phoneNumber').focus();
+                return;
+            }
+            
+            if (!phoneNumber.startsWith('+')) {
+                UI.showToast('رقم الجوال يجب أن يبدأ بـ +', 'warning');
+                document.getElementById('phoneNumber').focus();
+                return;
+            }
+            
+            // بناء اسم الصف
+            const levelLabels = { elementary: 'ابتدائي', middle: 'متوسط', high: 'ثانوي' };
+            const gradeNumbers = ['الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس'];
+            const levelLabel = levelLabels[setupState.level];
+            const gradeText = gradeNumbers[setupState.gradeNumber - 1] || setupState.gradeNumber;
+            const gradeName = `${gradeText} ${levelLabel}`;
+            const sectionsCount = setupState.selectedSections.length;
+            
+            const confirmed = confirm(`⚠️ تأكيد الإنشاء\n\n` +
+                `📋 المعلومات:\n` +
+                `• الصف: ${gradeName}\n` +
+                `• المادة: ${subjectName}\n` +
+                `• عدد الشُعب: ${sectionsCount}\n` +
+                `• الشُعب: ${setupState.selectedSections.join('، ')}\n` +
+                `• رقم الجوال: ${phoneNumber}\n\n` +
+                `⚠️ ملاحظة مهمة:\n` +
+                `إذا كانت أول مرة تستخدم هذا الرقم، قد يُرسل Telegram كود تحقق (5 أرقام) لهاتفك.\n` +
+                `سيظهر لك مربع لإدخال الكود لمدة 60 ثانية.\n\n` +
+                `هل أنت متأكد من المتابعة؟`);
+            
+            if (!confirmed) {
+                return;
+            }
+            
+            // تعطيل الزر وإظهار Spinner
+            const btn = document.getElementById('autoCreateGroups');
+            const text = document.getElementById('autoCreateText');
+            const spinner = document.getElementById('autoCreateSpinner');
+            
+            btn.disabled = true;
+            text.style.display = 'none';
+            spinner.style.display = 'inline-block';
+            
+            // إظهار Progress Bar
+            document.getElementById('creationProgress').style.display = 'block';
+            
+            try {
+                // الحصول على التوكن
+                const token = localStorage.getItem('access_token');
+                if (!token) {
+                    throw new Error('يجب تسجيل الدخول أولاً');
+                }
+                
+                // حفظ البيانات مؤقتاً
+                pendingPhoneNumber = phoneNumber;
+                pendingGroupsData = {
+                    gradeName,
+                    subjectName,
+                    sectionsCount
+                };
+                
+                // API URL
+                const API_URL = 'http://localhost:8000/api';
+                
+                // الخطوة 1: التحقق من Session أو إرسال كود
+                const response = await fetch(`${API_URL}/sections/telegram/session/login/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        phone_number: phoneNumber
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || data.error || 'فشل الاتصال بالسيرفر');
+                }
+                
+                // التحقق من نوع الرد
+                if (data.status === 'already_connected') {
+                    // Session موجود - ننتقل مباشرة للإنشاء
+                    await createGroupsDirectly(phoneNumber, gradeName, subjectName, sectionsCount);
+                    return;
+                }
+                
+                if (data.status === 'code_required' || data.phone_code_hash) {
+                    // يحتاج كود - نُظهر Modal
+                    pendingPhoneCodeHash = data.phone_code_hash;
+                    showCodeVerificationModal(data, phoneNumber, gradeName, subjectName, sectionsCount);
+                    return;
+                }
+                
+            } catch (error) {
+                console.error('Error creating groups:', error);
+                UI.showToast(error.message, 'error');
+                
+                // إعادة تفعيل الزر
+                btn.disabled = false;
+                text.style.display = 'inline-block';
+                spinner.style.display = 'none';
+                document.getElementById('creationProgress').style.display = 'none';
+            }
+        }
+        
+        // دالة إنشاء القروبات مباشرة (بعد التأكد من وجود session)
+        async function createGroupsDirectly(phoneNumber, gradeName, subjectName, sectionsCount) {
+            const API_URL = 'http://localhost:8000/api';
+            const token = localStorage.getItem('access_token');
+            
+            // تحويل العدد إلى array من الحروف العربية
+            const arabicLetters = ['أ', 'ب', 'ج', 'د', 'هـ', 'و', 'ز', 'ح', 'ط', 'ي'];
+            const sectionsArray = arabicLetters.slice(0, sectionsCount);
+            
+            try {
+                const response = await fetch(`${API_URL}/sections/telegram/create-groups-client/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        phone_number: phoneNumber,
+                        grade_name: gradeName,
+                        subject_name: subjectName,
+                        sections: sectionsArray  // إرسال array بدلاً من رقم
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || data.error || 'فشل إنشاء القروبات');
+                }
+                
+                // معالجة النتائج
+                handleGroupsCreation(data);
+                
+                // حفظ الروابط
+                setupState.sectionLinks = data.groups.map((group, index) => ({
+                    section_number: index + 1,
+                    platform: 'telegram',
+                    whatsapp_link: '',
+                    telegram_link: group.invite_link || '',
+                    chat_id: group.chat_id
+                }));
+                
+                document.getElementById('nextStep5').disabled = false;
+                UI.showToast('تم إنشاء القروبات بنجاح! 🎉', 'success');
+                
+            } catch (error) {
+                console.error('Error creating groups:', error);
+                UI.showToast(error.message, 'error');
+            } finally {
+                const btn = document.getElementById('autoCreateGroups');
+                btn.disabled = false;
+                document.getElementById('autoCreateText').style.display = 'inline-block';
+                document.getElementById('autoCreateSpinner').style.display = 'none';
+                document.getElementById('creationProgress').style.display = 'none';
+            }
+        }
+        
+        // إظهار modal التحقق من الكود
+        let verificationTimer = null;
+        
+        function showCodeVerificationModal(data, phoneNumber, gradeName, subjectName, sections) {
+            // حفظ البيانات
+            pendingGroupsData = {
+                phoneNumber,
+                gradeName,
+                subjectName,
+                sections,
+                phone_code_hash: data.phone_code_hash
+            };
+            
+            // عرض رقم الهاتف
+            document.getElementById('phoneDisplay').textContent = phoneNumber;
+            
+            // إظهار Modal
+            document.getElementById('telegramCodeModal').style.display = 'flex';
+            document.getElementById('codeStep1').style.display = 'block';
+            document.getElementById('codeStep2').style.display = 'none';
+            
+            // إخفاء progress من الصفحة الأساسية
+            document.getElementById('creationProgress').style.display = 'none';
+            const btn = document.getElementById('autoCreateGroups');
+            btn.disabled = false;
+            document.getElementById('autoCreateText').style.display = 'inline-block';
+            document.getElementById('autoCreateSpinner').style.display = 'none';
+            
+            // بدء Timer
+            startVerificationTimer();
+            
+            // Event listeners
+            document.getElementById('verificationCode').addEventListener('input', function(e) {
+                const code = e.target.value;
+                document.getElementById('verifyCodeBtn').disabled = code.length !== 5;
+            });
+            
+            document.getElementById('verifyCodeBtn').onclick = verifyTelegramCode;
+            document.getElementById('skipCodeBtn').onclick = skipCodeVerification;
+        }
+        
+        // Timer للعد التنازلي
+        function startVerificationTimer() {
+            let seconds = 60;
+            const timerDisplay = document.getElementById('timerDisplay');
+            const skipBtn = document.getElementById('skipCodeBtn');
+            
+            verificationTimer = setInterval(() => {
+                seconds--;
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                timerDisplay.textContent = `⏱️ ${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                
+                if (seconds <= 0) {
+                    clearInterval(verificationTimer);
+                    timerDisplay.textContent = '⏱️ 00:00';
+                    skipBtn.disabled = false;
+                    skipBtn.style.opacity = '1';
+                    timerDisplay.style.color = '#dc3545';
+                }
+            }, 1000);
+        }
+        
+        // التحقق من الكود
+        async function verifyTelegramCode() {
+            const code = document.getElementById('verificationCode').value;
+            const API_URL = 'http://localhost:8000/api';
+            const token = localStorage.getItem('access_token');
+            
+            try {
+                document.getElementById('verifyCodeBtn').disabled = true;
+                document.getElementById('verifyCodeBtn').textContent = 'جاري التحقق...';
+                
+                // استخدام session/verify بدلاً من verify-code
+                const response = await fetch(`${API_URL}/sections/telegram/session/verify/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        code: code,
+                        phone_number: pendingPhoneNumber,
+                        phone_code_hash: pendingPhoneCodeHash
+                    })
+                });
+                
+                const data = await response.json();
+                
+                // التحقق من password_required
+                if (data.status === 'password_required') {
+                    // يحتاج كلمة مرور Two-Step Verification
+                    clearInterval(verificationTimer);
+                    document.getElementById('codeStep1').style.display = 'none';
+                    showPasswordInput();
+                    return;
+                }
+                
+                if (!response.ok || data.status !== 'success') {
+                    throw new Error(data.message || data.error || 'فشل التحقق من الكود');
+                }
+                
+                // نجح التحقق
+                clearInterval(verificationTimer);
+                document.getElementById('codeStep1').style.display = 'none';
+                document.getElementById('codeStep2').style.display = 'block';
+                
+                // الآن ننشئ القروبات مباشرة
+                setTimeout(() => {
+                    document.getElementById('telegramCodeModal').style.display = 'none';
+                    const { gradeName, subjectName, sectionsCount } = pendingGroupsData;
+                    createGroupsDirectly(pendingPhoneNumber, gradeName, subjectName, sectionsCount);
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Error verifying code:', error);
+                UI.showToast(error.message, 'error');
+                document.getElementById('verifyCodeBtn').disabled = false;
+                document.getElementById('verifyCodeBtn').textContent = '✅ تحقق';
+            }
+        }
+        
+        // تخطي التحقق من الكود
+        function skipCodeVerification() {
+            clearInterval(verificationTimer);
+            document.getElementById('telegramCodeModal').style.display = 'none';
+            UI.showToast('تم تخطي التحقق. يمكنك المحاولة لاحقاً.', 'info');
+        }
+        
+        // إظهار إدخال كلمة المرور
+        function showPasswordInput() {
+            document.getElementById('passwordStep').style.display = 'block';
+            document.getElementById('twoStepPassword').focus();
+        }
+        
+        // التحقق من كلمة المرور
+        async function verifyTwoStepPassword() {
+            const password = document.getElementById('twoStepPassword').value;
+            const API_URL = 'http://localhost:8000/api';
+            const token = localStorage.getItem('access_token');
+            
+            if (!password) {
+                UI.showToast('يرجى إدخال كلمة المرور', 'warning');
+                return;
+            }
+            
+            try {
+                document.getElementById('verifyPasswordBtn').disabled = true;
+                document.getElementById('verifyPasswordBtn').textContent = 'جاري التحقق...';
+                
+                const response = await fetch(`${API_URL}/sections/telegram/session/password/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        phone_number: pendingPhoneNumber,
+                        password: password
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok || data.status !== 'success') {
+                    throw new Error(data.message || data.error || 'فشل التحقق من كلمة المرور');
+                }
+                
+                // نجح التحقق
+                document.getElementById('passwordStep').style.display = 'none';
+                document.getElementById('codeStep2').style.display = 'block';
+                
+                // إنشاء القروبات
+                setTimeout(() => {
+                    document.getElementById('telegramCodeModal').style.display = 'none';
+                    const { gradeName, subjectName, sectionsCount } = pendingGroupsData;
+                    createGroupsDirectly(pendingPhoneNumber, gradeName, subjectName, sectionsCount);
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Error verifying password:', error);
+                UI.showToast(error.message, 'error');
+                document.getElementById('verifyPasswordBtn').disabled = false;
+                document.getElementById('verifyPasswordBtn').textContent = '✅ تحقق';
+            }
+        }
+        
+        // تخطي التحقق من كلمة المرور
+        function skipPasswordVerification() {
+            document.getElementById('telegramCodeModal').style.display = 'none';
+            UI.showToast('تم تخطي التحقق. يجب إيقاف التحقق بخطوتين من إعدادات Telegram.', 'info');
+        }
+        
+        // معالجة نتائج الإنشاء
+        function handleGroupsCreation(data) {
+            const resultsDiv = document.getElementById('creationResults');
+            const groupsList = document.getElementById('groupsList');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            
+            // تحديث Progress Bar
+            progressBar.style.width = '100%';
+            progressText.textContent = '100%';
+            
+            let html = '<table class="table" style="width: 100%; border-collapse: collapse;"><thead><tr style="background: #f8f9fa;">';
+            html += '<th style="padding: 10px; border: 1px solid #ddd;">الشعبة</th>';
+            html += '<th style="padding: 10px; border: 1px solid #ddd;">الحالة</th>';
+            html += '<th style="padding: 10px; border: 1px solid #ddd;">رابط القروب</th></tr></thead><tbody>';
+            
+            const arabicLetters = ['أ', 'ب', 'ج', 'د', 'هـ', 'و', 'ز', 'ح', 'ط', 'ي'];
+            let newCount = 0, existingCount = 0;
+            
+            data.groups.forEach((group, index) => {
+                if (group.success) {
+                    const isExisting = group.already_exists;
+                    const icon = isExisting ? '♻️' : '✨';
+                    const status = isExisting ? 'موجود مسبقاً' : 'تم الإنشاء';
+                    const readOnlyBadge = group.read_only ? ' <span style="background: #28a745; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px;">🔒 للقراءة فقط</span>' : '';
+                    const rowColor = isExisting ? '#fff3cd' : '#d4edda';
+                    
+                    if (isExisting) existingCount++;
+                    else newCount++;
+                    
+                    const link = `<a href="${group.invite_link}" target="_blank" style="color: #667eea;">فتح القروب</a>`;
+                    
+                    html += `<tr style="background: ${rowColor}">
+                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>شعبة ${arabicLetters[index]}</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">${icon} ${status}${readOnlyBadge}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">${link}</td>
+                    </tr>`;
+                } else {
+                    html += `<tr style="background: #f8d7da">
+                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>شعبة ${arabicLetters[index]}</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">❌ فشل</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">${group.error}</td>
+                    </tr>`;
+                }
+            });
+            
+            html += '</tbody></table>';
+            
+            // إظهار الإحصائيات المحسّنة
+            html += `<div style="margin-top: 15px; padding: 15px; background: #e7f3ff; border-left: 4px solid #2196F3; border-radius: 5px;">
+                <strong>📊 الإحصائيات:</strong><br>
+                ✨ قروبات جديدة: ${newCount}<br>
+                ♻️ قروبات موجودة: ${existingCount}<br>
+                ❌ فشل: ${data.statistics.failed}<br>
+                📊 الإجمالي: ${data.statistics.total}
+            </div>`;
+            
+            // إضافة ملاحظة عن Read-Only
+            html += `<div style="margin-top: 10px; padding: 12px; background: #d4edda; border-left: 4px solid #28a745; border-radius: 5px;">
+                <strong>🔒 وضع القراءة فقط مُفعّل:</strong><br>
+                <span style="font-size: 13px; color: #155724;">الأعضاء لا يمكنهم إرسال رسائل. فقط المديرين يستطيعون النشر في القروبات.</span>
+            </div>`;
+            
+            groupsList.innerHTML = html;
+            resultsDiv.style.display = 'block';
+            
+            // إخفاء زر الإنشاء
+            document.getElementById('autoCreateGroups').style.display = 'none';
+            document.getElementById('subjectName').disabled = true;
+        }
+
+        function showSummary() {
+            console.log('📊 Step 6: showSummary - بدء عرض الملخص');
+            
+            // ============================================
+            // محاولة استعادة الروابط من localStorage
+            // ============================================
+            
+            console.log('🔍 فحص setupState.sectionLinks:', {
+                exists: !!setupState.sectionLinks,
+                length: setupState.sectionLinks?.length || 0,
+                empty: !setupState.sectionLinks || setupState.sectionLinks.length === 0
+            });
+            
+            // إذا كانت الروابط فارغة، حاول استعادتها من localStorage
+            if (!setupState.sectionLinks || setupState.sectionLinks.length === 0) {
+                console.log('⚠️ setupState.sectionLinks فارغة، محاولة الاسترجاع من localStorage...');
+                
+                const storedLinks = loadLinksFromLocalStorage();
+                
+                if (storedLinks && storedLinks.length > 0) {
+                    setupState.sectionLinks = storedLinks;
+                    console.log('✅ تم استعادة الروابط من localStorage بنجاح!');
+                    UI.showToast('✅ تم استعادة روابط القروبات', 'success', 3000);
+                } else {
+                    console.warn('❌ لا توجد روابط محفوظة في localStorage');
+                }
+            } else {
+                console.log('✅ setupState.sectionLinks موجودة:', setupState.sectionLinks.length);
+            }
+            
+            const grid = document.getElementById('summaryGrid');
+            const levelLabel = gradeConfig[setupState.level].label;
+            const actualSectionsCount = setupState.selectedSections.length;
+            
+            console.log('📊 البيانات النهائية:', {
+                level: setupState.level,
+                gradeNumber: setupState.gradeNumber,
+                schoolName: setupState.schoolName,
+                sectionsCount: actualSectionsCount,
+                linksCount: setupState.sectionLinks.length
+            });
+            
+            grid.innerHTML = `
+                <div class="summary-card">
+                    <h4>المدرسة</h4>
+                    <div class="summary-value">${setupState.schoolName}</div>
+                </div>
+                <div class="summary-card">
+                    <h4>المرحلة</h4>
+                    <div class="summary-value">${levelLabel}</div>
+                </div>
+                <div class="summary-card">
+                    <h4>الصف</h4>
+                    <div class="summary-value">${setupState.gradeNumber}</div>
+                </div>
+                <div class="summary-card">
+                    <h4>المادة</h4>
+                    <div class="summary-value">📚 ${setupState.subject}</div>
+                </div>
+                <div class="summary-card">
+                    <h4>عدد الشُعب</h4>
+                    <div class="summary-value">${actualSectionsCount}</div>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">
+                        الشُعب: ${setupState.selectedSections.join('، ')}
+                    </div>
+                </div>
+            `;
+            
+            // ملء جدول معاينة الشُعب
+            populateSectionsPreviewTable();
+        }
+
+        function populateSectionsPreviewTable() {
+            const tbody = document.getElementById('sectionsPreviewTableBody');
+            const levelLabel = gradeConfig[setupState.level].label;
+            const gradeDisplay = `${levelLabel} - الصف ${setupState.gradeNumber}`;
+            
+            console.log('📋 populateSectionsPreviewTable - البيانات:');
+            console.log('  selectedSections:', setupState.selectedSections);
+            console.log('  sectionLinks:', setupState.sectionLinks);
+            
+            // تحذير إذا كانت الروابط فارغة
+            if (!setupState.sectionLinks || setupState.sectionLinks.length === 0) {
+                console.warn('⚠️ setupState.sectionLinks فارغة! يجب إنشاء القروبات في الخطوة الخامسة أولاً.');
+            }
+            
+            let html = '';
+            let sectionsWithLinks = 0;
+            let sectionsWithoutLinks = 0;
+            
+            setupState.selectedSections.forEach((sectionName, index) => {
+                // البحث عن رابط Telegram لهذه الشعبة
+                const linkInfo = setupState.sectionLinks.find(
+                    link => link.section_name === sectionName
+                );
+                
+                console.log(`  شعبة ${sectionName}: linkInfo =`, linkInfo);
+                
+                const telegramLink = linkInfo?.telegram_link || '';
+                const hasLink = telegramLink !== '';
+                
+                if (hasLink) sectionsWithLinks++;
+                else sectionsWithoutLinks++;
+                
+                html += `
+                    <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.2s;" onmouseover="this.style.background='rgba(102, 126, 234, 0.05)'" onmouseout="this.style.background='transparent'">
+                        <td style="padding: 12px; text-align: center; font-weight: 600; color: var(--text-secondary);">${index + 1}</td>
+                        <td style="padding: 12px; text-align: center; color: var(--text-color);">${gradeDisplay}</td>
+                        <td style="padding: 12px; text-align: center; font-weight: 600; color: var(--primary-color);">شعبة ${sectionName}</td>
+                        <td style="padding: 12px; text-align: center;">
+                            ${hasLink 
+                                ? `<a href="${telegramLink}" target="_blank" style="color: #0088cc; text-decoration: none; word-break: break-all; font-size: 13px;" title="فتح الرابط">
+                                    📱 ${telegramLink.length > 40 ? telegramLink.substring(0, 40) + '...' : telegramLink}
+                                   </a>`
+                                : '<span style="color: #f59e0b; font-weight: 600;">⚠️ لم يتم إدخال رابط</span>'
+                            }
+                        </td>
+                        <td style="padding: 12px; text-align: center;">
+                            ${hasLink 
+                                ? '<span style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">✅ جاهز</span>'
+                                : '<span style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">⚠️ بدون رابط</span>'
+                            }
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            // إضافة صف الملخص
+            html += `
+                <tr style="background: rgba(102, 126, 234, 0.05); font-weight: 600;">
+                    <td colspan="3" style="padding: 15px; text-align: center; color: var(--primary-color);">
+                        📊 الإجمالي: ${setupState.selectedSections.length} شعبة
+                    </td>
+                    <td style="padding: 15px; text-align: center; color: #10b981;">
+                        ✅ ${sectionsWithLinks} مع روابط
+                    </td>
+                    <td style="padding: 15px; text-align: center; color: #f59e0b;">
+                        ⚠️ ${sectionsWithoutLinks} بدون روابط
+                    </td>
+                </tr>
+            `;
+            
+            tbody.innerHTML = html;
+            
+            // ============================================
+            // عرض رسالة توضيحية إذا كانت جميع الروابط مفقودة
+            // ============================================
+            if (sectionsWithoutLinks > 0 && sectionsWithLinks === 0) {
+                const warningDiv = document.getElementById('sectionsPreviewContainer');
+                const existingWarning = document.getElementById('linksWarningMessage');
+                
+                if (!existingWarning) {
+                    const warningMessage = document.createElement('div');
+                    warningMessage.id = 'linksWarningMessage';
+                    warningMessage.style.cssText = `
+                        margin-top: 15px;
+                        padding: 15px 20px;
+                        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(251, 191, 36, 0.05) 100%);
+                        border: 1px solid rgba(245, 158, 11, 0.3);
+                        border-radius: 12px;
+                        color: #92400e;
+                        font-size: 14px;
+                        line-height: 1.6;
+                    `;
+                    
+                    warningMessage.innerHTML = `
+                        <div style="display: flex; align-items: start; gap: 12px;">
+                            <span style="font-size: 24px;">💡</span>
+                            <div>
+                                <strong style="display: block; margin-bottom: 8px; color: #b45309;">ملاحظة هامة:</strong>
+                                <p style="margin: 0 0 8px 0;">
+                                    القروبات تم إنشاؤها بنجاح في Telegram ✅، لكن الروابط لم تظهر في هذه الخطوة.
+                                </p>
+                                <p style="margin: 0; opacity: 0.9;">
+                                    <strong>لا تقلق!</strong> بعد الحفظ، ستجد جميع الروابط في صفحة 
+                                    <strong style="color: var(--primary-color);">إدارة الصفوف</strong>
+                                    ويمكنك نسخها ومشاركتها مع الطلاب.
+                                </p>
+                            </div>
+                        </div>
+                    `;
+                    
+                    warningDiv.appendChild(warningMessage);
+                    console.log('💡 تم عرض رسالة توضيحية للمستخدم');
+                }
+            }
+        }
+
+        function displaySectionsResults(grade, sectionsWithLinks) {
+            const container = document.getElementById('sectionsCards');
+            const levelLabel = gradeConfig[grade.level].label;
+            
+            let html = `
+                <div style="background: rgba(16, 185, 129, 0.1); padding: 20px; border-radius: 12px; margin-bottom: 25px; text-align: center; border: 2px solid var(--success-color);">
+                    <h4 style="color: var(--success-color); margin-bottom: 10px;">📚 ${grade.school_name}</h4>
+                    <p style="color: var(--text-secondary); margin: 0;">${levelLabel} - الصف ${grade.grade_number}</p>
+                </div>
+                
+                <div style="display: grid; gap: 15px;">
+            `;
+            
+            sectionsWithLinks.forEach(section => {
+                html += `
+                    <div style="background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 12px; padding: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h4 style="margin: 0; color: var(--primary-color); font-size: 18px;">
+                                📋 شعبة ${section.name}
+                            </h4>
+                            ${section.link ? `
+                                <span style="background: var(--success-color); color: white; padding: 5px 12px; border-radius: 20px; font-size: 12px;">
+                                    ✅ تم الربط
+                                </span>
+                            ` : `
+                                <span style="background: var(--warning-color); color: white; padding: 5px 12px; border-radius: 20px; font-size: 12px;">
+                                    ⚠️ بدون رابط
+                                </span>
+                            `}
+                        </div>
+                        
+                        ${section.link ? `
+                            <div style="background: rgba(0, 136, 204, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                                <p style="margin: 0 0 8px 0; font-size: 13px; color: var(--text-secondary); font-weight: 600;">
+                                    📱 رابط تيليجرام:
+                                </p>
+                                <a href="${section.link}" target="_blank" style="color: #0088cc; word-break: break-all; font-size: 14px; text-decoration: none;">
+                                    ${section.link}
+                                </a>
+                            </div>
+                            
+                            <div style="display: flex; gap: 10px;">
+                                <button 
+                                    class="btn btn-sm" 
+                                    style="flex: 1; background: #0088cc; color: white;"
+                                    onclick="window.open('${section.link}', '_blank')"
+                                    title="فتح في تيليجرام">
+                                    ✈️ فتح التطبيق
+                                </button>
+                                <button 
+                                    class="btn btn-sm" 
+                                    style="flex: 1; background: var(--secondary-color); color: white;"
+                                    onclick="copyLinkToClipboard('${section.link}', '${section.name}')"
+                                    title="نسخ الرابط">
+                                    📋 نسخ الرابط
+                                </button>
+                            </div>
+                        ` : `
+                            <p style="margin: 0; color: var(--text-secondary); font-size: 14px; text-align: center; padding: 15px;">
+                                لا يوجد رابط تيليجرام لهذه الشعبة
+                            </p>
+                        `}
+                    </div>
+                `;
+            });
+            
+            html += `
+                </div>
+                
+                <div style="margin-top: 25px; padding: 15px; background: rgba(102, 126, 234, 0.1); border-radius: 10px; text-align: center;">
+                    <p style="margin: 0; color: var(--text-secondary); font-size: 14px;">
+                        🔄 سيتم التوجيه إلى صفحة الإدارة بعد 5 ثوان...
+                    </p>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        async function copyLinkToClipboard(link, sectionName) {
+            try {
+                await navigator.clipboard.writeText(link);
+                UI.showToast(`✅ تم نسخ رابط شعبة ${sectionName}`, 'success');
+            } catch (error) {
+                // Fallback
+                const textarea = document.createElement('textarea');
+                textarea.value = link;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                UI.showToast(`✅ تم نسخ رابط شعبة ${sectionName}`, 'success');
+            }
+        }
+
+        async function saveSetup() {
+            const btn = document.getElementById('saveSetup');
+            btn.disabled = true;
+            btn.textContent = 'جاري الحفظ...';
+            document.getElementById('loadingOverlay').style.display = 'flex';
+
+            try {
+                // 1. إنشاء الصف مع الشُعب المختارة فقط
+                const gradeData = {
+                    level: setupState.level,
+                    grade_number: setupState.gradeNumber,
+                    school_name: setupState.schoolName,
+                    subject: setupState.subject,  // 🆕 المادة الدراسية
+                    sections_list: setupState.selectedSections  // 🆕 إرسال القائمة المختارة فقط
+                };
+
+                console.log('📤 Sending grade data:', gradeData);
+                console.log('✅ Selected sections:', setupState.selectedSections);
+
+                const gradeResult = await sectionsAPI.setupGrade(gradeData);
+                console.log('✅ Grade created:', gradeResult);
+                console.log(`📊 Created ${gradeResult.sections_count} sections`);
+                
+                // 2. إعداد روابط الشُعب
+                const sections = await sectionsAPI.getGradeSections(gradeResult.grade.id);
+                console.log('📋 Sections retrieved:', sections);
+                
+                // مطابقة كل section مع الرابط الصحيح بناءً على اسم الشعبة
+                const sectionsWithLinks = [];
+                for (const section of sections.sections) {
+                    const sectionName = section.section_name;
+                    
+                    // البحث عن الرابط المناسب لهذه الشعبة
+                    const linkInfo = setupState.sectionLinks.find(link => link.section_name === sectionName);
+                    
+                    let telegramLink = null;
+                    if (linkInfo && linkInfo.telegram_link) {
+                        const linkData = {
+                            section_id: section.id,
+                            platform: 'telegram',
+                            telegram_link: linkInfo.telegram_link,
+                            chat_id: linkInfo.chat_id  // ✅ إضافة chat_id
+                        };
+                        
+                        console.log('✅ Setting up link for section:', sectionName, linkData);
+                        await sectionsAPI.setupSectionLink(linkData);
+                        telegramLink = linkInfo.telegram_link;
+                    }
+                    
+                    sectionsWithLinks.push({
+                        name: sectionName,
+                        link: telegramLink
+                    });
+                }
+
+                // إخفاء الجدول وعرض النتائج
+                document.getElementById('sectionsPreviewContainer').style.display = 'none';
+                document.getElementById('sectionsResultsList').style.display = 'block';
+                
+                // ملء بطاقات الشُعب
+                displaySectionsResults(gradeResult.grade, sectionsWithLinks);
+                
+                // تغيير نص الزر
+                btn.textContent = '✅ تم الحفظ بنجاح';
+                btn.style.background = 'var(--success-color)';
+                
+                // ============================================
+                // تنظيف localStorage بعد الحفظ الناجح
+                // ============================================
+                clearPendingLinks();
+                console.log('✅ تم حذف البيانات المؤقتة من localStorage');
+                
+                UI.showToast('✅ تم إنشاء الصف والشُعب بنجاح!', 'success', 3000);
+                
+                // إعادة توجيه بعد 5 ثواني
+                setTimeout(() => {
+                    window.location.href = '/pages/sections-manage.html';
+                }, 5000);
+
+            } catch (error) {
+                console.error('Save setup error:', error);
+                UI.showToast('حدث خطأ: ' + error.message, 'error');
+                btn.disabled = false;
+                btn.textContent = '💾 حفظ الصف والشُعب';
+            } finally {
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }
+        }
+
+        function nextStep() {
+            document.getElementById(`step${currentStep}`).style.display = 'none';
+            currentStep++;
+            document.getElementById(`step${currentStep}`).style.display = 'block';
+            updateStepIndicator();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function prevStep() {
+            document.getElementById(`step${currentStep}`).style.display = 'none';
+            currentStep--;
+            document.getElementById(`step${currentStep}`).style.display = 'block';
+            updateStepIndicator();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // تفعيل زر التالي في Step 6 (إذا كان المستخدم عائد من Step 7)
+            if (currentStep === 6) {
+                document.getElementById('nextStep6').disabled = false;
+            }
+        }
+
+        function updateStepIndicator() {
+            document.querySelectorAll('.step').forEach((step, index) => {
+                const stepNum = index + 1;
+                step.classList.remove('active', 'completed');
+                
+                if (stepNum < currentStep) {
+                    step.classList.add('completed');
+                } else if (stepNum === currentStep) {
+                    step.classList.add('active');
+                }
+            });
+        }
+        
+        // ====== Telegram Session Management ======
+        
+        const API_URL = 'http://localhost:8000/api';
+        let linkedPhoneNumber = '';
+        let phoneCodeHash = '';
+        let linkTimer = null;
+        
+        // التحقق من حالة Session عند دخول Step 5
+        async function checkTelegramSession() {
+            const phone = localStorage.getItem('telegram_phone');
+            
+            if (!phone) {
+                showDisconnectedState();
+                return;
+            }
+            
+            try {
+                const token = localStorage.getItem('access_token');
+                const response = await fetch(`${API_URL}/sections/telegram/session/status/?phone_number=${encodeURIComponent(phone)}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.is_connected) {
+                    linkedPhoneNumber = phone;
+                    showConnectedState(phone);
+                } else {
+                    showDisconnectedState();
+                }
+            } catch (error) {
+                console.error('Error checking session:', error);
+                showDisconnectedState();
+            }
+        }
+        
+        // عرض حالة متصل
+        function showConnectedState(phone) {
+            const statusDiv = document.getElementById('telegramSessionStatus');
+            statusDiv.className = 'telegram-session-status connected';
+            
+            const statusIcon = statusDiv.querySelector('.status-icon');
+            const statusMessage = document.getElementById('sessionStatusMessage');
+            const linkBtn = document.getElementById('linkAccountBtn');
+            const disconnectBtn = document.getElementById('disconnectBtn');
+            
+            statusIcon.textContent = '✅';
+            statusMessage.textContent = `متصل بالحساب: ${phone}`;
+            linkBtn.style.display = 'none';
+            disconnectBtn.style.display = 'inline-block';
+            
+            // تفعيل قسم الإنشاء
+            const createSection = document.getElementById('createGroupsSection');
+            createSection.style.opacity = '1';
+            createSection.style.pointerEvents = 'auto';
+            
+            // تحديث الملخص
+            updateCreationSummary();
+        }
+        
+        // عرض حالة غير متصل
+        function showDisconnectedState() {
+            const statusDiv = document.getElementById('telegramSessionStatus');
+            statusDiv.className = 'telegram-session-status disconnected';
+            
+            const statusIcon = statusDiv.querySelector('.status-icon');
+            const statusMessage = document.getElementById('sessionStatusMessage');
+            const linkBtn = document.getElementById('linkAccountBtn');
+            const disconnectBtn = document.getElementById('disconnectBtn');
+            
+            statusIcon.textContent = '⚠️';
+            statusMessage.textContent = 'يرجى ربط حسابك بـ Telegram أولاً';
+            linkBtn.style.display = 'inline-block';
+            disconnectBtn.style.display = 'none';
+            
+            // تعطيل قسم الإنشاء
+            const createSection = document.getElementById('createGroupsSection');
+            createSection.style.opacity = '0.5';
+            createSection.style.pointerEvents = 'none';
+        }
+        
+        // فتح Modal ربط الحساب
+        function showLinkAccountModal() {
+            document.getElementById('linkAccountModal').style.display = 'flex';
+            resetLinkModal();
+        }
+        
+        // إغلاق Modal
+        function closeLinkAccountModal() {
+            document.getElementById('linkAccountModal').style.display = 'none';
+            if (linkTimer) {
+                clearInterval(linkTimer);
+            }
+            
+            // إعادة فحص الحالة
+            checkTelegramSession();
+        }
+        
+        // إعادة تعيين Modal
+        function resetLinkModal() {
+            document.getElementById('linkStep1').style.display = 'block';
+            document.getElementById('linkStep2').style.display = 'none';
+            document.getElementById('linkStep3').style.display = 'none';
+            document.getElementById('linkStep4').style.display = 'none';
+            document.getElementById('linkLoading').style.display = 'none';
+            document.getElementById('linkPhoneNumber').value = '';
+            document.getElementById('linkVerificationCode').value = '';
+            document.getElementById('link2FAPassword').value = '';
+        }
+        
+        // إرسال كود التحقق
+        async function sendVerificationCode() {
+            const phone = document.getElementById('linkPhoneNumber').value.trim();
+            
+            if (!phone) {
+                UI.showToast('يرجى إدخال رقم الهاتف', 'warning');
+                return;
+            }
+            
+            if (!phone.startsWith('+')) {
+                UI.showToast('رقم الهاتف يجب أن يبدأ بـ +', 'warning');
+                return;
+            }
+            
+            linkedPhoneNumber = phone;
+            
+            // إظهار Loading
+            document.getElementById('linkStep1').style.display = 'none';
+            document.getElementById('linkLoading').style.display = 'block';
+            
+            try {
+                const token = localStorage.getItem('access_token');
+                const response = await fetch(`${API_URL}/sections/telegram/session/login/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ phone_number: phone })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || data.error || 'فشل إرسال الكود');
+                }
+                
+                if (data.status === 'already_connected') {
+                    // متصل بالفعل
+                    linkedPhoneNumber = phone;
+                    localStorage.setItem('telegram_phone', phone);
+                    document.getElementById('linkLoading').style.display = 'none';
+                    document.getElementById('linkStep4').style.display = 'block';
+                    setTimeout(closeLinkAccountModal, 2000);
+                    return;
+                }
+                
+                if (data.status === 'code_required' || data.phone_code_hash) {
+                    phoneCodeHash = data.phone_code_hash;
+                    
+                    // الانتقال لخطوة الكود
+                    document.getElementById('linkLoading').style.display = 'none';
+                    document.getElementById('linkStep2').style.display = 'block';
+                    document.getElementById('linkPhoneDisplay').textContent = phone;
+                    
+                    // بدء العد التنازلي
+                    startLinkTimer();
+                    
+                    UI.showToast('تم إرسال الكود إلى Telegram', 'success');
+                }
+                
+            } catch (error) {
+                console.error('Error sending code:', error);
+                UI.showToast(error.message, 'error');
+                document.getElementById('linkLoading').style.display = 'none';
+                document.getElementById('linkStep1').style.display = 'block';
+            }
+        }
+        
+        // بدء عداد الكود
+        function startLinkTimer() {
+            let timeLeft = 60;
+            const timerValue = document.getElementById('linkTimerValue');
+            
+            linkTimer = setInterval(() => {
+                timeLeft--;
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                timerValue.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(linkTimer);
+                    timerValue.textContent = 'انتهى الوقت';
+                }
+            }, 1000);
+        }
+        
+        // التحقق من الكود
+        async function verifyCode() {
+            const code = document.getElementById('linkVerificationCode').value.trim();
+            
+            if (!code || code.length !== 5) {
+                UI.showToast('يرجى إدخال كود مكون من 5 أرقام', 'warning');
+                return;
+            }
+            
+            // إظهار Loading
+            document.getElementById('linkStep2').style.display = 'none';
+            document.getElementById('linkLoading').style.display = 'block';
+            
+            try {
+                const token = localStorage.getItem('access_token');
+                const response = await fetch(`${API_URL}/sections/telegram/session/verify/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        phone_number: linkedPhoneNumber,
+                        code: code,
+                        phone_code_hash: phoneCodeHash
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || data.error || 'فشل التحقق');
+                }
+                
+                if (data.status === 'password_required') {
+                    // يحتاج كلمة مرور 2FA
+                    document.getElementById('linkLoading').style.display = 'none';
+                    document.getElementById('linkStep3').style.display = 'block';
+                    return;
+                }
+                
+                if (data.status === 'success') {
+                    // نجح!
+                    localStorage.setItem('telegram_phone', linkedPhoneNumber);
+                    document.getElementById('linkLoading').style.display = 'none';
+                    document.getElementById('linkStep4').style.display = 'block';
+                    
+                    UI.showToast('تم ربط حسابك بنجاح!', 'success');
+                    
+                    setTimeout(closeLinkAccountModal, 2000);
+                }
+                
+            } catch (error) {
+                console.error('Error verifying code:', error);
+                UI.showToast(error.message, 'error');
+                document.getElementById('linkLoading').style.display = 'none';
+                document.getElementById('linkStep2').style.display = 'block';
+            }
+        }
+        
+        // التحقق من كلمة مرور 2FA
+        async function verify2FAPassword() {
+            const password = document.getElementById('link2FAPassword').value.trim();
+            
+            if (!password) {
+                UI.showToast('يرجى إدخال كلمة المرور', 'warning');
+                return;
+            }
+            
+            // إظهار Loading
+            document.getElementById('linkStep3').style.display = 'none';
+            document.getElementById('linkLoading').style.display = 'block';
+            
+            try {
+                const token = localStorage.getItem('access_token');
+                const response = await fetch(`${API_URL}/sections/telegram/session/password/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        phone_number: linkedPhoneNumber,
+                        password: password
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || data.error || 'فشل التحقق من كلمة المرور');
+                }
+                
+                if (data.status === 'success') {
+                    // نجح!
+                    localStorage.setItem('telegram_phone', linkedPhoneNumber);
+                    document.getElementById('linkLoading').style.display = 'none';
+                    document.getElementById('linkStep4').style.display = 'block';
+                    
+                    UI.showToast('تم ربط حسابك بنجاح!', 'success');
+                    
+                    setTimeout(closeLinkAccountModal, 2000);
+                }
+                
+            } catch (error) {
+                console.error('Error verifying password:', error);
+                UI.showToast(error.message, 'error');
+                document.getElementById('linkLoading').style.display = 'none';
+                document.getElementById('linkStep3').style.display = 'block';
+            }
+        }
+        
+        // فصل ربط Telegram
+        async function disconnectTelegram() {
+            if (!confirm('هل أنت متأكد من فصل ربط حساب Telegram؟\n\nستحتاج إلى إعادة الربط لإنشاء القروبات.')) {
+                return;
+            }
+            
+            try {
+                const token = localStorage.getItem('access_token');
+                const phone = localStorage.getItem('telegram_phone');
+                
+                const response = await fetch(`${API_URL}/sections/telegram/session/disconnect/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ phone_number: phone })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok && response.status !== 404) {
+                    throw new Error(data.message || data.error || 'فشل فصل الربط');
+                }
+                
+                localStorage.removeItem('telegram_phone');
+                linkedPhoneNumber = '';
+                showDisconnectedState();
+                UI.showToast('تم فصل الربط بنجاح', 'success');
+                
+            } catch (error) {
+                console.error('Error disconnecting:', error);
+                UI.showToast(error.message, 'error');
+            }
+        }
+        
+        // تحديث ملخص الإنشاء
+        function updateCreationSummary() {
+            const subjectName = getSubjectName();
+            const subjectsText = subjectName || '-';
+            
+            // بناء اسم الصف
+            const levelLabels = { elementary: 'ابتدائي', middle: 'متوسط', high: 'ثانوي' };
+            const gradeNumbers = ['الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس'];
+            const levelLabel = levelLabels[setupState.level];
+            const gradeText = gradeNumbers[setupState.gradeNumber - 1] || setupState.gradeNumber;
+            const gradeName = `${gradeText} ${levelLabel}`;
+            
+            const sectionsCount = setupState.selectedSections.length;
+            const sectionsText = setupState.selectedSections.join('، ') || '-';
+            
+            document.getElementById('summaryGrade').textContent = gradeName;
+            document.getElementById('summarySubject').textContent = subjectsText;
+            document.getElementById('summaryCount').textContent = sectionsCount;
+            document.getElementById('summarySections').textContent = sectionsText;
+        }
+        
+        // إنشاء القروبات
+        // ============================================
+        // دوال معالجة المواد
+        // ============================================
+        
+        /**
+         * الحصول على اسم المادة المدخل
+         */
+        function getSubjectName() {
+            const subjectInput = document.getElementById('subjectName');
+            return subjectInput ? subjectInput.value.trim() : '';
+        }
+        
+        /**
+         * تحديث عداد المواد (لم يعد مستخدماً - تم الاحتفاظ به للتوافق)
+         */
+        function updateSelectedSubjectsCount() {
+            // لم يعد هناك حاجة لهذه الدالة مع حقل النص
+            // تحديث الملخص
+            if (linkedPhoneNumber) {
+                updateCreationSummary();
+            }
+        }
+        
+        /**
+         * حفظ المواد في قاعدة البيانات
+         */
+        async function saveSubjectsToDatabase(subjects, results) {
+            try {
+                const token = localStorage.getItem('access_token');
+                const gradeId = setupState.gradeId;
+                
+                // استخراج IDs الشُعب الناجحة فقط
+                const successfulSections = results
+                    .filter(r => r.success)
+                    .map(r => r.section);
+                
+                // الحصول على section_ids من setupState
+                // نحتاج section IDs من الـ API response في step 4
+                const sectionIds = setupState.sectionIds || [];
+                
+                if (sectionIds.length === 0) {
+                    console.warn('⚠️ لا توجد section IDs - لن يتم حفظ المواد');
+                    return;
+                }
+                
+                console.log('📤 حفظ المواد:', {
+                    grade_id: gradeId,
+                    section_ids: sectionIds,
+                    subject_names: subjects
+                });
+                
+                const response = await fetch(`${API_URL}/sections/subjects/assign/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        grade_id: gradeId,
+                        section_ids: sectionIds,
+                        subject_names: subjects
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    console.log('✅ تم حفظ المواد بنجاح:', data);
+                    UI.showToast(`✅ تم حفظ ${data.created} مادة جديدة`, 'success', 3000);
+                } else {
+                    console.error('❌ فشل حفظ المواد:', data);
+                    UI.showToast(`⚠️ ${data.error}`, 'warning');
+                }
+                
+            } catch (error) {
+                console.error('❌ خطأ في حفظ المواد:', error);
+                throw error;
+            }
+        }
+        
+        // Event listener لحقل المادة
+        const subjectInput = document.getElementById('subjectName');
+        if (subjectInput) {
+            subjectInput.addEventListener('input', () => {
+                if (linkedPhoneNumber) {
+                    updateCreationSummary();
+                }
+            });
+        }
+        
+        document.getElementById('createGroupsBtn').addEventListener('click', createTelegramGroupsNow);
+        
+        async function createTelegramGroupsNow() {
+            // التحقق من اسم المادة
+            const subjectName = getSubjectName();
+            if (!subjectName) {
+                UI.showToast('يرجى إدخال اسم المادة', 'warning');
+                document.getElementById('subjectName').focus();
+                return;
+            }
+            
+            const phone = localStorage.getItem('telegram_phone');
+            if (!phone) {
+                UI.showToast('يرجى ربط حسابك بـ Telegram أولاً', 'warning');
+                return;
+            }
+            
+            // تأكيد
+            if (!confirm(`هل أنت متأكد من إنشاء ${setupState.selectedSections.length} قروبات؟`)) {
+                return;
+            }
+            
+            // تعطيل الزر
+            const btn = document.getElementById('createGroupsBtn');
+            const btnText = document.getElementById('createGroupsText');
+            const btnSpinner = document.getElementById('createGroupsSpinner');
+            
+            btn.disabled = true;
+            btnText.style.display = 'none';
+            btnSpinner.style.display = 'inline-block';
+            
+            // إظهار Progress
+            document.getElementById('creationProgress').style.display = 'block';
+            document.getElementById('creationResults').style.display = 'none';
+            
+            try {
+                // بناء اسم الصف
+                console.log('📝 اسم المادة:', subjectName); // Debug log
+                const levelLabels = { elementary: 'ابتدائي', middle: 'متوسط', high: 'ثانوي' };
+                const gradeNumbers = ['الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس'];
+                const levelLabel = levelLabels[setupState.level];
+                const gradeText = gradeNumbers[setupState.gradeNumber - 1] || setupState.gradeNumber;
+                const gradeName = `${gradeText} ${levelLabel}`;
+                
+                const token = localStorage.getItem('access_token');
+                const totalSections = setupState.selectedSections.length;
+                const results = [];
+                
+                // إنشاء كل قروب على حدة
+                for (let i = 0; i < totalSections; i++) {
+                    const section = setupState.selectedSections[i];
+                    
+                    // تحديث Progress
+                    const progressBar = document.getElementById('progressBar');
+                    const progressText = document.getElementById('progressText');
+                    const progressCount = document.getElementById('progressCount');
+                    const progress = Math.round(((i + 1) / totalSections) * 100);
+                    
+                    progressBar.style.width = `${progress}%`;
+                    progressText.textContent = `${progress}%`;
+                    progressCount.textContent = `${i + 1}/${totalSections}`;
+                    
+                    try {
+                        // استدعاء API لكل شعبة
+                        const response = await fetch(`${API_URL}/sections/telegram/create-single-group/`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({
+                                phone_number: phone,
+                                grade_name: gradeName,
+                                subject_name: subjectName,
+                                school_name: setupState.schoolName || 'المدرسة',
+                                section: section
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        console.log(`📡 API Response لشعبة ${section}:`, data);
+                        
+                        if (response.ok) {
+                            results.push({
+                                success: true,
+                                section: section,
+                                invite_link: data.invite_link || data.link || data.telegram_link,
+                                link: data.link,
+                                telegram_link: data.telegram_link,
+                                group_link: data.group_link,
+                                chat_id: data.chat_id || data.group_id,
+                                group_id: data.group_id,
+                                full_data: data  // حفظ البيانات الكاملة للفحص
+                            });
+                        } else {
+                            results.push({
+                                success: false,
+                                section: section,
+                                error: data.message || data.error || 'فشل الإنشاء'
+                            });
+                        }
+                        
+                        // تأخير بسيط بين الطلبات (1 ثانية)
+                        if (i < totalSections - 1) {
+                            await new Promise(resolve => setTimeout(resolve, 1000));
+                        }
+                        
+                    } catch (error) {
+                        results.push({
+                            success: false,
+                            section: section,
+                            error: error.message
+                        });
+                    }
+                }
+                
+                console.log('📦 نتائج إنشاء القروبات:', results);
+                console.log('📦 أول نتيجة (للفحص):', results[0]);
+                
+                // ============================================
+                // استخراج وحفظ الروابط
+                // ============================================
+                
+                // 1. استخراج الروابط من النتائج
+                let extractedLinks = extractLinksFromResults(results);
+                
+                console.log('🔗 الروابط المستخرجة:', {
+                    count: extractedLinks.length,
+                    with_links: extractedLinks.filter(l => l.telegram_link).length,
+                    without_links: extractedLinks.filter(l => !l.telegram_link).length
+                });
+                
+                // ============================================
+                // Fallback: إذا لم نحصل على روابط، احفظ بدون روابط
+                // سيتم ملؤها لاحقاً من sections-manage أو يدوياً
+                // ============================================
+                
+                if (extractedLinks.length === 0) {
+                    console.warn('⚠️ لم يتم استخراج أي روابط من API Response');
+                    console.warn('💡 سيتم إنشاء placeholder links للشُعب');
+                    
+                    // إنشاء placeholder للشُعب الناجحة
+                    extractedLinks = results
+                        .filter(r => r.success)
+                        .map(r => ({
+                            section_name: r.section,
+                            platform: 'telegram',
+                            telegram_link: '',  // فارغ - سيتم ملؤه لاحقاً
+                            chat_id: r.chat_id || r.group_id,
+                            needs_link: true  // علامة أن الرابط مفقود
+                        }));
+                    
+                    console.log('📝 تم إنشاء placeholders:', extractedLinks.length);
+                }
+                
+                // 2. حفظ في setupState (Memory)
+                setupState.sectionLinks = extractedLinks;
+                console.log('✅ setupState: تم حفظ الروابط في الذاكرة');
+                console.log('   عدد الروابط:', setupState.sectionLinks.length);
+                console.log('   البيانات:', setupState.sectionLinks);
+                
+                // 3. حفظ نسخة احتياطية في localStorage
+                if (extractedLinks.length > 0) {
+                    const saved = saveLinksToLocalStorage(extractedLinks);
+                    if (saved) {
+                        const linksCount = extractedLinks.filter(l => l.telegram_link).length;
+                        if (linksCount > 0) {
+                            UI.showToast(`💾 تم حفظ ${linksCount} روابط`, 'info', 2000);
+                        } else {
+                            console.log('💡 الروابط غير موجودة في API Response');
+                            console.log('📌 الحل: الروابط ستكون متاحة في sections-manage بعد الحفظ');
+                            UI.showToast('💾 تم حفظ بيانات الشُعب', 'warning', 3000);
+                        }
+                    }
+                } else {
+                    console.warn('⚠️ لا توجد بيانات للحفظ');
+                }
+                
+                // ============================================
+                // حفظ المادة في قاعدة البيانات
+                // ============================================
+                // subjectName معرّف مسبقاً في بداية الدالة
+                if (subjectName && results.some(r => r.success)) {
+                    try {
+                        await saveSubjectsToDatabase([subjectName], results);
+                    } catch (error) {
+                        console.error('خطأ في حفظ المادة:', error);
+                        // لا نوقف العملية - الروابط تم حفظها بنجاح
+                    }
+                }
+                
+                // عرض النتائج النهائية
+                displayCreationResults(results);
+                
+                // تفعيل زر التالي
+                document.getElementById('nextStep5').disabled = false;
+                
+                const successCount = results.filter(r => r.success).length;
+                UI.showToast(`تم إنشاء ${successCount} من ${totalSections} قروبات بنجاح!`, 'success');
+                
+            } catch (error) {
+                console.error('Error creating groups:', error);
+                UI.showToast(error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btnText.style.display = 'inline-block';
+                btnSpinner.style.display = 'none';
+            }
+        }
+        
+        // عرض نتائج الإنشاء
+        function displayCreationResults(results) {
+            const resultsList = document.getElementById('resultsList');
+            
+            console.log('🎨 displayCreationResults - معالجة النتائج:', results);
+            
+            // عرض النتائج
+            document.getElementById('creationResults').style.display = 'block';
+            
+            // بناء HTML للنتائج
+            let html = '';
+            results.forEach(result => {
+                if (result.success) {
+                    // البحث عن الرابط من أي حقل
+                    const link = result.invite_link || result.link || result.telegram_link || result.group_link || '';
+                    
+                    console.log(`🎨 شعبة ${result.section} - الرابط المستخدم:`, link);
+                    
+                    html += `
+                        <div class="result-item success">
+                            <span class="result-text">✅ شعبة ${result.section}</span>
+                            ${link ? `<a href="${link}" target="_blank" class="result-link">فتح القروب</a>` : '<span style="color: #f59e0b;">⚠️ لا يوجد رابط</span>'}
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="result-item error">
+                            <span class="result-text">❌ شعبة ${result.section}</span>
+                            <span style="color: #dc3545; font-size: 0.9rem;">${result.error}</span>
+                        </div>
+                    `;
+                }
+            });
+            
+            resultsList.innerHTML = html;
+        }
+        
+        // ============================================
+        // التنظيف التلقائي عند تحميل الصفحة
+        // ============================================
+        
+        /**
+         * تنظيف البيانات القديمة من localStorage
+         */
+        function cleanupOldStorage() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (!stored) return;
+            
+            try {
+                const data = JSON.parse(stored);
+                const ageInHours = (Date.now() - data.timestamp) / 3600000;
+                
+                console.log('🧹 فحص عمر البيانات في localStorage:', {
+                    age_hours: ageInHours.toFixed(1),
+                    max_age: MAX_AGE_HOURS,
+                    should_clean: ageInHours > MAX_AGE_HOURS
+                });
+                
+                if (ageInHours > MAX_AGE_HOURS) {
+                    clearPendingLinks();
+                    console.log('🧹 تم حذف بيانات قديمة تلقائياً');
+                }
+            } catch (error) {
+                console.error('❌ خطأ في التنظيف التلقائي:', error);
+                clearPendingLinks();
+            }
+        }
+        
+        // تشغيل التنظيف التلقائي عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Sections Setup: تم تحميل الصفحة');
+            cleanupOldStorage();
+            
+            // عرض معلومات localStorage في Console
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                try {
+                    const data = JSON.parse(stored);
+                    console.log('📦 localStorage: بيانات محفوظة موجودة', {
+                        grade: `${data.grade_info.level}-${data.grade_info.gradeNumber}`,
+                        sections: data.sections.length,
+                        links: data.links.length,
+                        age: ((Date.now() - data.timestamp) / 60000).toFixed(0) + ' دقيقة'
+                    });
+                } catch (e) {
+                    console.error('❌ localStorage: بيانات تالفة', e);
+                }
+            } else {
+                console.log('ℹ️ localStorage: لا توجد بيانات محفوظة');
+            }
+        });
+    </script>
+
+    <style>
+        /* Sections Preview Table Styles */
+        #sectionsPreviewTable {
+            font-size: 14px;
+        }
+
+        #sectionsPreviewTable th {
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        #sectionsPreviewTable td {
+            vertical-align: middle;
+        }
+
+        #sectionsPreviewTable a {
+            transition: color 0.2s;
+        }
+
+        #sectionsPreviewTable a:hover {
+            color: var(--primary-color);
+            text-decoration: underline;
+        }
+
+        /* Responsive Table */
+        @media (max-width: 768px) {
+            #sectionsPreviewTable {
+                font-size: 12px;
+            }
+
+            #sectionsPreviewTable th,
+            #sectionsPreviewTable td {
+                padding: 8px !important;
+            }
+
+            #sectionsPreviewTable th:first-child,
+            #sectionsPreviewTable td:first-child {
+                display: none;
+            }
+
+            #sectionsPreviewContainer h4 {
+                font-size: 16px !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #sectionsPreviewTable {
+                font-size: 11px;
+            }
+
+            #sectionsPreviewTable th:nth-child(2),
+            #sectionsPreviewTable td:nth-child(2) {
+                display: none;
+            }
+        }
+
+        /* ==================== 📱 Responsive Modals للجوالات ==================== */
+        
+        /* Tablets (768px and below) */
+        @media (max-width: 768px) {
+            .modal-dialog {
+                max-width: 90%;
+                margin: 15px;
+            }
+            
+            .modal-header h3 {
+                font-size: 1.2rem;
+            }
+            
+            .modal-body {
+                max-height: 60vh;
+                padding: 20px !important;
+            }
+            
+            .modal-content button {
+                padding: 10px 20px !important;
+                font-size: 14px;
+            }
+        }
+        
+        /* Mobile (480px and below) */
+        @media (max-width: 480px) {
+            /* Modal Size */
+            .modal-dialog {
+                max-width: 95%;
+                margin: 10px;
+            }
+            
+            /* Modal Header */
+            .modal-header {
+                padding: 15px !important;
+            }
+            
+            .modal-header h3 {
+                font-size: 1rem;
+            }
+            
+            /* Modal Body */
+            .modal-body {
+                max-height: 55vh;
+                padding: 15px !important;
+                font-size: 14px;
+            }
+            
+            /* Input Fields */
+            .modal-content input[type="text"],
+            .modal-content input[type="tel"] {
+                padding: 10px !important;
+                font-size: 16px !important; /* ✅ منع auto-zoom على iOS */
+            }
+            
+            /* Buttons */
+            .modal-content button {
+                padding: 12px 16px !important;
+                font-size: 14px;
+                width: 100%;
+            }
+            
+            .modal-content .btn-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .modal-content .btn-group button {
+                width: 100% !important;
+            }
+            
+            /* Telegram Code Input */
+            .code-input-group {
+                gap: 5px !important;
+            }
+            
+            .code-input-group input {
+                width: 40px !important;
+                height: 45px !important;
+                font-size: 18px !important;
+            }
+            
+            /* Result Items */
+            .result-item {
+                padding: 10px 12px;
+                font-size: 13px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .result-item .result-link {
+                font-size: 12px;
+                word-break: break-all;
+            }
+        }
+        
+        /* Extra Small (360px and below) */
+        @media (max-width: 360px) {
+            .modal-dialog {
+                max-width: 98%;
+                margin: 5px;
+            }
+            
+            .modal-header {
+                padding: 12px !important;
+            }
+            
+            .modal-header h3 {
+                font-size: 0.95rem;
+            }
+            
+            .modal-body {
+                padding: 12px !important;
+                font-size: 13px;
+            }
+            
+            .code-input-group input {
+                width: 35px !important;
+                height: 40px !important;
+                font-size: 16px !important;
+            }
+        }
+    </style>
+
+    <!-- ✅ Dark Mode System -->
+    <script src="/assets/js/dark-mode-manager.js"></script>
+    <script src="/assets/js/dark-mode-init.js"></script>
+</body>
+</html>

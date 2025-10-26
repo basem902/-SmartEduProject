@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="مشروعي الذكي - منصة تعليمية ذكية لإدارة وتسليم المشاريع الدراسية">
+    <meta name="theme-color" content="#00ADEF">
+    
+    <title>مشروعي الذكي - SmartEduProject</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/png" href="/assets/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192x192.png">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/base.css">
+    <link rel="stylesheet" href="/assets/css/dark-mode.css">
+    <link rel="stylesheet" href="/assets/css/animations.css">
+    
+    <style>
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: linear-gradient(135deg, #00ADEF 0%, #0088CC 100%);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.1" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,112C960,128,1056,160,1152,165.3C1248,171,1344,149,1392,138.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+            background-size: cover;
+            background-position: bottom;
+            opacity: 0.5;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            padding: 40px 20px;
+        }
+        
+        .hero-icon {
+            font-size: 120px;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .hero-title {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            color: white;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.5rem;
+            margin-bottom: 40px;
+            opacity: 0.95;
+            color: white;
+        }
+        
+        .hero-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .hero-btn {
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 50px;
+            border: 2px solid white;
+            background: white;
+            color: #00ADEF;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+        
+        .hero-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .hero-btn.outline {
+            background: transparent;
+            color: white;
+        }
+        
+        .hero-btn.outline:hover {
+            background: white;
+            color: #00ADEF;
+        }
+        
+        .features {
+            padding: 80px 20px;
+            background: var(--bg-color);
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .feature-card {
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 6px var(--shadow-color);
+            transition: transform 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+        }
+        
+        .feature-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        
+        .feature-title {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+        
+        .feature-description {
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+        
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1.2rem;
+            }
+            
+            .hero-icon {
+                font-size: 80px;
+            }
+            
+            .hero-buttons {
+                flex-direction: column;
+            }
+            
+            .hero-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-icon">🎓</div>
+            <h1 class="hero-title">مشروعي الذكي</h1>
+            <p class="hero-subtitle">منصة تعليمية ذكية لإدارة وتسليم المشاريع الدراسية بأمان واحترافية</p>
+            
+            <div class="hero-buttons">
+                <a href="/pages/register.html" class="hero-btn">
+                    ابدأ الآن
+                </a>
+                <a href="/pages/login.html" class="hero-btn outline">
+                    تسجيل الدخول
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <h2 class="text-center mb-4" style="font-size: 2.5rem; color: var(--primary-color);">
+                ✨ مميزات المنصة
+            </h2>
+            
+            <div class="features-grid stagger-item">
+                <div class="feature-card stagger-item">
+                    <div class="feature-icon">🔒</div>
+                    <h3 class="feature-title">أمان متقدم</h3>
+                    <p class="feature-description">
+                        حماية شاملة من الإدخال الخاطئ والملفات الضارة مع فحص الفيروسات تلقائياً
+                    </p>
+                </div>
+                
+                <div class="feature-card stagger-item">
+                    <div class="feature-icon">📤</div>
+                    <h3 class="feature-title">رفع ملفات آمن</h3>
+                    <p class="feature-description">
+                        نظام رفع محمي بالكامل مع دعم جميع صيغ الملفات التعليمية
+                    </p>
+                </div>
+                
+                <div class="feature-card stagger-item">
+                    <div class="feature-icon">📊</div>
+                    <h3 class="feature-title">إدارة سهلة</h3>
+                    <p class="feature-description">
+                        واجهة بسيطة وسهلة الاستخدام لإدارة المشاريع والطلاب
+                    </p>
+                </div>
+                
+                <div class="feature-card stagger-item">
+                    <div class="feature-icon">📱</div>
+                    <h3 class="feature-title">يعمل بدون إنترنت</h3>
+                    <p class="feature-description">
+                        تطبيق PWA يمكن تثبيته والوصول إليه حتى بدون اتصال
+                    </p>
+                </div>
+                
+                <div class="feature-card stagger-item">
+                    <div class="feature-icon">🌙</div>
+                    <h3 class="feature-title">الوضع الداكن</h3>
+                    <p class="feature-description">
+                        دعم كامل للوضع الليلي لراحة عينيك
+                    </p>
+                </div>
+                
+                <div class="feature-card stagger-item">
+                    <div class="feature-icon">⚡</div>
+                    <h3 class="feature-title">سريع وفعال</h3>
+                    <p class="feature-description">
+                        أداء عالي وسرعة استجابة ممتازة في جميع الأوقات
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Scripts -->
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/ui.js"></script>
+    <script src="/assets/js/theme.js"></script>
+    <script src="/assets/js/auth.js"></script>
+    <script src="/assets/js/app.js"></script>
+    
+    <script>
+        // إعادة التوجيه إذا كان المستخدم مسجلاً
+        if (auth.isAuthenticated()) {
+            window.location.href = '/pages/dashboard.html';
+        }
+    </script>
+</body>
+</html>

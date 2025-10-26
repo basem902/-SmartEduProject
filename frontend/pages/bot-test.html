@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار Telegram Bot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0088cc 0%, #005f99 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .telegram-icon {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            color: #0088cc;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 3px solid #0088cc;
+            padding-bottom: 10px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #0088cc;
+        }
+
+        .info-box .label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .info-box .value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+            word-break: break-all;
+        }
+
+        .test-steps {
+            counter-reset: step;
+        }
+
+        .test-step {
+            position: relative;
+            padding: 20px;
+            padding-right: 60px;
+            margin-bottom: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-right: 4px solid #0088cc;
+        }
+
+        .test-step::before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 35px;
+            height: 35px;
+            background: #0088cc;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .test-step h3 {
+            color: #0088cc;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .test-step p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .test-step code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #d63384;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            min-width: 150px;
+            padding: 12px 20px;
+            background: #0088cc;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background: #006699;
+            transform: translateY(-2px);
+        }
+
+        .btn.secondary {
+            background: white;
+            color: #0088cc;
+            border: 2px solid #0088cc;
+        }
+
+        .btn.secondary:hover {
+            background: #0088cc;
+            color: white;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 8px;
+        }
+
+        .status-indicator.online {
+            background: #28a745;
+            box-shadow: 0 0 10px #28a745;
+        }
+
+        .status-indicator.offline {
+            background: #dc3545;
+        }
+
+        .command-list {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .command-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 8px;
+            border-right: 3px solid #0088cc;
+        }
+
+        .command-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .command-name {
+            font-weight: bold;
+            color: #0088cc;
+        }
+
+        .command-desc {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert.info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        .alert.warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+
+        .alert.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .qr-container {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .qr-container img {
+            max-width: 250px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .checklist {
+            list-style: none;
+        }
+
+        .checklist li {
+            padding: 10px;
+            padding-right: 35px;
+            position: relative;
+            margin-bottom: 8px;
+        }
+
+        .checklist li::before {
+            content: '✓';
+            position: absolute;
+            right: 0;
+            width: 25px;
+            height: 25px;
+            background: #28a745;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <div class="telegram-icon">✈️</div>
+                اختبار Telegram Bot
+            </h1>
+            <p>دليل شامل لاختبار بوت تيليجرام</p>
+        </div>
+
+        <!-- Bot Status -->
+        <div class="card">
+            <h2>📊 حالة البوت</h2>
+            <div class="info-grid">
+                <div class="info-box">
+                    <div class="label">اسم البوت</div>
+                    <div class="value">@YourBotUsername</div>
+                </div>
+                <div class="info-box">
+                    <div class="label">الحالة</div>
+                    <div class="value">
+                        قيد التشغيل
+                        <span class="status-indicator online"></span>
+                    </div>
+                </div>
+                <div class="info-box">
+                    <div class="label">نوع OTP</div>
+                    <div class="value">6 أرقام</div>
+                </div>
+                <div class="info-box">
+                    <div class="label">مدة الصلاحية</div>
+                    <div class="value">10 دقائق</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alert -->
+        <div class="alert info">
+            <strong>📌 ملاحظة:</strong> تأكد من تشغيل البوت قبل البدء بالاختبار. استخدم الأمر:
+            <code>cd telegram_bot && python bot.py</code>
+        </div>
+
+        <!-- Test Steps -->
+        <div class="card">
+            <h2>🧪 خطوات الاختبار</h2>
+            
+            <div class="test-steps">
+                <div class="test-step">
+                    <h3>افتح Telegram</h3>
+                    <p>افتح تطبيق Telegram على هاتفك أو الكمبيوتر</p>
+                </div>
+
+                <div class="test-step">
+                    <h3>ابحث عن البوت</h3>
+                    <p>ابحث عن البوت باستخدام اسم المستخدم: <code>@YourBotUsername</code></p>
+                </div>
+
+                <div class="test-step">
+                    <h3>ابدأ المحادثة</h3>
+                    <p>اضغط على زر "Start" أو أرسل <code>/start</code></p>
+                </div>
+
+                <div class="test-step">
+                    <h3>انضم للقروب</h3>
+                    <p>انضم إلى قروب المشروع للتأكد من العضوية</p>
+                </div>
+
+                <div class="test-step">
+                    <h3>اطلب OTP</h3>
+                    <p>انتقل إلى صفحة اختبار OTP وولّد رمز جديد</p>
+                </div>
+
+                <div class="test-step">
+                    <h3>استلم الرمز</h3>
+                    <p>ستصلك رسالة على تيليجرام تحتوي على رمز OTP</p>
+                </div>
+
+                <div class="test-step">
+                    <h3>استخدم الرمز</h3>
+                    <p>انسخ الرمز واستخدمه في صفحة رفع المشروع</p>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <a href="otp-test.html" class="btn">🧪 صفحة اختبار OTP</a>
+                <a href="submit-project.html?project_id=1" class="btn secondary">📤 رفع مشروع</a>
+            </div>
+        </div>
+
+        <!-- Bot Commands -->
+        <div class="card">
+            <h2>⌨️ أوامر البوت</h2>
+            <div class="command-list">
+                <div class="command-item">
+                    <div>
+                        <div class="command-name">/start</div>
+                        <div class="command-desc">بدء المحادثة مع البوت</div>
+                    </div>
+                </div>
+                <div class="command-item">
+                    <div>
+                        <div class="command-name">/help</div>
+                        <div class="command-desc">عرض رسالة المساعدة</div>
+                    </div>
+                </div>
+                <div class="command-item">
+                    <div>
+                        <div class="command-name">/status</div>
+                        <div class="command-desc">التحقق من حالة OTP الحالي</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Scenarios -->
+        <div class="card">
+            <h2>📋 سيناريوهات الاختبار</h2>
+            
+            <h3 style="color: #0088cc; margin: 20px 0 10px;">✅ السيناريو الطبيعي (Happy Path)</h3>
+            <ul class="checklist">
+                <li>توليد OTP من الصفحة</li>
+                <li>استلام الرمز على Telegram</li>
+                <li>استخدام الرمز لرفع مشروع</li>
+                <li>نجاح العملية</li>
+            </ul>
+
+            <h3 style="color: #0088cc; margin: 20px 0 10px;">❌ سيناريوهات الخطأ</h3>
+            <div class="test-step">
+                <h3>رمز OTP خاطئ</h3>
+                <p>جرّب إدخال رمز غير صحيح - يجب أن ترى رسالة خطأ</p>
+            </div>
+            
+            <div class="test-step">
+                <h3>رمز OTP منتهي</h3>
+                <p>انتظر 10 دقائق بعد توليد الرمز ثم حاول استخدامه</p>
+            </div>
+            
+            <div class="test-step">
+                <h3>غير عضو في القروب</h3>
+                <p>حاول الحصول على OTP بدون الانضمام للقروب</p>
+            </div>
+            
+            <div class="test-step">
+                <h3>استخدام الرمز مرتين</h3>
+                <p>حاول استخدام نفس رمز OTP مرتين - يجب أن يفشل</p>
+            </div>
+        </div>
+
+        <!-- Troubleshooting -->
+        <div class="card">
+            <h2>🔧 حل المشاكل</h2>
+            
+            <div class="alert warning">
+                <strong>⚠️ البوت لا يرد؟</strong>
+                <ul style="margin-top: 10px; padding-right: 20px;">
+                    <li>تأكد من تشغيل البوت: <code>python bot.py</code></li>
+                    <li>تحقق من ملف <code>.env.telegram</code></li>
+                    <li>راجع logs البوت للأخطاء</li>
+                </ul>
+            </div>
+
+            <div class="alert warning">
+                <strong>⚠️ لا يصل OTP على Telegram؟</strong>
+                <ul style="margin-top: 10px; padding-right: 20px;">
+                    <li>تأكد من صحة Telegram User ID</li>
+                    <li>تحقق من اتصال البوت بـ Telegram API</li>
+                    <li>راجع logs في Backend و Bot</li>
+                </ul>
+            </div>
+
+            <div class="alert warning">
+                <strong>⚠️ خطأ "غير عضو في القروب"؟</strong>
+                <ul style="margin-top: 10px; padding-right: 20px;">
+                    <li>انضم للقروب المطلوب</li>
+                    <li>تأكد من إضافة البوت كـ Admin في القروب</li>
+                    <li>تحقق من صحة GROUP_ID في <code>.env.telegram</code></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="card">
+            <h2>🔗 روابط سريعة</h2>
+            <div class="button-group">
+                <a href="otp-test.html" class="btn">🧪 اختبار OTP</a>
+                <a href="submit-project.html?project_id=1" class="btn">📤 رفع مشروع</a>
+                <a href="../index.html" class="btn secondary">🏠 الصفحة الرئيسية</a>
+                <button onclick="window.open('https://telegram.org', '_blank')" class="btn secondary">
+                    ✈️ فتح Telegram Web
+                </button>
+            </div>
+        </div>
+
+        <!-- Success Message -->
+        <div class="alert success">
+            <strong>🎉 نصيحة:</strong> عند نجاح جميع الاختبارات، النظام جاهز للاستخدام الفعلي!
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('load', () => {
+            console.log('✈️ صفحة اختبار Telegram Bot جاهزة');
+            
+            // محاكاة فحص حالة البوت
+            setTimeout(() => {
+                console.log('🤖 Bot Status: Online');
+            }, 1000);
+        });
+
+        // Copy command to clipboard
+        document.querySelectorAll('code').forEach(code => {
+            code.style.cursor = 'pointer';
+            code.title = 'اضغط للنسخ';
+            code.addEventListener('click', function() {
+                navigator.clipboard.writeText(this.textContent);
+                
+                const original = this.textContent;
+                this.textContent = '✓ تم النسخ';
+                this.style.background = '#28a745';
+                this.style.color = 'white';
+                
+                setTimeout(() => {
+                    this.textContent = original;
+                    this.style.background = '';
+                    this.style.color = '';
+                }, 1500);
+            });
+        });
+    </script>
+</body>
+</html>

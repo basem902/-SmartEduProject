@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إنشاء مشروع جديد - SmartEdu</title>
+    <meta name="description" content="أنشئ مشروعاً تعليمياً جديداً وأرسله للطلاب عبر Telegram تلقائياً">
+    <meta name="robots" content="noindex, nofollow">
+ 
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="/assets/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192x192.png">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <link rel="stylesheet" href="../css/create-project.css">
+    <link rel="stylesheet" href="../css/create-project-theme.css">
+    <link rel="stylesheet" href="/assets/css/mobile-responsive.css">
+</head>
+<body data-page-type="wizard">
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p style="color: #333; font-size: 1.1rem; font-weight: 600;">جاري الحفظ والإرسال...</p>
+            <p style="color: #666; margin-top: 10px;">قد تستغرق العملية بضع ثوانٍ</p>
+        </div>
+    </div>
+
+    <div class="wizard-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-actions" style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                <a href="/pages/dashboard.html" class="back-btn" title="العودة إلى لوحة التحكم" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); text-decoration: none; font-size: 14px; transition: all 0.3s;">
+                    <span style="font-size: 20px;">←</span>
+                    <span>لوحة التحكم</span>
+                </a>
+                <button class="theme-toggle" onclick="toggleTheme()" title="تبديل الوضع الليلي">
+                    🌙
+                </button>
+            </div>
+            <div class="header-content">
+                <h1>📝 إنشاء مشروع جديد</h1>
+                <p>أضف مشروعاً جديداً وسيتم إرساله تلقائياً للطلاب عبر Telegram</p>
+                <small style="opacity: 0.7; font-size: 0.85rem; margin-top: 8px; display: block;">
+                    ⌨️ اختصارات: Ctrl+Enter (التالي) | Ctrl+S (حفظ مسودة) | Esc (رجوع)
+                </small>
+            </div>
+        </header>
+
+        <!-- Progress Bar -->
+        <div class="progress-container">
+            <div class="progress-steps">
+                <div class="progress-line">
+                    <div class="progress-line-fill" id="progressFill" style="width: 16.67%"></div>
+                </div>
+                
+                <div class="progress-step" data-step="1">
+                    <div class="step-circle active">1</div>
+                    <span class="step-label active">الصف والشُعب</span>
+                </div>
+                <div class="progress-step" data-step="2">
+                    <div class="step-circle">2</div>
+                    <span class="step-label">المشروع</span>
+                </div>
+                <div class="progress-step" data-step="3">
+                    <div class="step-circle">3</div>
+                    <span class="step-label">التعليمات</span>
+                </div>
+                <div class="progress-step" data-step="4">
+                    <div class="step-circle">4</div>
+                    <span class="step-label">الملفات</span>
+                </div>
+                <div class="progress-step" data-step="5">
+                    <div class="step-circle">5</div>
+                    <span class="step-label">الإعدادات</span>
+                </div>
+                <div class="progress-step" data-step="6">
+                    <div class="step-circle">6</div>
+                    <span class="step-label">المراجعة</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alert -->
+        <div id="alertBox" class="alert"></div>
+
+        <!-- Wizard Body -->
+        <div class="wizard-body">
+            <!-- Step 1: Grade & Sections Selection -->
+            <div class="wizard-step active" data-step="1">
+                <h2 class="step-title">اختيار الصف والشُعب</h2>
+                <p class="step-subtitle">حدد الصف والشُعب المستهدفة والمادة الدراسية</p>
+
+                <div class="form-group">
+                    <label>
+                        <span class="required">*</span>
+                        اختر الصف الدراسي:
+                    </label>
+                    <select id="gradeSelect" required onchange="loadSections()">
+                        <option value="">اختر الصف...</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="sectionsGroup" style="display: none;">
+                    <label>
+                        <span class="required">*</span>
+                        اختر الشُعب: (يمكن اختيار أكثر من شعبة)
+                    </label>
+                    <div style="margin: 10px 0;">
+                        <label style="display: inline-flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" id="selectAllSections" onchange="toggleAllSections()" style="margin-left: 8px;">
+                            <strong>تحديد الكل</strong>
+                        </label>
+                    </div>
+                    <div class="checkbox-grid" id="sectionsList"></div>
+                </div>
+
+                <div class="form-group" id="subjectGroup" style="display: none;">
+                    <label>
+                        <span class="required">*</span>
+                        المادة الدراسية:
+                    </label>
+                    <select id="projectSubject" required>
+                        <option value="">جاري تحميل المواد...</option>
+                    </select>
+                    <small style="color: var(--text-muted);">يتم تحميل مواد المعلم من قاعدة البيانات</small>
+                </div>
+
+                <div class="info-box" id="selectionStats" style="display: none;">
+                    <h4>📊 الإحصائيات:</h4>
+                    <ul>
+                        <li>إجمالي الطلاب: <strong id="totalStudents">0</strong> طالب</li>
+                        <li>عدد الشُعب المختارة: <strong id="selectedSections">0</strong> شعبة</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Step 2: Project Info -->
+            <div class="wizard-step" data-step="2">
+                <h2 class="step-title">معلومات المشروع</h2>
+                <p class="step-subtitle">أدخل عنوان المشروع ووصفه</p>
+
+                <div class="form-group">
+                    <label>
+                        <span class="required">*</span>
+                        اسم المشروع:
+                    </label>
+                    
+                    <!-- Tabs للاختيار -->
+                    <div class="input-tabs">
+                        <button type="button" class="tab-btn active" onclick="switchInputTab('text')">
+                            ✍️ كتابة
+                        </button>
+                        <button type="button" class="tab-btn" onclick="switchInputTab('image')">
+                            📷 من صورة
+                        </button>
+                        <button type="button" class="tab-btn" onclick="switchInputTab('pdf')">
+                            📄 من PDF
+                        </button>
+                    </div>
+                    
+                    <!-- Tab 1: إدخال نصي -->
+                    <div class="tab-content active" id="tab-text">
+                        <input type="text" id="projectTitle" placeholder="مثال: بحث عن الطاقة المتجددة" required>
+                        <small>اختر عنواناً واضحاً ومحدداً (3-100 حرف)</small>
+                    </div>
+                    
+                    <!-- Tab 2: استخراج من صورة -->
+                    <div class="tab-content" id="tab-image" style="display: none;">
+                        <input type="file" id="titleImage" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
+                        
+                        <div class="drop-zone" id="imageDropZone" onclick="document.getElementById('titleImage').click()">
+                            <div class="drop-zone-content">
+                                <span class="drop-icon">📷</span>
+                                <p class="drop-text">اضغط لاختيار صورة أو اسحبها هنا</p>
+                                <small>PNG, JPG, JPEG - Max 5MB</small>
+                            </div>
+                        </div>
+                        
+                        <div id="imagePreview" class="extraction-preview" style="display: none;"></div>
+                    </div>
+                    
+                    <!-- Tab 3: استخراج من PDF -->
+                    <div class="tab-content" id="tab-pdf" style="display: none;">
+                        <input type="file" id="titlePdf" accept=".pdf" style="display: none;" onchange="handlePdfUpload(event)">
+                        
+                        <div class="drop-zone" id="pdfDropZone" onclick="document.getElementById('titlePdf').click()">
+                            <div class="drop-zone-content">
+                                <span class="drop-icon">📄</span>
+                                <p class="drop-text">اضغط لاختيار ملف PDF أو اسحبه هنا</p>
+                                <small>PDF - Max 10MB</small>
+                            </div>
+                        </div>
+                        
+                        <div id="pdfPreview" class="extraction-preview" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>وصف المشروع:</label>
+                    <textarea id="projectDescription" rows="3" placeholder="اكتب وصفاً مختصراً أو دع الذكاء الاصطناعي يولده لك..."></textarea>
+                    <small>سطر أو سطرين عن المشروع (اختياري، يمكن توليده تلقائياً)</small>
+                </div>
+            </div>
+
+            <!-- Step 3: Instructions -->
+            <div class="wizard-step" data-step="3">
+                <h2 class="step-title">تعليمات وشروط المشروع</h2>
+                <p class="step-subtitle">وضّح للطلاب ما هو مطلوب منهم</p>
+
+                <div class="form-group">
+                    <div class="checklist-header">
+                        <label>
+                            <span class="required">*</span>
+                            التعليمات:
+                        </label>
+                        <div class="checklist-controls">
+                            <button type="button" class="btn-checklist-control" onclick="checklistSelectAll('instructions')">
+                                ✓ تحديد الكل
+                            </button>
+                            <button type="button" class="btn-checklist-control" onclick="checklistDeselectAll('instructions')">
+                                ✗ إلغاء الكل
+                            </button>
+                            <button type="button" class="btn-checklist-control btn-add" onclick="checklistAddItem('instructions')">
+                                + إضافة
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Hidden textarea for form submission -->
+                    <textarea id="projectInstructions" style="display: none;" required></textarea>
+                    
+                    <!-- Checklist container -->
+                    <div class="checklist-container" id="instructionsChecklist" data-field="instructions">
+                        <!-- Items will be added here dynamically -->
+                    </div>
+                    
+                    <small class="checklist-hint">
+                        ✨ اختر التعليمات التي تريدها | يمكنك التعديل بالنقر على النص | 
+                        <span class="text-primary" style="cursor: pointer;" onclick="checklistLoadExample('instructions')">📝 تحميل مثال</span>
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <div class="checklist-header">
+                        <label>
+                            <span class="required">*</span>
+                            الشروط:
+                        </label>
+                        <div class="checklist-controls">
+                            <button type="button" class="btn-checklist-control" onclick="checklistSelectAll('requirements')">
+                                ✓ تحديد الكل
+                            </button>
+                            <button type="button" class="btn-checklist-control" onclick="checklistDeselectAll('requirements')">
+                                ✗ إلغاء الكل
+                            </button>
+                            <button type="button" class="btn-checklist-control btn-add" onclick="checklistAddItem('requirements')">
+                                + إضافة
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Hidden textarea for form submission -->
+                    <textarea id="projectRequirements" style="display: none;" required></textarea>
+                    
+                    <!-- Checklist container -->
+                    <div class="checklist-container" id="requirementsChecklist" data-field="requirements">
+                        <!-- Items will be added here dynamically -->
+                    </div>
+                    
+                    <small class="checklist-hint">
+                        ✨ اختر الشروط المناسبة | قابل للتعديل | 
+                        <span class="text-primary" style="cursor: pointer;" onclick="checklistLoadExample('requirements')">📝 تحميل مثال</span>
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <div class="checklist-header">
+                        <label>💡 نصائح للطلاب (اختياري):</label>
+                        <div class="checklist-controls">
+                            <button type="button" class="btn-checklist-control" onclick="checklistSelectAll('tips')">
+                                ✓ تحديد الكل
+                            </button>
+                            <button type="button" class="btn-checklist-control" onclick="checklistDeselectAll('tips')">
+                                ✗ إلغاء الكل
+                            </button>
+                            <button type="button" class="btn-checklist-control btn-add" onclick="checklistAddItem('tips')">
+                                + إضافة
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Hidden textarea for form submission -->
+                    <textarea id="projectTips" style="display: none;"></textarea>
+                    
+                    <!-- Checklist container -->
+                    <div class="checklist-container" id="tipsChecklist" data-field="tips">
+                        <!-- Items will be added here dynamically -->
+                    </div>
+                    
+                    <small class="checklist-hint">
+                        ✨ نصائح مفيدة للطلاب | <strong>زر AI</strong> يولد نصائح بناءً على التعليمات والشروط | 
+                        <span class="text-primary" style="cursor: pointer;" onclick="checklistLoadExample('tips')">📝 تحميل مثال</span>
+                    </small>
+                </div>
+            </div>
+
+            <!-- Step 4: Files -->
+            <div class="wizard-step" data-step="4">
+                <h2 class="step-title">ملفات وموارد مساعدة</h2>
+                <p class="step-subtitle">أضف ملفات أو روابط مساعدة للطلاب (اختياري)</p>
+
+                <div class="info-box">
+                    <h4>💡 معلومات مهمة:</h4>
+                    <ul>
+                        <li>جميع الملفات اختيارية</li>
+                        <li>سيتم إرسال الملفات مع الإشعار على Telegram</li>
+                        <li>الحد الأقصى لكل ملف: 10 MB</li>
+                    </ul>
+                </div>
+
+                <div class="form-group">
+                    <label>📹 فيديو شرح (اختياري):</label>
+                    <input type="file" id="videoFile" accept="video/*" style="display: none;" onchange="handleVideoSelect()">
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('videoFile').click()">
+                        📤 رفع فيديو
+                    </button>
+                    <small>رفع ملف فيديو من جهازك</small>
+                    <div id="videoPreview" class="file-list"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>📄 ملفات PDF (اختياري):</label>
+                    <input type="file" id="pdfFiles" accept=".pdf" multiple style="display: none;" onchange="handleFileSelect('pdf')">
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('pdfFiles').click()">
+                        📤 إضافة ملفات PDF
+                    </button>
+                    <small>Max: 5 ملفات × 10MB</small>
+                    <div id="pdfList" class="file-list"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>📊 ملفات Word/Excel (اختياري):</label>
+                    <input type="file" id="docFiles" accept=".doc,.docx,.xls,.xlsx" multiple style="display: none;" onchange="handleFileSelect('doc')">
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('docFiles').click()">
+                        📤 إضافة ملفات Office
+                    </button>
+                    <small>Max: 5 ملفات × 10MB</small>
+                    <div id="docList" class="file-list"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>🔗 روابط خارجية (اختياري):</label>
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        <input type="url" id="externalLink" placeholder="https://example.com" style="flex: 1;">
+                        <button type="button" class="btn btn-primary" onclick="addExternalLink()">+ إضافة</button>
+                    </div>
+                    <div id="linksList"></div>
+                </div>
+            </div>
+
+            <!-- Step 5: Settings -->
+            <div class="wizard-step" data-step="5">
+                <h2 class="step-title">إعدادات التسليم والقبول</h2>
+                <p class="step-subtitle">حدد قواعد استقبال وتقييم المشروع</p>
+
+                <div class="form-group">
+                    <label>
+                        <span class="required">*</span>
+                        أنواع الملفات المسموح برفعها:
+                    </label>
+                    <div class="checkbox-grid">
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="fileTypes" value="pdf" checked>
+                            <span class="checkbox-label">PDF</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="fileTypes" value="doc" checked>
+                            <span class="checkbox-label">Word</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="fileTypes" value="ppt">
+                            <span class="checkbox-label">PowerPoint</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="fileTypes" value="xls">
+                            <span class="checkbox-label">Excel</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="fileTypes" value="img">
+                            <span class="checkbox-label">صور</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="fileTypes" value="zip">
+                            <span class="checkbox-label">ملفات مضغوطة</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="fileTypes" value="video">
+                            <span class="checkbox-label">🎬 فيديو</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="fileTypes" value="audio">
+                            <span class="checkbox-label">🎵 صوت</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>
+                            <span class="required">*</span>
+                            حجم الملف الأقصى:
+                        </label>
+                        <select id="maxFileSize" required>
+                            <option value="5">5 MB</option>
+                            <option value="10" selected>10 MB (موصى به)</option>
+                            <option value="20">20 MB</option>
+                            <option value="50">50 MB</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <span class="required">*</span>
+                            الدرجة الكاملة:
+                        </label>
+                        <input type="number" id="maxGrade" value="100" min="0" max="100" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>
+                            <span class="required">*</span>
+                            تاريخ البداية:
+                        </label>
+                        <input type="datetime-local" id="startDate" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <span class="required">*</span>
+                            الموعد النهائي:
+                        </label>
+                        <input type="datetime-local" id="deadline" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>⚡ خيارات إضافية:</label>
+                    <div class="checkbox-grid">
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="allowLateSubmission" checked>
+                            <span class="checkbox-label">السماح بالتسليم المتأخر</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="sendReminder" checked>
+                            <span class="checkbox-label">إرسال تذكير قبل الموعد</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="aiCheck">
+                            <span class="checkbox-label">فحص الانتحال بالذكاء الاصطناعي</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Telegram Settings -->
+                <div class="form-group telegram-settings">
+                    <label>
+                        📱 إعدادات إرسال التيليجرام:
+                        <small style="color: var(--text-muted); font-weight: normal;">
+                            اختر متى تريد إرسال المشروع للقروبات
+                        </small>
+                    </label>
+                    
+                    <div class="checkbox-grid">
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="sendToTelegram" checked onchange="toggleTelegramOptions()">
+                            <span class="checkbox-label">
+                                <strong>📤 إرسال فوري بعد الحفظ</strong>
+                                <small style="display: block; color: var(--text-muted); margin-top: 4px;">
+                                    سيتم إرسال إشعار تلقائياً لقروبات التيليجرام الآن
+                                </small>
+                            </span>
+                        </label>
+                    </div>
+                    
+                    <div class="alert-info" style="margin-top: 12px; padding: 12px; background: #dbeafe; border-radius: 8px; border-right: 4px solid #3b82f6;">
+                        <p style="margin: 0; font-size: 14px; color: #1e40af;">
+                            💡 <strong>نصيحة:</strong> إذا لم تكن القروبات جاهزة بعد، يمكنك إلغاء التحديد والإرسال لاحقاً من لوحة التحكم
+                        </p>
+                    </div>
+
+                    <div id="telegramOptions" style="display: block; margin-top: 16px; padding: 16px; background: var(--bg-color); border-radius: 8px;">
+                        <div class="checkbox-grid">
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="pinMessage" checked>
+                                <span class="checkbox-label">
+                                    تثبيت الرسالة في القروب
+                                </span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="sendFiles" checked>
+                                <span class="checkbox-label">
+                                    إرسال الملفات المساعدة
+                                </span>
+                            </label>
+                        </div>
+
+                        <div class="telegram-target-box" style="margin-top: 16px; padding: 16px; background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%); border: 2px solid #0ea5e9; border-radius: 10px; box-shadow: 0 2px 8px rgba(14, 165, 233, 0.15);">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                                <span style="font-size: 24px;">📊</span>
+                                <strong style="color: #0c4a6e; font-size: 16px; font-weight: 700;">سيتم الإرسال إلى:</strong>
+                            </div>
+                            <ul id="telegramTargets" style="margin: 0; padding-right: 24px; list-style: none; color: #0f172a; font-size: 15px; line-height: 1.8;">
+                                <li style="position: relative; padding-right: 20px;">
+                                    <span style="position: absolute; right: 0; color: #10b981; font-weight: bold;">✓</span>
+                                    <span style="color: #475569;">جاري تحميل الشُعب...</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 6: Review -->
+            <div class="wizard-step" data-step="6">
+                <h2 class="step-title">مراجعة المشروع قبل الإرسال</h2>
+                <p class="step-subtitle">تأكد من صحة جميع المعلومات</p>
+
+                <div class="summary-box" id="projectSummary">
+                    <!-- Will be filled by JavaScript -->
+                </div>
+
+                <div class="info-box">
+                    <h4>📤 سيتم إرسال إشعار إلى:</h4>
+                    <ul id="notificationTargets">
+                        <!-- Will be filled by JavaScript -->
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="wizard-buttons">
+                <button type="button" class="btn btn-secondary" id="prevBtn" onclick="previousStep()">
+                    ← السابق
+                </button>
+                <button type="button" class="btn btn-primary btn-left" id="nextBtn" onclick="nextStep()">
+                    التالي →
+                </button>
+                <button type="button" class="btn btn-success btn-left" id="submitBtn" style="display: none;" onclick="submitProject()">
+                    ✓ حفظ وإرسال
+                </button>
+            </div>
+        </div>
+
+        <!-- ✨ Floating AI Assistant Button -->
+        <button type="button" id="floatingAIButton" class="floating-ai-button" onclick="openAIAssistant()" style="display: none;">
+            <span class="ai-icon">🤖</span>
+            <span class="ai-text">مساعد AI</span>
+            <span class="ai-badge" id="emptyFieldsCount">0</span>
+        </button>
+    </div>
+
+    <!-- AI Assistant Modal -->
+    <div id="aiAssistantModal" class="ai-modal" style="display: none;">
+        <div class="ai-modal-content">
+            <div class="ai-modal-header">
+                <h3>🤖 المساعد الذكي</h3>
+                <button onclick="closeAIAssistant()" class="close-btn">&times;</button>
+            </div>
+            
+            <div class="ai-modal-body">
+                <p class="ai-description">
+                    💡 سيتم توليد محتوى احترافي بناءً على:
+                </p>
+                
+                <div class="ai-context-preview" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); padding: 16px; border-radius: 12px; margin-bottom: 20px; border: 2px solid #0ea5e9;">
+                    <div style="display: grid; gap: 10px; font-size: 14px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <strong style="color: #0c4a6e; min-width: 80px;">📚 المشروع:</strong>
+                            <span id="aiContextTitle" style="color: #0369a1; font-weight: 500;">-</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <strong style="color: #0c4a6e; min-width: 80px;">📖 المادة:</strong>
+                            <span id="aiContextSubject" style="color: #0369a1; font-weight: 500;">-</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <strong style="color: #0c4a6e; min-width: 80px;">🏫 الصف:</strong>
+                            <span id="aiContextGrade" style="color: #0369a1; font-weight: 500;">-</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="ai-options">
+                    <label class="ai-option-item">
+                        <input type="checkbox" id="aiGenDescription" checked>
+                        <span class="ai-option-label">
+                            <strong>📝 الوصف</strong>
+                            <small>وصف احترافي (3-4 جمل)</small>
+                        </span>
+                        <span class="ai-status" id="statusDescription">فارغ</span>
+                    </label>
+                    
+                    <label class="ai-option-item">
+                        <input type="checkbox" id="aiGenInstructions" checked>
+                        <span class="ai-option-label">
+                            <strong>📋 التعليمات</strong>
+                            <small>5 خطوات واضحة للتنفيذ</small>
+                        </span>
+                        <span class="ai-badge" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">5 نقاط</span>
+                    </label>
+                    
+                    <label class="ai-option-item">
+                        <input type="checkbox" id="aiGenRequirements" checked>
+                        <span class="ai-option-label">
+                            <strong>⚠️ الشروط</strong>
+                            <small>5 متطلبات أساسية</small>
+                        </span>
+                        <span class="ai-badge" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">5 نقاط</span>
+                    </label>
+                    
+                    <label class="ai-option-item">
+                        <input type="checkbox" id="aiGenTips" checked>
+                        <span class="ai-option-label">
+                            <strong>💡 النصائح</strong>
+                            <small>5 نصائح عملية للتميز</small>
+                        </span>
+                        <span class="ai-badge" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">5 نقاط</span>
+                    </label>
+                </div>
+                
+                <div class="ai-total-badge" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 20px; border-radius: 12px; text-align: center; margin-top: 16px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+                    <strong style="font-size: 16px;">📊 المجموع: <span id="aiTotalItems">15</span> نقطة</strong>
+                    <div style="font-size: 12px; opacity: 0.9; margin-top: 4px;">(الوصف + 5 تعليمات + 5 شروط + 5 نصائح)</div>
+                </div>
+                
+                <div id="aiProgress" class="ai-progress" style="display: none;">
+                    <div class="progress-header">
+                        <span>جاري التوليد...</span>
+                        <span id="progressPercent">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-details" id="progressDetails"></div>
+                </div>
+            </div>
+            
+            <div class="ai-modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeAIAssistant()">إلغاء</button>
+                <button type="button" class="btn-generate" onclick="generateAllWithAI()">
+                    ✨ توليد المحدد
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        // Configure PDF.js worker
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+    </script>
+    
+    <!-- ✅ Config يُحمّل أولاً -->
+    <script src="/assets/js/config.js"></script>
+    
+    <script src="../js/create-project.js"></script>
+    <script src="../js/checklist-manager.js"></script>
+    <script src="../js/ai-assistant.js"></script>
+    <script src="../js/success-modal.js"></script>
+
+    <!-- ✅ Dark Mode System -->
+    <script src="/assets/js/dark-mode-manager.js"></script>
+    <script src="/assets/js/dark-mode-init.js"></script>
+</body>
+</html>

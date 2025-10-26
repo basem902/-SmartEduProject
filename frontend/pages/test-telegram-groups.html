@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار إنشاء قروبات تيليجرام</title>
+    <link rel="stylesheet" href="/assets/css/base.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .result.success {
+            background: #d4edda;
+            border: 2px solid #c3e6cb;
+        }
+        
+        .result.error {
+            background: #f8d7da;
+            border: 2px solid #f5c6cb;
+        }
+        
+        .result pre {
+            background: rgba(0,0,0,0.05);
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 0.9rem;
+        }
+        
+        .spinner {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .spinner.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🤖 اختبار إنشاء قروبات تيليجرام</h1>
+        
+        <form id="testForm">
+            <div class="form-group">
+                <label>اسم الصف:</label>
+                <input type="text" id="gradeName" value="الصف الثالث متوسط" required>
+            </div>
+            
+            <div class="form-group">
+                <label>اسم المادة:</label>
+                <input type="text" id="subjectName" value="المهارات الرقمية" required>
+            </div>
+            
+            <div class="form-group">
+                <label>عدد الشُعب:</label>
+                <select id="sectionsCount">
+                    <option value="2">2 شُعب</option>
+                    <option value="3" selected>3 شُعب</option>
+                    <option value="5">5 شُعب</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>رقم الهاتف: (اختياري)</label>
+                <input type="tel" id="phoneNumber" placeholder="+966xxxxxxxxx">
+                <small style="color: #666;">إذا كان فارغاً سيُستخدم الرقم من ملفك الشخصي</small>
+            </div>
+            
+            <button type="submit" class="btn" id="submitBtn">
+                <span id="btnText">🚀 إنشاء القروبات</span>
+                <span id="btnSpinner" style="display: none;">⏳ جاري الإنشاء...</span>
+            </button>
+        </form>
+        
+        <div class="spinner" id="spinner">
+            <p>جاري إنشاء القروبات... هذا قد يستغرق بضع ثوانٍ</p>
+        </div>
+        
+        <div id="result" class="result"></div>
+    </div>
+
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/ui.js"></script>
+    <script src="/assets/js/auth.js"></script>
+    
+    <script>
+        // حماية الصفحة
+        auth.protectPage();
+        
+        document.getElementById('testForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const gradeName = document.getElementById('gradeName').value.trim();
+            const subjectName = document.getElementById('subjectName').value.trim();
+            const count = parseInt(document.getElementById('sectionsCount').value);
+            const phoneNumber = document.getElementById('phoneNumber').value.trim();
+            
+            // بناء قائمة الشُعب
+            const arabicLetters = ['أ', 'ب', 'ج', 'د', 'هـ', 'و', 'ز', 'ح', 'ط', 'ي'];
+            const sections = arabicLetters.slice(0, count);
+            
+            // تعطيل الزر
+            const btn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            const btnSpinner = document.getElementById('btnSpinner');
+            const resultDiv = document.getElementById('result');
+            const spinner = document.getElementById('spinner');
+            
+            btn.disabled = true;
+            btnText.style.display = 'none';
+            btnSpinner.style.display = 'inline';
+            spinner.classList.add('active');
+            resultDiv.style.display = 'none';
+            
+            try {
+                console.log('إرسال طلب إنشاء القروبات...');
+                
+                // الحصول على التوكن
+                const token = localStorage.getItem('access_token');
+                if (!token) {
+                    throw new Error('يجب تسجيل الدخول أولاً');
+                }
+                
+                // API URL - استخدام Client API الجديد
+                const API_URL = 'http://localhost:8000/api';
+                
+                const requestBody = {
+                    grade_name: gradeName,
+                    subject_name: subjectName,
+                    sections: sections
+                };
+                
+                // إضافة رقم الهاتف إذا كان موجود
+                if (phoneNumber) {
+                    requestBody.phone_number = phoneNumber;
+                }
+                
+                const response = await fetch(`${API_URL}/sections/telegram/create-groups-client/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                const data = await response.json();
+                
+                console.log('استجابة من السيرفر:', data);
+                
+                if (response.ok) {
+                    // نجح
+                    resultDiv.className = 'result success';
+                    
+                    // بناء HTML لعرض النتائج بشكل جميل
+                    let groupsHtml = '';
+                    if (data.results && data.results.length > 0) {
+                        groupsHtml = '<div style="margin-top: 20px;">';
+                        groupsHtml += '<h4>📋 القروبات المُنشأة:</h4>';
+                        
+                        data.results.forEach((group, index) => {
+                            if (group.success) {
+                                groupsHtml += `
+                                    <div style="background: white; padding: 15px; margin: 10px 0; border-radius: 8px; border-right: 4px solid #28a745;">
+                                        <strong>${index + 1}. ${group.group_name}</strong><br>
+                                        <a href="${group.invite_link}" target="_blank" style="color: #667eea; text-decoration: none;">
+                                            🔗 ${group.invite_link}
+                                        </a>
+                                    </div>
+                                `;
+                            } else {
+                                groupsHtml += `
+                                    <div style="background: white; padding: 15px; margin: 10px 0; border-radius: 8px; border-right: 4px solid #dc3545;">
+                                        <strong>${index + 1}. ${group.group_name}</strong><br>
+                                        <span style="color: #dc3545;">❌ ${group.error}</span>
+                                    </div>
+                                `;
+                            }
+                        });
+                        
+                        groupsHtml += '</div>';
+                        
+                        // إضافة زر تطبيق الصلاحيات
+                        groupsHtml += `
+                            <button onclick="applyPermissions(event)" class="btn" style="margin-top: 20px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                                🔒 تطبيق صلاحيات read-only
+                            </button>
+                        `;
+                    }
+                    
+                    resultDiv.innerHTML = `
+                        <h3>✅ ${data.message}</h3>
+                        <p><strong>نجح:</strong> ${data.success_count} من ${data.total_count}</p>
+                        ${groupsHtml}
+                    `;
+                    resultDiv.style.display = 'block';
+                } else {
+                    // فشل
+                    throw new Error(data.message || data.error || 'فشل غير معروف');
+                }
+                
+            } catch (error) {
+                console.error('خطأ:', error);
+                
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <h3>❌ فشل إنشاء القروبات</h3>
+                    <p><strong>الخطأ:</strong> ${error.message}</p>
+                `;
+                resultDiv.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btnText.style.display = 'inline';
+                btnSpinner.style.display = 'none';
+                spinner.classList.remove('active');
+            }
+        });
+        
+        // دالة لتطبيق الصلاحيات
+        async function applyPermissions(event) {
+            const resultDiv = document.getElementById('result');
+            
+            if (!confirm('هل تريد تطبيق صلاحيات read-only على جميع القروبات؟\n\nسيتمكن فقط أنت والبوت من الإرسال.')) {
+                return;
+            }
+            
+            const permBtn = event.target;
+            
+            try {
+                // عرض رسالة انتظار
+                permBtn.disabled = true;
+                permBtn.textContent = '⏳ جاري تطبيق الصلاحيات...';
+                
+                const token = localStorage.getItem('access_token');
+                const API_URL = 'http://localhost:8000/api';
+                
+                const response = await fetch(`${API_URL}/sections/telegram/apply-permissions/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert(`✅ ${data.message}\n\nنجح: ${data.success_count} من ${data.total_count}`);
+                    permBtn.textContent = '✅ تم تطبيق الصلاحيات';
+                    permBtn.style.background = '#28a745';
+                } else {
+                    throw new Error(data.error || 'فشل في تطبيق الصلاحيات');
+                }
+                
+            } catch (error) {
+                alert('❌ خطأ: ' + error.message);
+                permBtn.disabled = false;
+                permBtn.textContent = '🔒 تطبيق صلاحيات read-only';
+            }
+        }
+    </script>
+</body>
+</html>

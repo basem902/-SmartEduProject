@@ -1,0 +1,21 @@
+# Telegram Bot Configuration
+# انسخ هذا الملف وأعد تسميته إلى .env
+
+# Bot Token (من @BotFather)
+TELEGRAM_BOT_TOKEN=your-bot-token-here
+
+# Bot Username (بدون @)
+TELEGRAM_BOT_USERNAME=YourBotUsername
+
+# Backend API URL
+API_BASE_URL=http://localhost:8000/api
+
+# Secret Key للتوقيع (يجب أن يكون نفسه في Backend)
+OTP_SECRET_KEY=your-otp-secret-key-here
+
+# Database URL (PostgreSQL)
+DATABASE_URL=postgresql://user:password@host:5432/database
+
+# Logging
+LOG_LEVEL=INFO
+LOG_FILE=bot.log

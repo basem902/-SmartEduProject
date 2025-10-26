@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل دخول المدير - SmartEdu Admin</title>
+    <link rel="stylesheet" href="/admin/css/admin-base.css">
+    <style>
+        :root {
+            --login-bg-start: #ffffff;
+            --login-bg-end: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --text-light: #666666;
+            --border-color: #e0e0e0;
+        }
+
+        [data-theme="dark"] {
+            --login-bg-start: #1a1a2e;
+            --login-bg-end: #16213e;
+            --card-bg: #0f1419;
+            --text-color: #e5e7eb;
+            --text-light: #9ca3af;
+            --border-color: #374151;
+        }
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--login-bg-start) 0%, var(--login-bg-end) 100%);
+            transition: background 0.3s ease;
+        }
+
+        .login-card {
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 450px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle-login {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 50px;
+            padding: 10px 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-color);
+        }
+
+        .theme-toggle-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header .icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+
+        .login-header h1 {
+            color: var(--text-color);
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .login-header p {
+            color: var(--text-light);
+            font-size: 16px;
+        }
+
+        .form-label {
+            color: var(--text-color);
+        }
+
+        .form-control {
+            background: var(--card-bg);
+            color: var(--text-color);
+            border-color: var(--border-color);
+        }
+
+        .form-control:focus {
+            background: var(--card-bg);
+            color: var(--text-color);
+            border-color: #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .btn-login {
+            margin-top: 20px;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: var(--admin-primary);
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        #errorMessage {
+            display: none;
+        }
+    </style>
+</head>
+<body data-theme="dark">
+    <!-- Theme Toggle -->
+    <button class="theme-toggle-login" onclick="toggleTheme()" id="themeToggle">
+        <span id="themeIcon">🌙</span>
+    </button>
+
+    <div class="login-card">
+        <div class="login-header">
+            <div class="icon">🔐</div>
+            <h1>لوحة إدارة قاعدة البيانات</h1>
+            <p>SmartEdu Admin Panel</p>
+        </div>
+
+        <div id="errorMessage" class="alert alert-danger"></div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label class="form-label">اسم المستخدم *</label>
+                <input type="text" id="username" class="form-control" 
+                       placeholder="basem902" required autofocus>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">كلمة المرور *</label>
+                <input type="password" id="password" class="form-control" 
+                       placeholder="••••••••" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block btn-login" id="loginBtn">
+                🔓 تسجيل الدخول
+            </button>
+        </form>
+
+        <div class="back-link">
+            <a href="/">← العودة إلى الصفحة الرئيسية</a>
+        </div>
+    </div>
+
+    <script src="/admin/js/admin-auth.js"></script>
+    
+    <script>
+        // ============ Theme Management ============
+        
+        function toggleTheme() {
+            const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('admin-theme', newTheme);
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            icon.textContent = theme === 'dark' ? '🌙' : '☀️';
+        }
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('admin-theme') || 'dark';
+            document.body.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        }
+
+        initTheme();
+
+        // ============ Auth ============
+        
+        // منع الوصول إذا كان مسجلاً مسبقاً
+        if (adminAuth.isAuthenticated()) {
+            window.location.href = '/admin/dashboard.html';
+        }
+
+        // معالجة تسجيل الدخول
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            const errorMessage = document.getElementById('errorMessage');
+
+            // إخفاء رسالة الخطأ
+            errorMessage.style.display = 'none';
+
+            // تعطيل الزر
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'جاري تسجيل الدخول...';
+
+            try {
+                await adminAuth.login(username, password);
+                
+                // نجح تسجيل الدخول
+                window.location.href = '/admin/dashboard.html';
+            } catch (error) {
+                // فشل تسجيل الدخول
+                errorMessage.textContent = '❌ ' + error.message;
+                errorMessage.style.display = 'flex';
+                
+                loginBtn.disabled = false;
+                loginBtn.textContent = '🔓 تسجيل الدخول';
+                
+                // مسح كلمة المرور
+                document.getElementById('password').value = '';
+                document.getElementById('password').focus();
+            }
+        });
+    </script>
+</body>
+</html>

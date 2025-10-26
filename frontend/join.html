@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Redirecting...</title>
+    <script>
+        // Redirect من /join.html?token=xxx أو /join/xxx إلى /pages/join.html?token=xxx
+        const pathParts = window.location.pathname.split('/').filter(p => p);
+        const queryToken = new URLSearchParams(window.location.search).get('token');
+        
+        // الحصول على token من المسار أو query parameter
+        let token = queryToken;
+        if (!token && pathParts.length > 0) {
+            // إذا كان المسار /join/xxx أو /join.html/xxx
+            const lastPart = pathParts[pathParts.length - 1];
+            if (lastPart && lastPart !== 'join.html' && lastPart !== 'join') {
+                token = lastPart;
+            }
+        }
+        
+        if (token) {
+            // Redirect إلى صفحة join الحقيقية
+            window.location.replace(`/pages/join.html?token=${token}`);
+        } else {
+            // لا يوجد token - رابط غير صالح
+            alert('رابط غير صالح - Token مفقود');
+            window.location.replace('/');
+        }
+    </script>
+</head>
+<body>
+    <p style="text-align: center; margin-top: 50px; font-family: Arial;">
+        جاري التحويل إلى صفحة التسجيل...
+    </p>
+</body>
+</html>

@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#667eea">
+    <meta name="description" content="انضم إلى القروب التعليمي - SmartEdu">
+    
+    <title>انضم للقروب التعليمي - SmartEdu</title>
+    <meta name="description" content="سجل بياناتك للانضمام إلى قروب Telegram التعليمية">
+    <meta name="robots" content="noindex, nofollow">
+    
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="/assets/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192x192.png">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/base.css">
+    <link rel="stylesheet" href="/assets/css/join.css">
+    <link rel="stylesheet" href="/assets/css/mobile-responsive.css">
+</head>
+<body data-theme="dark" data-page-type="default">
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="screen active">
+        <div class="loading-container">
+            <div class="spinner"></div>
+            <h2 class="loading-title">SmartEdu</h2>
+            <p class="loading-text">جاري التحميل...</p>
+        </div>
+    </div>
+
+    <!-- Password Screen -->
+    <div id="passwordScreen" class="screen">
+        <div class="container">
+            <div class="welcome-header">
+                <div class="logo">🔐</div>
+                <h1>رابط محمي</h1>
+                <p class="subtitle">هذا الرابط يتطلب كلمة مرور</p>
+            </div>
+
+            <form id="passwordForm">
+                <div class="form-group">
+                    <label for="passwordInput">كلمة المرور</label>
+                    <input type="password" id="passwordInput" placeholder="أدخل كلمة المرور" required>
+                </div>
+
+                <button type="submit" class="btn-primary">تحقق →</button>
+            </form>
+
+            <p id="passwordError" style="color: #ff4444; text-align: center; margin-top: 20px; display: none;"></p>
+        </div>
+    </div>
+
+    <!-- Welcome Screen -->
+    <div id="welcomeScreen" class="screen">
+        <div class="container">
+            <div class="welcome-header">
+                <div class="logo">🎓</div>
+                <h1>SmartEdu</h1>
+                <p class="subtitle">منصة التعليم الذكية</p>
+            </div>
+
+            <div class="teacher-info">
+                <p class="teacher-name" id="teacherName">...</p>
+                <p class="school-name" id="schoolName">...</p>
+                <p class="subject-name" id="subjectName">...</p>
+            </div>
+
+            <div class="welcome-message">
+                <h2>👋 مرحباً بك عزيزي الطالب</h2>
+                <p id="welcomeText">
+                    أهلاً بك في منصة SmartEdu التعليمية<br>
+                    يسعدنا انضمامك إلى القروب التعليمي الخاص بك على Telegram
+                </p>
+            </div>
+
+            <button class="btn-primary" id="startBtn">ابدأ التسجيل →</button>
+        </div>
+    </div>
+
+    <!-- Registration Screen -->
+    <div id="registrationScreen" class="screen">
+        <div class="container">
+            <div class="form-header">
+                <h2>📝 بياناتك الشخصية</h2>
+                <p class="form-description">أدخل بياناتك للتسجيل</p>
+            </div>
+
+            <form id="registrationForm">
+                <div class="form-group">
+                    <label for="fullName">الاسم الكامل *</label>
+                    <input type="text" id="fullName" placeholder="مثال: محمد أحمد علي حسن" required minlength="6">
+                    <p class="input-hint">💡 الرجاء إدخال الاسم الكامل (اسمين على الأقل)</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="gradeSelect">الصف *</label>
+                    <select id="gradeSelect" required>
+                        <option value="">اختر الصف</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="sectionSelect">الشعبة *</label>
+                    <select id="sectionSelect" required disabled>
+                        <option value="">اختر الشعبة</option>
+                    </select>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="backBtn">← رجوع</button>
+                    <button type="submit" class="btn-primary" id="submitBtn" disabled>التالي →</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Success Screen -->
+    <div id="successScreen" class="screen">
+        <div class="container">
+            <div class="success-animation">
+                <div class="success-icon">✅</div>
+                <h2 class="success-title">تم التسجيل بنجاح!</h2>
+            </div>
+
+            <div class="student-card">
+                <h3>شكراً <span id="studentNameDisplay">...</span></h3>
+                <div class="student-details">
+                    <p><strong>الاسم:</strong> <span id="confirmedName">...</span></p>
+                    <p><strong>الصف:</strong> <span id="confirmedGrade">...</span></p>
+                    <p><strong>الشعبة:</strong> <span id="confirmedSection">...</span></p>
+                </div>
+            </div>
+
+            <div id="telegramSection" class="telegram-section" style="display: none;">
+                <h3>📱 قروبك على Telegram</h3>
+                <p class="telegram-description">انضم الآن للقروب للبقاء على اطلاع بالمشاريع والمهام</p>
+                
+                <div class="telegram-card">
+                    <div class="group-name" id="groupName">...</div>
+                    <div class="telegram-actions">
+                        <button class="btn-copy" id="copyBtn" onclick="copyLink()">
+                            📋 نسخ الرابط
+                        </button>
+                        <a class="btn-open" id="openBtn" href="#" target="_blank">
+                            🔗 فتح التطبيق
+                        </a>
+                        <button class="btn-share" id="shareBtn" onclick="shareLink()">
+                            📤 مشاركة
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="noTelegramSection" class="no-telegram" style="display: none;">
+                <p>لا يوجد قروب تليجرام لهذه الشعبة حالياً</p>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Scripts -->
+    <script>
+        const API_URL = 'http://localhost:8000/api';
+        
+        // Get token from URL - أولوية لـ query parameter ثم المسار
+        console.log('🌐 Full URL:', window.location.href);
+        console.log('🌐 Pathname:', window.location.pathname);
+        console.log('🌐 Search:', window.location.search);
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        let token = urlParams.get('token');
+        console.log('📝 Token from query params:', token);
+        
+        // إذا لم يوجد في query parameter، جرب المسار
+        if (!token) {
+            const pathParts = window.location.pathname.split('/').filter(p => p);
+            console.log('📝 Path parts:', pathParts);
+            
+            // آخر جزء من المسار (إذا لم يكن .html)
+            const lastPart = pathParts[pathParts.length - 1];
+            console.log('📝 Last part:', lastPart);
+            
+            if (lastPart && !lastPart.includes('.html')) {
+                token = lastPart;
+                console.log('📝 Token from path:', token);
+            }
+        }
+        
+        console.log('🔍 Final extracted token:', token);
+
+        // State
+        let teacherData = null;
+        let selectedGradeId = null;
+        let selectedSectionId = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!token) {
+                alert('رابط غير صالح');
+                return;
+            }
+            loadTeacherInfo();
+        });
+
+        // Load teacher info
+        async function loadTeacherInfo(password = null) {
+            try {
+                console.log('📡 Loading teacher info for token:', token);
+                const apiUrl = `${API_URL}/sections/join/${token}/info/`;
+                console.log('📡 API URL:', apiUrl);
+                
+                const options = {
+                    method: password ? 'POST' : 'GET',
+                    headers: {'Content-Type': 'application/json'}
+                };
+                
+                if (password) {
+                    options.body = JSON.stringify({ password });
+                }
+                
+                const response = await fetch(apiUrl, options);
+                console.log('📡 Response status:', response.status);
+                
+                const data = await response.json();
+                console.log('📡 Response data:', data);
+                
+                // 🔐 يحتاج كلمة مرور
+                if (data.password_required && !data.success) {
+                    showScreen('passwordScreen');
+                    if (data.error) {
+                        document.getElementById('passwordError').textContent = data.error;
+                        document.getElementById('passwordError').style.display = 'block';
+                    }
+                    return;
+                }
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'فشل تحميل البيانات');
+                }
+                
+                teacherData = data;
+                
+                // Fill teacher info
+                document.getElementById('teacherName').textContent = `المعلم: ${data.teacher.name}`;
+                document.getElementById('schoolName').textContent = `🏫 ${data.teacher.school}`;
+                document.getElementById('subjectName').textContent = `📚 ${data.teacher.subject}`;
+                document.getElementById('welcomeText').innerHTML = data.welcome_message.replace(/\n/g, '<br>');
+                
+                // Show welcome screen
+                showScreen('welcomeScreen');
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert(error.message || 'حدث خطأ في تحميل البيانات');
+            }
+        }
+
+        // Show screen
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // Password form submit
+        document.getElementById('passwordForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const password = document.getElementById('passwordInput').value;
+            document.getElementById('passwordError').style.display = 'none';
+            await loadTeacherInfo(password);
+        });
+
+          // Buttons
+        document.getElementById('startBtn')?.addEventListener('click', () => {
+            // Load grades
+            const gradeSelect = document.getElementById('gradeSelect');
+            gradeSelect.innerHTML = '<option value="">اختر الصف</option>';
+            
+            teacherData.grades.forEach(grade => {
+                const option = document.createElement('option');
+                option.value = grade.id;
+                option.textContent = grade.name;
+                option.dataset.sections = JSON.stringify(grade.sections);
+                gradeSelect.appendChild(option);
+            });
+            
+            showScreen('registrationScreen');
+        });
+
+        document.getElementById('backBtn')?.addEventListener('click', () => {
+            showScreen('welcomeScreen');
+        });
+
+        // Grade change
+        document.getElementById('gradeSelect')?.addEventListener('change', (e) => {
+            const sectionSelect = document.getElementById('sectionSelect');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            if (!e.target.value) {
+                sectionSelect.disabled = true;
+                sectionSelect.innerHTML = '<option value="">اختر الشعبة</option>';
+                submitBtn.disabled = true;
+                return;
+            }
+            
+            selectedGradeId = e.target.value;
+            const sections = JSON.parse(e.target.selectedOptions[0].dataset.sections);
+            
+            sectionSelect.innerHTML = '<option value="">اختر الشعبة</option>';
+            sections.forEach(section => {
+                const option = document.createElement('option');
+                option.value = section.id;
+                option.textContent = section.name;
+                sectionSelect.appendChild(option);
+            });
+            
+            sectionSelect.disabled = false;
+        });
+
+        // Section change
+        document.getElementById('sectionSelect')?.addEventListener('change', (e) => {
+            const submitBtn = document.getElementById('submitBtn');
+            selectedSectionId = e.target.value;
+            submitBtn.disabled = !selectedSectionId;
+        });
+
+        // Form submit
+        document.getElementById('registrationForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const fullName = document.getElementById('fullName').value.trim();
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // Validation
+            if (fullName.length < 6) {
+                alert('الرجاء إدخال الاسم الكامل');
+                return;
+            }
+            
+            const nameParts = fullName.split(' ').filter(p => p.length > 0);
+            if (nameParts.length < 2) {
+                alert('الرجاء إدخال اسمين على الأقل');
+                return;
+            }
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'جاري التسجيل...';
+            
+            // 🔍 Log data before sending
+            const requestData = {
+                full_name: fullName,
+                grade_id: parseInt(selectedGradeId),
+                section_id: parseInt(selectedSectionId)
+            };
+            console.log('📤 Sending registration data:', requestData);
+            
+            try {
+                const response = await fetch(`${API_URL}/sections/join/${token}/register/`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(requestData)
+                });
+                
+                const data = await response.json();
+                console.log('📡 Register response:', response.status, data);
+                
+                // 🐛 عرض traceback إذا موجود
+                if (data.traceback) {
+                    console.error('❌ Backend Traceback:', data.traceback);
+                }
+                
+                if (data.duplicate) {
+                    alert(`${data.message}\n\nطالب مشابه: ${data.similar_name}`);
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'التالي →';
+                    return;
+                }
+                
+                if (!data.success) {
+                    console.error('❌ Registration failed:', data);
+                    
+                    // Show validation errors if available
+                    if (data.details && typeof data.details === 'object') {
+                        console.error('Validation errors:', data.details);
+                        const errorMessages = Object.entries(data.details)
+                            .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
+                            .join('\n');
+                        throw new Error(`خطأ في البيانات:\n${errorMessages}`);
+                    }
+                    
+                    throw new Error(data.error || 'فشل التسجيل');
+                }
+                
+                // Show success
+                showSuccessScreen(data);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert(error.message || 'حدث خطأ في التسجيل');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'التالي →';
+            }
+        });
+
+        // Show success screen
+        function showSuccessScreen(data) {
+            const student = data.student;
+            
+            document.getElementById('studentNameDisplay').textContent = student.name;
+            document.getElementById('confirmedName').textContent = student.name;
+            document.getElementById('confirmedGrade').textContent = student.grade;
+            document.getElementById('confirmedSection').textContent = student.section;
+            
+            // Telegram section
+            if (data.telegram && data.telegram.invite_link) {
+                const groupName = data.telegram.group_name;
+                const inviteLink = data.telegram.invite_link;
+                
+                document.getElementById('groupName').textContent = groupName;
+                document.getElementById('openBtn').href = inviteLink;
+                
+                // Store for copy/share
+                window.telegramLink = inviteLink;
+                window.groupName = groupName;
+                
+                document.getElementById('telegramSection').style.display = 'block';
+                document.getElementById('noTelegramSection').style.display = 'none';
+            } else {
+                document.getElementById('telegramSection').style.display = 'none';
+                document.getElementById('noTelegramSection').style.display = 'block';
+            }
+            
+            showScreen('successScreen');
+            confetti();
+        }
+
+        // Copy link
+        function copyLink() {
+            if (!window.telegramLink) return;
+            
+            navigator.clipboard.writeText(window.telegramLink).then(() => {
+                alert('✅ تم نسخ الرابط');
+            }).catch(() => {
+                alert('❌ فشل النسخ');
+            });
+        }
+
+        // Share link
+        async function shareLink() {
+            if (!window.telegramLink) return;
+            
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: window.groupName || 'قروب التليجرام',
+                        text: 'انضم إلى القروب التعليمي',
+                        url: window.telegramLink
+                    });
+                } catch (err) {
+                    console.log('Share cancelled');
+                }
+            } else {
+                copyLink();
+            }
+        }
+
+        // Confetti animation
+        function confetti() {
+            const colors = ['#667eea', '#764ba2', '#f093fb', '#4facfe'];
+            const count = 50;
+            
+            for (let i = 0; i < count; i++) {
+                setTimeout(() => {
+                    const el = document.createElement('div');
+                    el.style.position = 'fixed';
+                    el.style.width = '10px';
+                    el.style.height = '10px';
+                    el.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    el.style.left = Math.random() * 100 + '%';
+                    el.style.top = '-20px';
+                    el.style.borderRadius = '50%';
+                    el.style.pointerEvents = 'none';
+                    el.style.zIndex = '9999';
+                    el.style.animation = 'fall 3s linear';
+                    document.body.appendChild(el);
+                    
+                    setTimeout(() => el.remove(), 3000);
+                }, i * 30);
+            }
+        }
+
+        // Add CSS animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fall {
+                to {
+                    transform: translateY(100vh) rotate(360deg);
+                    opacity: 0;
+                }
+            }
+            .screen { display: none; }
+            .screen.active { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+        `;
+        document.head.appendChild(style);
+    </script>
+
+    <!-- ✅ Dark Mode System -->
+    <script src="/assets/js/dark-mode-manager.js"></script>
+    <script src="/assets/js/dark-mode-init.js"></script>
+</body>
+</html>    

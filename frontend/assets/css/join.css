@@ -1,0 +1,375 @@
+/**
+ * Join Page - Student Registration
+ * Dark Mode Default - SmartEdu
+ */
+
+/* ==================== Global ==================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #e5e7eb;
+  min-height: 100vh;
+}
+
+.container {
+  background: #1a1f26;
+  border-radius: 20px;
+  padding: 40px 30px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+/* ==================== Loading ==================== */
+.loading-container {
+  text-align: center;
+  color: white;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(255,255,255,0.1);
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+.loading-title {
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ==================== Welcome Screen ==================== */
+.welcome-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.logo {
+  font-size: 60px;
+  margin-bottom: 10px;
+}
+
+.welcome-header h1 {
+  font-size: 32px;
+  color: #667eea;
+  margin-bottom: 5px;
+}
+
+.subtitle {
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+.teacher-info {
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.teacher-info p {
+  margin: 8px 0;
+  font-size: 15px;
+}
+
+.teacher-name {
+  font-weight: bold;
+  color: #667eea;
+}
+
+.welcome-message {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.welcome-message h2 {
+  font-size: 22px;
+  margin-bottom: 15px;
+  color: #f3f4f6;
+}
+
+.welcome-message p {
+  line-height: 1.6;
+  color: #d1d5db;
+}
+
+/* ==================== Form ==================== */
+.form-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.form-header h2 {
+  font-size: 24px;
+  margin-bottom: 8px;
+  color: #f3f4f6;
+}
+
+.form-description {
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #d1d5db;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 12px 16px;
+  background: #0f1419;
+  border: 2px solid #374151;
+  border-radius: 10px;
+  color: #f3f4f6;
+  font-size: 15px;
+  transition: all 0.3s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #667eea;
+  background: #1a1f26;
+}
+
+.form-group select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.input-hint {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 6px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 25px;
+}
+
+/* ==================== Buttons ==================== */
+.btn-primary,
+.btn-secondary {
+  flex: 1;
+  padding: 14px 24px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: #374151;
+  color: #d1d5db;
+}
+
+.btn-secondary:hover {
+  background: #4b5563;
+}
+
+/* ==================== Success Screen ==================== */
+.success-animation {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.success-icon {
+  font-size: 60px;
+  margin-bottom: 15px;
+  animation: bounce 0.6s ease;
+}
+
+.success-title {
+  font-size: 24px;
+  color: #10b981;
+}
+
+.student-card {
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 25px;
+}
+
+.student-card h3 {
+  font-size: 20px;
+  margin-bottom: 15px;
+  text-align: center;
+  color: #667eea;
+}
+
+.student-details p {
+  margin: 10px 0;
+  font-size: 15px;
+}
+
+.student-details strong {
+  color: #9ca3af;
+  display: inline-block;
+  width: 80px;
+}
+
+/* ==================== Telegram Section ==================== */
+.telegram-section {
+  text-align: center;
+}
+
+.telegram-section h3 {
+  font-size: 20px;
+  margin-bottom: 10px;
+  color: #667eea;
+}
+
+.telegram-description {
+  color: #9ca3af;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.telegram-card {
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.group-name {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 15px;
+  color: #f3f4f6;
+}
+
+.telegram-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-copy,
+.btn-open,
+.btn-share {
+  flex: 1;
+  min-width: 120px;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+}
+
+.btn-copy {
+  background: #374151;
+  color: #d1d5db;
+}
+
+.btn-open {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-share {
+  background: #10b981;
+  color: white;
+}
+
+.btn-copy:hover,
+.btn-open:hover,
+.btn-share:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+}
+
+.no-telegram {
+  text-align: center;
+  color: #9ca3af;
+  padding: 20px;
+}
+
+/* ==================== Animations ==================== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* ==================== Responsive ==================== */
+@media (max-width: 576px) {
+  .container {
+    padding: 30px 20px;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .telegram-actions {
+    flex-direction: column;
+  }
+  
+  .btn-copy,
+  .btn-open,
+  .btn-share {
+    width: 100%;
+    min-width: auto;
+  }
+}

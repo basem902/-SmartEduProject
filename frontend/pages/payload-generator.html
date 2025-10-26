@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔑 توليد Payload للاختبار</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 2rem;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.95rem;
+        }
+
+        .notice {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 25px;
+            color: #856404;
+        }
+
+        .notice strong {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .result {
+            margin-top: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .payload-box {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px dashed #667eea;
+            margin-bottom: 15px;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+            color: #333;
+        }
+
+        .copy-btn {
+            width: 100%;
+            padding: 10px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .copy-btn:hover {
+            background: #218838;
+        }
+
+        .copy-btn.copied {
+            background: #20c997;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+
+        .quick-links {
+            margin-top: 25px;
+            text-align: center;
+        }
+
+        .quick-links a {
+            display: inline-block;
+            margin: 5px;
+            padding: 10px 20px;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .quick-links a:hover {
+            background: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>🔑 توليد Payload</h1>
+            <p class="subtitle">للاختبار السريع لنظام OTP</p>
+
+            <div class="notice">
+                <strong>⚡ للاختبار السريع فقط!</strong>
+                هذه الصفحة تُنشئ payload وهمي للاختبار. في الإنتاج، يحصل الطالب على payload من عملية الانضمام.
+            </div>
+
+            <div class="form-group">
+                <label>Project ID:</label>
+                <input type="number" id="projectId" value="1" min="1">
+                <small style="color: #666; font-size: 0.85rem;">ID المشروع من قاعدة البيانات</small>
+            </div>
+
+            <div class="form-group">
+                <label>Section ID (اختياري):</label>
+                <input type="number" id="sectionId" value="1" min="1">
+                <small style="color: #666; font-size: 0.85rem;">ID الشعبة (اتركه 1 للاختبار)</small>
+            </div>
+
+            <div class="form-group">
+                <label>مدة الصلاحية:</label>
+                <select id="expiry">
+                    <option value="3600">ساعة واحدة</option>
+                    <option value="7200">ساعتان</option>
+                    <option value="86400" selected>24 ساعة</option>
+                    <option value="604800">أسبوع</option>
+                </select>
+            </div>
+
+            <button class="btn" onclick="generatePayload()">🔑 توليد Payload</button>
+
+            <div id="result" class="result">
+                <h3>✅ تم التوليد بنجاح!</h3>
+                
+                <div class="payload-box" id="payloadText"></div>
+                
+                <button class="copy-btn" id="copyBtn" onclick="copyPayload()">
+                    📋 نسخ Payload
+                </button>
+
+                <div class="info-box">
+                    <strong>💡 كيفية الاستخدام:</strong><br>
+                    1. انسخ الـ Payload أعلاه<br>
+                    2. افتح <a href="otp-test.html" style="color: #0066cc;">صفحة اختبار OTP</a><br>
+                    3. ألصقه في حقل "Payload"<br>
+                    4. أكمل البيانات واختبر النظام
+                </div>
+            </div>
+
+            <div class="quick-links">
+                <a href="otp-test.html">🧪 اختبار OTP</a>
+                <a href="sections-manage.html">📚 الشُعب</a>
+                <a href="testing-index.html">🏠 الرئيسية</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function generatePayload() {
+            const projectId = document.getElementById('projectId').value;
+            const sectionId = document.getElementById('sectionId').value;
+            const expiry = parseInt(document.getElementById('expiry').value);
+            
+            // Validation
+            if (!projectId || projectId < 1) {
+                alert('⚠️ يجب إدخال Project ID صحيح');
+                return;
+            }
+
+            // Calculate expiration timestamp
+            const exp = Math.floor(Date.now() / 1000) + expiry;
+            
+            // Generate simple signature (للاختبار فقط)
+            const sig = generateSignature(projectId, sectionId, exp);
+            
+            // Create payload
+            const payload = `p=${projectId}&s=${sectionId}&exp=${exp}&sig=${sig}`;
+            
+            // Display result
+            document.getElementById('payloadText').textContent = payload;
+            document.getElementById('result').classList.add('show');
+            
+            // Store for copying
+            window.generatedPayload = payload;
+            
+            // Log
+            console.log('Generated Payload:', payload);
+            console.log('Expires at:', new Date(exp * 1000).toLocaleString('ar-SA'));
+        }
+
+        function generateSignature(projectId, sectionId, exp) {
+            // Simple signature للاختبار
+            // في الإنتاج، يُحسب بـ HMAC
+            const str = `${projectId}${sectionId}${exp}test`;
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return Math.abs(hash).toString(16).substring(0, 10);
+        }
+
+        function copyPayload() {
+            const payload = window.generatedPayload;
+            if (!payload) return;
+
+            // Copy to clipboard
+            navigator.clipboard.writeText(payload).then(() => {
+                const btn = document.getElementById('copyBtn');
+                const originalText = btn.textContent;
+                
+                btn.textContent = '✅ تم النسخ!';
+                btn.classList.add('copied');
+                
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                alert('فشل النسخ: ' + err);
+            });
+        }
+
+        // Auto-generate on load للتجربة السريعة
+        window.addEventListener('load', () => {
+            console.log('🔑 Payload Generator Ready');
+            console.log('Tip: اضغط "توليد Payload" للبدء');
+        });
+    </script>
+</body>
+</html>

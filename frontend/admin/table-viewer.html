@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>عرض الجدول - SmartEdu Admin</title>
+    <link rel="stylesheet" href="/admin/css/admin-base.css">
+    <style>
+        .table-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .data-table {
+            min-width: 100%;
+            white-space: nowrap;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            align-items: center;
+        }
+
+        .json-viewer {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow: auto;
+            direction: ltr;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Header -->
+        <div class="admin-header">
+            <h1>📋 <span id="tableName">جدول</span></h1>
+            <div class="admin-user">
+                <button class="btn btn-info btn-sm" onclick="window.location.href='/admin/dashboard.html'">
+                    ← العودة للوحة التحكم
+                </button>
+                <button class="btn btn-danger btn-sm" onclick="adminAuth.logout()">
+                    🚪 تسجيل الخروج
+                </button>
+            </div>
+        </div>
+
+        <!-- Table Controls -->
+        <div class="admin-card">
+            <div class="table-controls">
+                <div class="search-box">
+                    <input type="text" id="searchInput" class="form-control" 
+                           placeholder="🔍 بحث في البيانات...">
+                </div>
+                <div class="table-actions">
+                    <button class="btn btn-success btn-sm" onclick="tableViewer.exportToCSV()">
+                        📥 تصدير CSV
+                    </button>
+                    <button class="btn btn-info btn-sm" onclick="tableViewer.exportToJSON()">
+                        📄 تصدير JSON
+                    </button>
+                    <button class="btn btn-primary btn-sm" onclick="tableViewer.refresh()">
+                        🔄 تحديث
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table Info -->
+            <div style="margin-bottom: 15px; color: var(--admin-text-light);">
+                <span id="tableInfo">جاري التحميل...</span>
+            </div>
+
+            <!-- Table Data -->
+            <div class="table-wrapper">
+                <div id="tableContainer">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" id="paginationContainer">
+            </div>
+        </div>
+    </div>
+
+    <script src="/admin/js/admin-auth.js"></script>
+    <script src="/admin/js/admin-api.js"></script>
+    
+    <script>
+        class TableViewer {
+            constructor() {
+                this.tableName = '';
+                this.data = null;
+                this.filteredData = null;
+                this.currentPage = 0;
+                this.limit = 100;
+            }
+
+            async init() {
+                // الحصول على اسم الجدول من URL
+                const params = new URLSearchParams(window.location.search);
+                this.tableName = params.get('table');
+
+                if (!this.tableName) {
+                    alert('لم يتم تحديد اسم الجدول');
+                    window.location.href = '/admin/dashboard.html';
+                    return;
+                }
+
+                // عرض اسم الجدول
+                document.getElementById('tableName').textContent = this.tableName;
+
+                // تحميل البيانات
+                await this.loadData();
+
+                // إعداد البحث
+                document.getElementById('searchInput').addEventListener('input', (e) => {
+                    this.filterData(e.target.value);
+                });
+            }
+
+            async loadData() {
+                try {
+                    this.data = await adminAPI.getTableData(this.tableName, this.limit, this.currentPage * this.limit);
+                    this.filteredData = this.data.data;
+                    this.render();
+                } catch (error) {
+                    this.showError('فشل في تحميل البيانات: ' + error.message);
+                }
+            }
+
+            render() {
+                if (!this.data || !this.filteredData) return;
+
+                // معلومات الجدول
+                document.getElementById('tableInfo').textContent = 
+                    `عرض ${this.filteredData.length} من أصل ${this.data.total} سجل`;
+
+                // عرض البيانات
+                const container = document.getElementById('tableContainer');
+                
+                if (this.filteredData.length === 0) {
+                    container.innerHTML = '<p class="text-center">لا توجد بيانات</p>';
+                    return;
+                }
+
+                let html = '<table class="data-table"><thead><tr>';
+                
+                // Headers
+                this.data.columns.forEach(col => {
+                    html += `<th>${col}</th>`;
+                });
+                html += '<th>إجراءات</th>';
+                html += '</tr></thead><tbody>';
+
+                // Rows
+                this.filteredData.forEach(row => {
+                    const rowId = row.id; // افتراض أن كل جدول يحتوي على عمود id
+                    html += '<tr>';
+                    this.data.columns.forEach(col => {
+                        const value = row[col];
+                        const displayValue = value === null ? '<em>null</em>' : 
+                                           value === '' ? '<em>فارغ</em>' : 
+                                           String(value).substring(0, 100);
+                        html += `<td>${displayValue}</td>`;
+                    });
+                    // زر حذف
+                    html += `
+                        <td>
+                            <button class="btn btn-danger btn-sm" 
+                                    onclick="tableViewer.deleteRow(${rowId})"
+                                    title="حذف هذا السجل">
+                                🗑️ حذف
+                            </button>
+                        </td>
+                    `;
+                    html += '</tr>';
+                });
+
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            }
+
+            filterData(searchTerm) {
+                if (!searchTerm) {
+                    this.filteredData = this.data.data;
+                } else {
+                    searchTerm = searchTerm.toLowerCase();
+                    this.filteredData = this.data.data.filter(row => {
+                        return Object.values(row).some(value => {
+                            return String(value).toLowerCase().includes(searchTerm);
+                        });
+                    });
+                }
+                this.render();
+            }
+
+            async refresh() {
+                await this.loadData();
+            }
+
+            exportToCSV() {
+                if (!this.filteredData || this.filteredData.length === 0) {
+                    alert('لا توجد بيانات للتصدير');
+                    return;
+                }
+
+                let csv = this.data.columns.join(',') + '\n';
+                
+                this.filteredData.forEach(row => {
+                    const values = this.data.columns.map(col => {
+                        const value = row[col];
+                        return value === null ? '' : `"${String(value).replace(/"/g, '""')}"`;
+                    });
+                    csv += values.join(',') + '\n';
+                });
+
+                this.downloadFile(csv, `${this.tableName}.csv`, 'text/csv');
+            }
+
+            exportToJSON() {
+                if (!this.filteredData || this.filteredData.length === 0) {
+                    alert('لا توجد بيانات للتصدير');
+                    return;
+                }
+
+                const json = JSON.stringify(this.filteredData, null, 2);
+                this.downloadFile(json, `${this.tableName}.json`, 'application/json');
+            }
+
+            downloadFile(content, filename, type) {
+                const blob = new Blob([content], { type });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+
+            async deleteRow(rowId) {
+                if (!confirm(`⚠️ هل أنت متأكد من حذف السجل رقم ${rowId}؟\n\nهذا الإجراء لا يمكن التراجع عنه!`)) {
+                    return;
+                }
+
+                try {
+                    await adminAPI.deleteRow(this.tableName, rowId);
+                    
+                    // عرض رسالة نجاح
+                    this.showSuccess(`✅ تم حذف السجل رقم ${rowId} بنجاح`);
+                    
+                    // إعادة تحميل البيانات
+                    await this.refresh();
+                } catch (error) {
+                    this.showError('فشل في حذف السجل: ' + error.message);
+                }
+            }
+
+            showSuccess(message) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-success';
+                alertDiv.textContent = message;
+                
+                const container = document.querySelector('.admin-container');
+                container.insertBefore(alertDiv, container.firstChild);
+                
+                setTimeout(() => alertDiv.remove(), 3000);
+            }
+
+            showError(message) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-danger';
+                alertDiv.textContent = message;
+                
+                const container = document.querySelector('.admin-container');
+                container.insertBefore(alertDiv, container.firstChild);
+                
+                setTimeout(() => alertDiv.remove(), 5000);
+            }
+        }
+
+        // إنشاء instance عام
+        let tableViewer;
+
+        // التحقق من تسجيل الدخول
+        if (!adminAuth.requireAuth()) {
+            // سيتم إعادة التوجيه تلقائياً
+        } else {
+            tableViewer = new TableViewer();
+            tableViewer.init();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0b1220">
+  <title>إرسال إشعار التيليجرام - مباشر</title>
+  <link rel="manifest" href="../manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="color-scheme" content="light dark">
+  <link rel="stylesheet" href="../assets/css/telegram-send-progress.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#f8fafc;--card:#ffffff;--text:#0f172a;--muted:#64748b;--border:#e5e7eb;--primary:#2563eb;--primary-600:#1d4ed8;--success:#10b981;--danger:#ef4444;--shadow:rgba(0,0,0,.10)}
+    @media (prefers-color-scheme: dark){
+      :root{--bg:#0b1220;--card:#0f172a;--text:#e5e7eb;--muted:#9ca3af;--border:#1f2937;--shadow:rgba(0,0,0,.35)}
+    }
+    [data-theme="dark"]{--bg:#0b1220;--card:#0f172a;--text:#e5e7eb;--muted:#9ca3af;--border:#1f2937;--shadow:rgba(0,0,0,.35)}
+    [data-theme="light"]{--bg:#f8fafc;--card:#ffffff;--text:#0f172a;--muted:#64748b;--border:#e5e7eb;--shadow:rgba(0,0,0,.10)}
+    body{font-family:'Tajawal',system-ui;background:var(--bg);color:var(--text);min-height:100vh;accent-color:var(--primary)}
+    .container{max-width:900px;margin:calc(env(safe-area-inset-top,0) + 16px) auto 24px;padding:0 16px;animation:fadeIn .5s ease-out}
+    .header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+    .title{font-size:20px;font-weight:700}
+    .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .switch{display:flex;gap:6px;align-items:center;background:var(--card);padding:8px 12px;border-radius:10px;border:1px solid var(--border);color:var(--text)}
+    .btn{background:linear-gradient(135deg,var(--primary) 0%,var(--primary-600) 100%);border:none;color:#fff;padding:10px 14px;border-radius:10px;cursor:pointer;transition:transform .15s ease,opacity .2s ease;box-shadow:0 6px 18px var(--shadow)}
+    .btn:hover{transform:translateY(-1px)}
+    .btn:active{transform:translateY(0)}
+    .btn.secondary{background:#374151}
+    .btn.install{background:#059669}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;color:var(--text);box-shadow:0 8px 24px var(--shadow);animation:slideUp .5s ease}
+    .row{display:flex;gap:12px;align-items:center;margin:8px 0}
+    .muted{color:var(--muted)}
+    .list{display:grid;gap:8px;margin-top:12px}
+    .ok{color:var(--success)}
+    .err{color:var(--danger)}
+    .tag{display:inline-block;background:#111827;border:1px solid var(--border);border-radius:999px;padding:4px 10px;font-size:12px;color:var(--muted)}
+    .toast{position:fixed;inset-inline:16px;bottom:16px;background:#111827;border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:10px;box-shadow:0 6px 18px var(--shadow);display:none;z-index:50}
+    .offline{position:fixed;top:0;inset-inline:0;background:#7f1d1d;color:#fee2e2;text-align:center;padding:8px 12px;display:none;z-index:60}
+    .a2hs{display:none}
+
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    @keyframes slideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+    @media (max-width:640px){
+      .header{flex-direction:column;align-items:stretch}
+      .controls{gap:10px}
+      .btn{width:100%}
+      .switch{flex:1}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="title">إرسال إشعار التيليجرام - مباشر</div>
+      <div class="controls">
+        <label class="switch"><input id="optPin" type="checkbox" checked> <span>تثبيت الرسالة</span></label>
+        <label class="switch"><input id="optFiles" type="checkbox" checked> <span>إرسال المرفقات</span></label>
+        <button id="sendBtn" class="btn">إرسال الآن</button>
+        <a href="/pages/dashboard.html" class="btn secondary">عودة للوحة التحكم</a>
+        <button id="installBtn" class="btn install a2hs">تثبيت التطبيق</button>
+      </div>
+    </div>
+
+    <div id="projCard" class="card">
+      <div class="row"><span class="muted">العنوان:</span> <span id="pTitle">-</span></div>
+      <div class="row"><span class="muted">المادة:</span> <span id="pSubject">-</span></div>
+      <div class="row"><span class="muted">الشُعب:</span> <span id="pSections" class="tag">-</span></div>
+      <div id="loading" class="row" style="display:none"><div class="spinner"></div><span>جارِ الإرسال، يرجى الانتظار...</span></div>
+    </div>
+
+    <div id="resultCard" class="card" style="margin-top:12px;display:none">
+      <div class="row"><span class="muted">النتيجة:</span> <span id="summary">-</span></div>
+      <div class="list" id="details"></div>
+    </div>
+  </div>
+
+  <div id="offlineBar" class="offline">أنت غير متصل الآن</div>
+  <div id="toast" class="toast"></div>
+
+  <script src="/assets/js/config.js"></script>
+  <script src="../assets/js/telegram-send-direct.js"></script>
+  <script>
+    // Theme: follow OS/user preference by default; override only if user saved a choice
+    try {
+      const pref = localStorage.getItem('darkMode');
+      if (pref === 'true') document.documentElement.setAttribute('data-theme','dark');
+      else if (pref === 'false') document.documentElement.setAttribute('data-theme','light');
+    } catch {}
+
+    // Service Worker registration for PWA
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('../sw.js').catch(()=>{});
+    }
+
+    // Add to Home Screen (A2HS)
+    let deferredPrompt = null;
+    const installBtn = document.getElementById('installBtn');
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.classList.remove('a2hs');
+    });
+    installBtn?.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      installBtn.classList.add('a2hs');
+      showToast('تم إرسال طلب التثبيت');
+    });
+
+    // Offline/Online indicator
+    const offlineBar = document.getElementById('offlineBar');
+    function updateOnline(){ offlineBar.style.display = navigator.onLine ? 'none' : 'block'; }
+    window.addEventListener('online', updateOnline);
+    window.addEventListener('offline', updateOnline);
+    updateOnline();
+
+    // Toast helper
+    function showToast(msg){
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.style.display = 'block';
+      setTimeout(()=>{ el.style.display = 'none'; }, 2500);
+    }
+  </script>
+</body>
+</html>
