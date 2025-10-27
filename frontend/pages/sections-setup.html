@@ -1247,8 +1247,8 @@
                     sectionsCount
                 };
                 
-                // API URL
-                const API_URL = 'http://localhost:8000/api';
+                // API URL - use global from config.js
+                const API_URL = window.API_BASE || 'http://localhost:8000/api';
                 
                 // الخطوة 1: التحقق من Session أو إرسال كود
                 const response = await fetch(`${API_URL}/sections/telegram/session/login/`, {
@@ -1296,7 +1296,7 @@
         
         // دالة إنشاء القروبات مباشرة (بعد التأكد من وجود session)
         async function createGroupsDirectly(phoneNumber, gradeName, subjectName, sectionsCount) {
-            const API_URL = 'http://localhost:8000/api';
+            const API_URL = window.API_BASE || 'http://localhost:8000/api';
             const token = localStorage.getItem('access_token');
             
             // تحويل العدد إلى array من الحروف العربية
@@ -1417,7 +1417,7 @@
         // التحقق من الكود
         async function verifyTelegramCode() {
             const code = document.getElementById('verificationCode').value;
-            const API_URL = 'http://localhost:8000/api';
+            const API_URL = window.API_BASE || 'http://localhost:8000/api';
             const token = localStorage.getItem('access_token');
             
             try {
@@ -1489,7 +1489,7 @@
         // التحقق من كلمة المرور
         async function verifyTwoStepPassword() {
             const password = document.getElementById('twoStepPassword').value;
-            const API_URL = 'http://localhost:8000/api';
+            const API_URL = window.API_BASE || 'http://localhost:8000/api';
             const token = localStorage.getItem('access_token');
             
             if (!password) {
@@ -2023,7 +2023,7 @@
         
         // ====== Telegram Session Management ======
         
-        const API_URL = 'http://localhost:8000/api';
+        const API_URL = window.API_BASE || 'http://localhost:8000/api';
         let linkedPhoneNumber = '';
         let phoneCodeHash = '';
         let linkTimer = null;
