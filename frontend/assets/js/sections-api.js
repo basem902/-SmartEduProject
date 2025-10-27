@@ -5,7 +5,10 @@
 
 class SectionsAPI {
   constructor() {
-    this.baseURL = 'http://localhost:8000/api/sections';
+    // Use global API_BASE from config.js
+    const API_BASE = window.API_BASE || 'http://localhost:8000/api';
+    this.baseURL = `${API_BASE}/sections`;
+    console.log('🔧 SectionsAPI initialized with baseURL:', this.baseURL);
   }
 
   /**
