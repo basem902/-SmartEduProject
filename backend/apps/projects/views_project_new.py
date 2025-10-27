@@ -20,10 +20,19 @@ logger = logging.getLogger(__name__)
 
 def parse_formdata_array(request, field_name, as_int=False):
     """
-    Parse array field from FormData
-    Simple approach: use getlist() for native FormData arrays
+    Parse array field from both JSON and FormData
+    - JSON: data is dict with lists
+    - FormData: data is QueryDict with getlist()
     """
-    values = request.data.getlist(field_name)
+    # Check if data is dict (JSON) or QueryDict (FormData)
+    if isinstance(request.data, dict):
+        # JSON request
+        values = request.data.get(field_name, [])
+        if not isinstance(values, list):
+            values = [values] if values else []
+    else:
+        # FormData request
+        values = request.data.getlist(field_name)
     
     if not values:
         logger.warning(f"⚠️ {field_name}: empty or not found")
@@ -78,13 +87,13 @@ def create_project_v2(request):
             'requirements': request.data.get('requirements', ''),
             'tips': request.data.get('tips', ''),
             'allowed_file_types': allowed_file_types,
-            'max_file_size': request.data.get('max_file_size', 10),
+            'max_file_size': request.data.get('max_file_size_mb', request.data.get('max_file_size', 10)),
             'max_grade': request.data.get('max_grade', 20),
             'start_date': request.data.get('start_date'),
-            'deadline': request.data.get('deadline'),
-            'allow_late_submission': request.data.get('allow_late_submission', 'false').lower() == 'true',
-            'send_reminder': request.data.get('send_reminder', 'true').lower() == 'true',
-            'ai_check_plagiarism': request.data.get('ai_check_plagiarism', 'false').lower() == 'true',
+            'deadline': request.data.get('due_date', request.data.get('deadline')),
+            'allow_late_submission': str(request.data.get('allow_late_submission', False)).lower() == 'true',
+            'send_reminder': str(request.data.get('send_reminder', True)).lower() in ['true', '1', 'yes'],
+            'ai_check_plagiarism': str(request.data.get('ai_check_plagiarism', False)).lower() == 'true',
             'external_links': external_links,
         }
         
