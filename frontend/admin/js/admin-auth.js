@@ -13,7 +13,9 @@ class AdminAuth {
      */
     async login(username, password) {
         try {
-            const response = await fetch('http://localhost:8000/api/admin-panel/login/', {
+            // Use global API_BASE from config.js
+            const API_BASE = window.API_BASE || 'http://localhost:8000/api';
+            const response = await fetch(`${API_BASE}/admin-panel/login/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
