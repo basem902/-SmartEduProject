@@ -1,0 +1,3 @@
+# Netlify Redirects
+/api/*  https://smarteduproject-k0um.onrender.com/api/:splat  200
+/*      /index.html   200
