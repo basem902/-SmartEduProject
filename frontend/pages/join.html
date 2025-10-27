@@ -161,8 +161,9 @@
 
 
     <!-- Scripts -->
+    <script src="/assets/js/config.js"></script>
     <script>
-        const API_URL = 'http://localhost:8000/api';
+        const API_URL = window.API_BASE || 'http://localhost:8000/api';
         
         // Get token from URL - أولوية لـ query parameter ثم المسار
         console.log('🌐 Full URL:', window.location.href);

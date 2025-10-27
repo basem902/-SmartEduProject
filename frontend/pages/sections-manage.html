@@ -1262,7 +1262,8 @@
                     console.log('🔐 Password enabled for join link');
                 }
                 
-                const response = await fetch('http://localhost:8000/api/sections/teacher/join-link/generate/', {
+                const API_BASE = window.API_BASE || 'http://localhost:8000/api';
+                const response = await fetch(`${API_BASE}/sections/teacher/join-link/generate/`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -1367,7 +1368,8 @@
                 
                 console.log('🔐 Updating join link password...');
                 
-                const response = await fetch('http://localhost:8000/api/sections/teacher/join-link/generate/', {
+                const API_BASE = window.API_BASE || 'http://localhost:8000/api';
+                const response = await fetch(`${API_BASE}/sections/teacher/join-link/generate/`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -1407,7 +1409,8 @@
                 const token = localStorage.getItem('access_token');
                 if (!token) return;
                 
-                const response = await fetch('http://localhost:8000/api/sections/students/count/', {
+                const API_BASE = window.API_BASE || 'http://localhost:8000/api';
+                const response = await fetch(`${API_BASE}/sections/students/count/`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -1444,7 +1447,8 @@
                 }
                 
                 // Fetch join link stats
-                const response = await fetch('http://localhost:8000/api/sections/teacher/join-link/generate/', {
+                const API_BASE = window.API_BASE || 'http://localhost:8000/api';
+                const response = await fetch(`${API_BASE}/sections/teacher/join-link/generate/`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
