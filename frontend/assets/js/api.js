@@ -3,7 +3,8 @@
  */
 
 const API_CONFIG = {
-  BASE_URL: 'http://localhost:8000/api',
+  // Use global API_BASE from config.js with fallback
+  BASE_URL: window.API_BASE || 'http://localhost:8000/api',
   TIMEOUT: 30000,
 };
 
@@ -11,6 +12,7 @@ class APIService {
   constructor() {
     this.baseURL = API_CONFIG.BASE_URL;
     this.token = localStorage.getItem('access_token');
+    console.log('🌐 APIService initialized with baseURL:', this.baseURL);
   }
 
   /**
