@@ -2,7 +2,7 @@
  * Service Worker للـ PWA
  */
 
-const CACHE_NAME = 'smartedu-v1.3.1';
+const CACHE_NAME = 'smartedu-v1.3.2';
 const urlsToCache = [
   '/',
   '/index.html',

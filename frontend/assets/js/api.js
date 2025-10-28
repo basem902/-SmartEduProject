@@ -283,6 +283,51 @@ class APIService {
   async reviewSubmission(submissionId, reviewData) {
     return this.put(`/projects/submissions/${submissionId}/review/`, reviewData);
   }
+
+  /**
+   * إنشاء مشروع جديد مع ملفات (FormData)
+   */
+  async createProjectWithFiles(formData) {
+    return this.request('/projects/create-new/', {
+      method: 'POST',
+      body: formData,
+      isFormData: true
+    });
+  }
+
+  // ========== Sections & Grades APIs ==========
+
+  /**
+   * جلب جميع صفوف المعلم
+   */
+  async getMyGrades() {
+    return this.get('/sections/my-grades/');
+  }
+
+  /**
+   * جلب شُعب صف معين
+   */
+  async getGradeSections(gradeId) {
+    return this.get(`/sections/grade/${gradeId}/sections/`);
+  }
+
+  // ========== AI Generation APIs ==========
+
+  /**
+   * توليد محتوى بالذكاء الاصطناعي
+   */
+  async generateAI(data) {
+    return this.post('/sections/ai/generate/', data);
+  }
+
+  // ========== Teacher APIs ==========
+
+  /**
+   * جلب مواد المعلم
+   */
+  async getTeacherSubjects() {
+    return this.get('/auth/subjects/');
+  }
 }
 
 // إنشاء نسخة واحدة من API Service

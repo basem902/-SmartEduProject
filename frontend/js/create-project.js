@@ -314,30 +314,18 @@ function saveCurrentStepData() {
 // ✅ NEW: Load Teacher Subjects from Database
 async function loadTeacherSubjects() {
     try {
-        const token = localStorage.getItem('access_token');
-        const response = await fetch(`${API_BASE}/auth/subjects/`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
+        const data = await api.getTeacherSubjects();
+        const select = document.getElementById('projectSubject');
+        select.innerHTML = '<option value="">اختر المادة...</option>';
+        
+        data.subjects.forEach(subject => {
+            const option = document.createElement('option');
+            option.value = subject;
+            option.textContent = subject;
+            select.appendChild(option);
         });
         
-        if (response.ok) {
-            const data = await response.json();
-            const select = document.getElementById('projectSubject');
-            select.innerHTML = '<option value="">اختر المادة...</option>';
-            
-            data.subjects.forEach(subject => {
-                const option = document.createElement('option');
-                option.value = subject;
-                option.textContent = subject;
-                select.appendChild(option);
-            });
-            
-            console.log('✅ Subjects loaded:', data.subjects.length);
-        } else if (response.status === 401) {
-            showAlert('انتهت جلسة العمل. يرجى تسجيل الدخول مجدداً', 'error');
-            setTimeout(() => window.location.href = 'login.html', 2000);
-        }
+        console.log('✅ Subjects loaded:', data.subjects.length);
     } catch (error) {
         console.error('Error loading subjects:', error);
         // Use default subjects if API fails
@@ -356,34 +344,24 @@ async function loadTeacherSubjects() {
 // Load Grades
 async function loadGrades() {
     try {
-        const token = localStorage.getItem('access_token');
-        const response = await fetch(`${API_BASE}/sections/my-grades/`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
+        const data = await api.getMyGrades();
+        const select = document.getElementById('gradeSelect');
+        select.innerHTML = '<option value="">اختر الصف...</option>';
         
-        if (response.ok) {
-            const data = await response.json();
-            const select = document.getElementById('gradeSelect');
-            
-            // Handle both array and object responses
-            const grades = Array.isArray(data) ? data : (data.grades || data.data || []);
-            
-            if (grades.length === 0) {
-                showAlert('لا توجد صفوف. يجب إنشاء صفوف أولاً من صفحة إدارة الشُعب', 'warning');
-                return;
-            }
-            
-            grades.forEach(grade => {
+        if (data.grades && data.grades.length > 0) {
+            data.grades.forEach(grade => {
                 const option = document.createElement('option');
                 option.value = grade.id;
-                option.textContent = grade.display_name || grade.name;
+                option.textContent = grade.display_name;
                 select.appendChild(option);
             });
-        } else if (response.status === 401) {
-            showAlert('انتهت جلسة العمل. يرجى تسجيل الدخول مجدداً', 'error');
-            setTimeout(() => window.location.href = 'login.html', 2000);
+            console.log('✅ Grades loaded:', data.grades.length);
+        } else {
+            console.warn('No grades found for teacher');
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'لا توجد صفوف مضافة';
+            select.appendChild(option);
         }
     } catch (error) {
         console.error('Error loading grades:', error);
@@ -403,41 +381,32 @@ async function loadSections() {
     }
     
     try {
-        const token = localStorage.getItem('access_token');
-        const response = await fetch(`${API_BASE}/sections/grade/${gradeId}/sections/`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
+        const data = await api.getGradeSections(gradeId);
+        console.log('Sections loaded:', data.sections);
+        const container = document.getElementById('sectionsList');
+        container.innerHTML = '';
+        
+        data.sections.forEach(section => {
+            const item = document.createElement('label');
+            item.className = 'checkbox-item';
+            const studentCount = section.registrations_count || section.total_students || 0;
+            console.log(`Section ${section.section_name}: ${studentCount} students`);
+            item.innerHTML = `
+                <input type="checkbox" name="section" value="${section.id}" onchange="updateTelegramTargets()">
+                <div class="checkbox-label">
+                    ${section.section_name}
+                    <span class="checkbox-info">${studentCount} طالب</span>
+                </div>
+            `;
+            container.appendChild(item);
         });
         
-        if (response.ok) {
-            const data = await response.json();
-            console.log('Sections loaded:', data.sections);
-            const container = document.getElementById('sectionsList');
-            container.innerHTML = '';
-            
-            data.sections.forEach(section => {
-                const item = document.createElement('label');
-                item.className = 'checkbox-item';
-                const studentCount = section.registrations_count || section.total_students || 0;
-                console.log(`Section ${section.section_name}: ${studentCount} students`);
-                item.innerHTML = `
-                    <input type="checkbox" name="section" value="${section.id}" onchange="updateTelegramTargets()">
-                    <div class="checkbox-label">
-                        ${section.section_name}
-                        <span class="checkbox-info">${studentCount} طالب</span>
-                    </div>
-                `;
-                container.appendChild(item);
-            });
-            
-            document.getElementById('sectionsGroup').style.display = 'block';
-            document.getElementById('subjectGroup').style.display = 'block'; // ✅ Show subject field
-            updateSectionStats();
-            
-            // ✅ Update Telegram targets after loading sections
-            setTimeout(() => updateTelegramTargets(), 100);
-        }
+        document.getElementById('sectionsGroup').style.display = 'block';
+        document.getElementById('subjectGroup').style.display = 'block'; // ✅ Show subject field
+        updateSectionStats();
+        
+        // ✅ Update Telegram targets after loading sections
+        setTimeout(() => updateTelegramTargets(), 100);
     } catch (error) {
         console.error('Error loading sections:', error);
         showAlert('فشل تحميل الشُعب', 'error');
@@ -502,61 +471,33 @@ async function generateDescription() {
     text.textContent = 'جاري التوليد...';
     
     try {
-        const token = localStorage.getItem('access_token');
-        if (!token) {
-            showAlert('يجب تسجيل الدخول أولاً', 'error');
-            setTimeout(() => window.location.href = 'login.html', 2000);
-            return;
-        }
-        
-        const response = await fetch(`${API_BASE}/sections/ai/generate/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                content_type: 'instructions',
-                context: {
-                    project_name: title,
-                    subject: subject,
-                    purpose: 'وصف المشروع'
-                }
-            })
+        const data = await api.generateAI({
+            content_type: 'instructions',
+            context: {
+                project_name: title,
+                subject: subject,
+                purpose: 'وصف المشروع'
+            }
         });
+        console.log('AI Response:', data);
         
-        if (response.status === 401) {
-            showAlert('انتهت جلسة العمل. يرجى تسجيل الدخول مجدداً', 'error');
-            setTimeout(() => window.location.href = 'login.html', 2000);
-            return;
+        // Extract text from nested structure
+        let generatedText = '';
+        if (data.content && typeof data.content === 'object' && data.content.generated_text) {
+            generatedText = data.content.generated_text;
+        } else if (typeof data.generated_text === 'string') {
+            generatedText = data.generated_text;
+        } else if (typeof data.text === 'string') {
+            generatedText = data.text;
         }
         
-        if (response.ok) {
-            const data = await response.json();
-            console.log('AI Response:', data);
-            
-            // Extract text from nested structure
-            let generatedText = '';
-            if (data.content && typeof data.content === 'object' && data.content.generated_text) {
-                generatedText = data.content.generated_text;
-            } else if (typeof data.generated_text === 'string') {
-                generatedText = data.generated_text;
-            } else if (typeof data.text === 'string') {
-                generatedText = data.text;
-            }
-            
-            console.log('Generated Text:', generatedText);
-            
-            if (generatedText && typeof generatedText === 'string') {
-                document.getElementById('projectDescription').value = generatedText;
-                showAlert('تم توليد الوصف بنجاح', 'success');
-            } else {
-                showAlert('تم التوليد ولكن لا يوجد نص. تحقق من إعدادات AI.', 'warning');
-            }
+        console.log('Generated Text:', generatedText);
+        
+        if (generatedText && typeof generatedText === 'string') {
+            document.getElementById('projectDescription').value = generatedText;
+            showAlert('تم توليد الوصف بنجاح', 'success');
         } else {
-            const errorData = await response.json().catch(() => ({}));
-            const errorMsg = errorData.error || errorData.message || 'فشل التوليد';
-            throw new Error(errorMsg);
+            showAlert('تم التوليد ولكن لا يوجد نص. تحقق من إعدادات AI.', 'warning');
         }
     } catch (error) {
         console.error('Error:', error);
@@ -1045,39 +986,20 @@ async function submitProject() {
         }
         
         // 🚀 PRODUCTION MODE: Save to database
-        // Test endpoint (JSON file): ${API_BASE}/projects/test-create/
-        const response = await fetch(`${API_BASE}/projects/create-new/`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-            },
-            body: formData
-        });
-        
         console.log('🚀 PRODUCTION MODE: Data will be saved to database');
         
-        if (response.ok) {
-            const data = await response.json();
-            
-            console.log('✅ Project created successfully:', data);
-            
-            // ✅ Save preferences for next time
-            saveUserPreferences();
-            
-            // ✅ Clear draft after successful submission
-            clearDraft();
-            
-            // Show success modal with project info
-            showSuccessModal(data);
-            
-        } else {
-            const error = await response.json();
-            console.error('API Error:', error);
-            const errorMsg = error.details ? 
-                `بيانات غير صحيحة: ${JSON.stringify(error.details)}` : 
-                (error.error || 'فشل إنشاء المشروع');
-            throw new Error(errorMsg);
-        }
+        const data = await api.createProjectWithFiles(formData);
+        
+        console.log('✅ Project created successfully:', data);
+        
+        // ✅ Save preferences for next time
+        saveUserPreferences();
+        
+        // ✅ Clear draft after successful submission
+        clearDraft();
+        
+        // Show success modal with project info
+        showSuccessModal(data);
     } catch (error) {
         console.error('Error:', error);
         showAlert(error.message || 'حدث خطأ أثناء إنشاء المشروع', 'error');
