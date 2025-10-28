@@ -29,6 +29,19 @@ class SectionsAPI {
     const data = await response.json();
     
     if (!response.ok) {
+      // 🔒 Auto-logout عند 401 Unauthorized
+      if (response.status === 401) {
+        console.warn('⚠️ Session expired or invalid token - logging out...');
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user_data');
+        
+        // Redirect to login إلا إذا كنا في صفحة login أصلاً
+        if (!window.location.pathname.includes('login.html')) {
+          window.location.href = '/pages/login.html?expired=true';
+        }
+      }
+      
       throw new Error(data.error || data.message || 'حدث خطأ في الطلب');
     }
     

@@ -107,9 +107,13 @@
                 
                 <div class="form-group">
                     <label class="form-label">كلمة المرور *</label>
-                    <input type="password" id="password" class="form-control" 
-                           placeholder="••••••••••" required>
-                    <span class="password-toggle" id="togglePassword">👁️</span>
+                    <div style="position: relative;">
+                        <input type="password" id="password" class="form-control" 
+                               placeholder="••••••••••" required 
+                               style="padding-left: 45px;">
+                        <span class="password-toggle" id="togglePassword" 
+                              style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 20px; user-select: none;">👁️</span>
+                    </div>
                 </div>
                 
                 <div class="form-group">
@@ -142,6 +146,12 @@
     <script>
         // منع الوصول إذا كان مسجلاً
         auth.redirectIfAuthenticated();
+        
+        // ✅ عرض رسالة إذا انتهت الجلسة
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('expired') === 'true') {
+            UI.showNotification('⏰ انتهت صلاحية الجلسة. الرجاء تسجيل الدخول مرة أخرى.', 'warning');
+        }
         
         // إظهار/إخفاء كلمة المرور
         document.getElementById('togglePassword').addEventListener('click', () => {
