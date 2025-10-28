@@ -2,7 +2,7 @@
  * Service Worker للـ PWA
  */
 
-const CACHE_NAME = 'smartedu-v1.2.0';
+const CACHE_NAME = 'smartedu-v1.3.0';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -18,6 +18,7 @@ const urlsToCache = [
   '/assets/css/animations.css',
   '/assets/css/sections.css',
   '/assets/css/join.css',
+  '/assets/js/config.js',
   '/assets/js/app.js',
   '/assets/js/api.js',
   '/assets/js/auth.js',
