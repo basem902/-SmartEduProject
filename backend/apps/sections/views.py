@@ -2329,6 +2329,9 @@ def register_student(request, token):
         teacher_link.registrations_count += 1
         teacher_link.save(update_fields=['registrations_count'])
         
+        # ✅ تحديث عدد الطلاب في الشعبة
+        section.update_student_count()
+        
         logger.info(f"Student registered: {full_name} in section {section.id} via token {token}")
         
         response_data = {
