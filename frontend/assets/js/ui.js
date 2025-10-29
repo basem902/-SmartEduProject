@@ -33,6 +33,14 @@ const UI = {
   },
 
   /**
+   * Backward-compatible alias for legacy calls
+   * Some pages used UI.showNotification; delegate to showToast
+   */
+  showNotification(message, type = 'info', duration = 3000) {
+    this.showToast(message, type, duration);
+  },
+
+  /**
    * الحصول على أيقونة Toast حسب النوع
    */
   getToastIcon(type) {
