@@ -390,9 +390,14 @@ async function loadSections() {
             const item = document.createElement('label');
             item.className = 'checkbox-item';
             const studentCount = section.registrations_count || section.total_students || 0;
-            console.log(`Section ${section.section_name}: ${studentCount} students`);
+            
+            // ✅ Check if section was previously selected
+            const wasSelected = projectData.sections && projectData.sections.includes(section.id);
+            const checkedAttr = wasSelected ? 'checked' : '';
+            
+            console.log(`Section ${section.section_name}: ${studentCount} students, wasSelected: ${wasSelected}`);
             item.innerHTML = `
-                <input type="checkbox" name="section" value="${section.id}" onchange="updateTelegramTargets()">
+                <input type="checkbox" name="section" value="${section.id}" ${checkedAttr} onchange="updateSectionStats(); updateTelegramTargets();">
                 <div class="checkbox-label">
                     ${section.section_name}
                     <span class="checkbox-info">${studentCount} طالب</span>
@@ -404,6 +409,14 @@ async function loadSections() {
         document.getElementById('sectionsGroup').style.display = 'block';
         document.getElementById('subjectGroup').style.display = 'block'; // ✅ Show subject field
         updateSectionStats();
+        
+        // ✅ Update "Select All" checkbox state
+        const allCheckboxes = document.querySelectorAll('input[name="section"]');
+        const allChecked = allCheckboxes.length > 0 && Array.from(allCheckboxes).every(cb => cb.checked);
+        const selectAllCheckbox = document.getElementById('selectAllSections');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = allChecked;
+        }
         
         // ✅ Update Telegram targets after loading sections
         setTimeout(() => updateTelegramTargets(), 100);
@@ -418,8 +431,16 @@ function toggleAllSections() {
     document.querySelectorAll('input[name="section"]').forEach(cb => {
         cb.checked = selectAll;
     });
+    
+    // Update projectData immediately
+    projectData.sections = Array.from(document.querySelectorAll('input[name="section"]:checked'))
+        .map(cb => parseInt(cb.value))
+        .filter(id => !isNaN(id));
+    
+    console.log('Toggled all sections:', projectData.sections);
+    
     updateSectionStats();
-    updateTelegramTargets(); // ✅ Update Telegram after toggling
+    updateTelegramTargets();
 }
 
 function updateSectionStats() {
@@ -441,7 +462,12 @@ function updateSectionStats() {
         }
     });
     
-    console.log(`Selected: ${selectedCount} sections, Total: ${totalStudents} students`);
+    // ✅ Update projectData.sections whenever stats are updated
+    projectData.sections = Array.from(document.querySelectorAll('input[name="section"]:checked'))
+        .map(cb => parseInt(cb.value))
+        .filter(id => !isNaN(id));
+    
+    console.log(`Selected: ${selectedCount} sections (IDs: ${projectData.sections.join(', ')}), Total: ${totalStudents} students`);
     
     if (selectedCount > 0) {
         document.getElementById('selectionStats').style.display = 'block';
@@ -855,11 +881,34 @@ async function submitProject() {
     
     saveCurrentStepData();
     
+    // ✅ Log current state for debugging
+    console.log('📊 Final project data before validation:', {
+        gradeId: projectData.gradeId,
+        sections: projectData.sections,
+        sectionsCount: projectData.sections?.length,
+        title: projectData.title,
+        subject: projectData.subject
+    });
+    
+    // ✅ Double-check sections from DOM
+    const checkedSections = Array.from(document.querySelectorAll('input[name="section"]:checked'))
+        .map(cb => parseInt(cb.value));
+    console.log('📋 Checked sections in DOM:', checkedSections);
+    
+    // ✅ Sync if mismatch detected
+    if (projectData.sections.length !== checkedSections.length) {
+        console.warn('⚠️ Mismatch detected! Syncing projectData.sections with DOM');
+        projectData.sections = checkedSections;
+    }
+    
     // Validate required fields
     if (!projectData.gradeId || !projectData.sections || projectData.sections.length === 0) {
         showAlert('الرجاء اختيار صف وشُعب', 'error');
+        console.error('❌ Validation failed: No sections selected');
         return;
     }
+    
+    console.log('✅ Validation passed. Sections:', projectData.sections);
     
     if (!projectData.settings.startDate || !projectData.settings.deadline) {
         showAlert('الرجاء تحديد تاريخ البداية والموعد النهائي', 'error');
