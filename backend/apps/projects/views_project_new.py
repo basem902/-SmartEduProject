@@ -73,6 +73,8 @@ def create_project_v2(request):
     try:
         # Parse FormData arrays
         section_ids = parse_formdata_array(request, 'section_ids', as_int=True)
+        logger.info(f"🔍 Parsed section_ids: {section_ids} (type: {type(section_ids)}, length: {len(section_ids)})")
+        
         allowed_file_types = parse_formdata_array(request, 'allowed_file_types')
         external_links = parse_formdata_array(request, 'external_links')
         
@@ -138,12 +140,21 @@ def create_project_v2(request):
         logger.info(f"✅ Project created: ID={project.id}")
         
         # Add sections (with telegram_group relation for notifications)
+        logger.info(f"🔍 About to add sections. IDs from validated_data: {validated_data['section_ids']}")
+        
         sections = Section.objects.filter(
             id__in=validated_data['section_ids']
         ).select_related('telegram_group', 'grade')
         
+        logger.info(f"🔍 Sections fetched from DB: {list(sections.values_list('id', 'section_name'))}")
+        logger.info(f"🔍 Sections count: {sections.count()}")
+        
         project.sections.set(sections)
+        
+        # Verify what was actually saved
+        saved_sections = project.sections.all()
         logger.info(f"✅ Added {sections.count()} sections")
+        logger.info(f"✅ Verified: Project now has {saved_sections.count()} sections: {list(saved_sections.values_list('id', 'section_name'))}")
         
         # Handle files
         files_created = 0
