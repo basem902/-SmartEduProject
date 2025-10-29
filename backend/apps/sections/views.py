@@ -28,6 +28,28 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def normalize_telegram_chatid(chat_id):
+    """
+    تحويل chat_id إلى الصيغة الصحيحة (سالب مع -100 prefix)
+    
+    Examples:
+        3298260616 → -1003298260616
+        -1003298260616 → -1003298260616 (no change)
+    """
+    if chat_id is None:
+        return None
+    
+    chat_id = int(chat_id)
+    
+    # إذا كان سالباً بالفعل، لا تغيير
+    if chat_id < 0:
+        return chat_id
+    
+    # إذا كان موجباً، حوله لسالب مع -100 prefix
+    # Formula: -(100000000000 + chat_id)
+    return -(100000000000 + chat_id)
+
+
 # ==================== إعدادات المعلم ====================
 
 @api_view(['POST'])
@@ -371,13 +393,18 @@ def setup_section_link(request):
                 telegram_link = data.get('telegram_link')
                 chat_id = data.get('chat_id')  # ✅ استقبال chat_id من Frontend
                 
+                # ✅ تحويل chat_id إلى سالب تلقائياً
+                normalized_chat_id = normalize_telegram_chatid(chat_id)
+                
+                logger.info(f"Original chat_id: {chat_id}, Normalized: {normalized_chat_id}")
+                
                 # إنشاء أو تحديث TelegramGroup
                 telegram_group, tg_created = TelegramGroup.objects.get_or_create(
                     section=section,
                     defaults={
                         'group_name': f"{section.grade.display_name} - {section.section_name}",
                         'invite_link': telegram_link,
-                        'chat_id': chat_id,  # ✅ حفظ chat_id
+                        'chat_id': normalized_chat_id,  # ✅ حفظ chat_id سالب
                         'created_by_phone': teacher.phone or 'unknown',
                         'status': 'active',
                         'is_bot_added': False,  # لم يتم إضافة البوت بعد
@@ -391,7 +418,7 @@ def setup_section_link(request):
                 # تحديث السجل الموجود
                 if not tg_created:
                     telegram_group.invite_link = telegram_link
-                    telegram_group.chat_id = chat_id  # ✅ تحديث chat_id
+                    telegram_group.chat_id = normalized_chat_id  # ✅ تحديث chat_id سالب
                     telegram_group.group_name = f"{section.grade.display_name} - {section.section_name}"
                     telegram_group.status = 'active'
                     telegram_group.save()
@@ -1390,11 +1417,15 @@ def create_telegram_groups_for_grade(request, grade_id):
                         elif 'https://t.me/' in line:
                             invite_link = line.strip()
                     
+                    # ✅ تحويل chat_id إلى سالب تلقائياً
+                    normalized_chat_id = normalize_telegram_chatid(chat_id)
+                    logger.info(f"Script chat_id: {chat_id}, Normalized: {normalized_chat_id}")
+                    
                     # حفظ في Database
                     telegram_group = TelegramGroup.objects.create(
                         section=section,
                         group_name=group_name,
-                        chat_id=chat_id,
+                        chat_id=normalized_chat_id,  # ✅ حفظ سالب
                         invite_link=invite_link,
                         created_by_phone=phone_number,
                         is_bot_added=True,  # السكريبت يضيف البوت
@@ -1663,12 +1694,16 @@ def create_single_telegram_group(request):
                                 ).first()
                                 
                                 if section_obj:
+                                    # ✅ تحويل chat_id إلى سالب تلقائياً
+                                    raw_chat_id = group_result.get('chat_id')
+                                    normalized_chat_id = normalize_telegram_chatid(raw_chat_id)
+                                    
                                     # التحقق من عدم وجود سجل سابق
                                     telegram_group, created = TelegramGroup.objects.get_or_create(
                                         section=section_obj,
                                         defaults={
                                             'group_name': group_result['group_name'],
-                                            'chat_id': group_result.get('chat_id'),
+                                            'chat_id': normalized_chat_id,  # ✅ حفظ سالب
                                             'invite_link': group_result['invite_link'],
                                             'created_by_phone': phone_number,
                                             'status': 'created',
@@ -1691,7 +1726,7 @@ def create_single_telegram_group(request):
                                     if not created:
                                         # تحديث السجل الموجود
                                         telegram_group.group_name = group_result['group_name']
-                                        telegram_group.chat_id = group_result.get('chat_id')
+                                        telegram_group.chat_id = normalized_chat_id  # ✅ تحديث سالب
                                         telegram_group.invite_link = group_result['invite_link']
                                         telegram_group.created_by_phone = phone_number
                                         telegram_group.status = 'created'
