@@ -17,6 +17,33 @@ from django.conf import settings
 from telethon import TelegramClient, functions, types, errors
 
 
+def normalize_chat_id(chat_id):
+    """
+    تحويل chat_id إلى التنسيق الصحيح
+    Supergroups يجب أن تبدأ بـ -100
+    """
+    if not chat_id:
+        return None
+    
+    # تحويل إلى int
+    chat_id = int(chat_id)
+    
+    # إذا كان موجب، حوله إلى سالب بالتنسيق الصحيح
+    if chat_id > 0:
+        # Supergroup IDs in Telegram start with -100
+        return -(1000000000000 + chat_id)
+    
+    # إذا كان سالب بالفعل
+    if str(chat_id).startswith('-100'):
+        # بالفعل بالتنسيق الصحيح
+        return chat_id
+    
+    # إذا كان سالب لكن بتنسيق خاطئ (مثل -103...)
+    # نحوله للإيجابي ثم نطبق التنسيق الصحيح
+    abs_id = abs(chat_id)
+    return -(1000000000000 + abs_id)
+
+
 async def ensure_authorized(client: TelegramClient, phone: str) -> None:
     """يتأكد من تسجيل الدخول - للـ subprocess يجب أن تكون الجلسة موجودة مسبقاً."""
     print(f"DEBUG: Connecting to Telegram for phone: {phone}")
@@ -313,15 +340,18 @@ async def create_class_groups(api_id, api_hash, phone_number, grade_name, subjec
                 # 7. استخراج رابط الدعوة
                 invite_link = await export_invite_link(client, channel)
                 
+                # تحويل chat_id إلى التنسيق الصحيح (-100...)
+                normalized_chat_id = normalize_chat_id(channel.id)
+                
                 print(f"\n✅ نجح إنشاء القروب:")
-                print(f"   Chat ID: {channel.id}")
+                print(f"   Chat ID: {channel.id} → {normalized_chat_id}")
                 print(f"   Link: {invite_link}")
                 
                 results.append({
                     'success': True,
                     'section_name': section,
                     'group_name': group_name,
-                    'chat_id': channel.id,
+                    'chat_id': normalized_chat_id,
                     'invite_link': invite_link,
                     'message_id': msg.id if msg else None
                 })

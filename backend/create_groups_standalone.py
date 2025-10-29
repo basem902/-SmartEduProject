@@ -26,6 +26,33 @@ from pyrogram import raw
 import requests
 
 
+def normalize_chat_id(chat_id):
+    """
+    تحويل chat_id إلى التنسيق الصحيح
+    Supergroups يجب أن تبدأ بـ -100
+    """
+    if not chat_id:
+        return None
+    
+    # تحويل إلى int
+    chat_id = int(chat_id)
+    
+    # إذا كان موجب، حوله إلى سالب بالتنسيق الصحيح
+    if chat_id > 0:
+        # Supergroup IDs in Telegram start with -100
+        return -(1000000000000 + chat_id)
+    
+    # إذا كان سالب بالفعل
+    if str(chat_id).startswith('-100'):
+        # بالفعل بالتنسيق الصحيح
+        return chat_id
+    
+    # إذا كان سالب لكن بتنسيق خاطئ (مثل -103...)
+    # نحوله للإيجابي ثم نطبق التنسيق الصحيح
+    abs_id = abs(chat_id)
+    return -(1000000000000 + abs_id)
+
+
 def send_bot_message(bot_token, chat_id, text, parse_mode='Markdown'):
     """إرسال رسالة من البوت باستخدام Bot API"""
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
@@ -212,8 +239,9 @@ async def create_groups(api_id, api_hash, phone_number, grade_name, subject_name
             
             # التحقق من وجود القروب
             if group_name in existing_groups:
-                chat_id = existing_groups[group_name]
-                print(f"   [SKIP] Group already exists (ID: {chat_id})")
+                raw_chat_id = existing_groups[group_name]
+                chat_id = normalize_chat_id(raw_chat_id)
+                print(f"   [SKIP] Group already exists (ID: {raw_chat_id} → {chat_id})")
                 
                 try:
                     # تطبيق صلاحيات Read-Only على القروب الموجود
@@ -410,11 +438,15 @@ async def create_groups(api_id, api_hash, phone_number, grade_name, subject_name
                 # الحصول على رابط
                 invite_link = await client.export_chat_invite_link(chat.id)
                 
+                # تحويل chat_id إلى التنسيق الصحيح (-100...)
+                normalized_chat_id = normalize_chat_id(chat.id)
+                print(f"   [INFO] Chat ID normalized: {chat.id} → {normalized_chat_id}")
+                
                 results.append({
                     'success': True,
                     'section_name': section,
                     'group_name': group_name,
-                    'chat_id': chat.id,
+                    'chat_id': normalized_chat_id,
                     'invite_link': invite_link,
                     'already_exists': False,
                     'read_only': True

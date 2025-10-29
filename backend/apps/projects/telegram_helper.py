@@ -20,6 +20,73 @@ class TelegramProjectNotifier:
         self.bot_token = getattr(settings, 'TELEGRAM_BOT_TOKEN', None)
         self.api_url = f"https://api.telegram.org/bot{self.bot_token}" if self.bot_token else None
         self.frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5500')
+        self.bot_info = None  # Will be set after verification
+    
+    def verify_bot_token(self):
+        """Verify bot token is valid by calling getMe"""
+        if not self.bot_token or not self.api_url:
+            return False
+        
+        try:
+            url = f"{self.api_url}/getMe"
+            response = requests.get(url, timeout=5)
+            result = response.json()
+            
+            if result.get('ok'):
+                self.bot_info = result.get('result')
+                print(f"   ✅ Bot Token صحيح")
+                print(f"      🤖 Bot Username: @{self.bot_info.get('username')}")
+                print(f"      📛 Bot Name: {self.bot_info.get('first_name')}")
+                return True
+            else:
+                print(f"   ❌ Bot Token غير صحيح!")
+                print(f"      Error: {result.get('description')}")
+                logger.error(f"Invalid bot token: {result.get('description')}")
+                return False
+        except Exception as e:
+            print(f"   ❌ فشل التحقق من Bot Token: {str(e)}")
+            logger.error(f"Failed to verify bot token: {str(e)}")
+            return False
+    
+    def check_bot_in_chat(self, chat_id):
+        """Check if bot is member of the chat"""
+        if not self.api_url:
+            return False
+        
+        try:
+            url = f"{self.api_url}/getChatMember"
+            data = {
+                'chat_id': chat_id,
+                'user_id': self.bot_info.get('id') if self.bot_info else None
+            }
+            
+            if not data['user_id']:
+                print("      ⚠️ Bot info not available, skipping membership check")
+                return True  # Skip check if bot info not available
+            
+            response = requests.post(url, json=data, timeout=5)
+            result = response.json()
+            
+            if result.get('ok'):
+                member = result.get('result', {})
+                status = member.get('status')
+                print(f"      👤 Bot Status في المجموعة: {status}")
+                
+                # Bot should be member or admin to send messages
+                if status in ['member', 'administrator', 'creator']:
+                    return True
+                else:
+                    print(f"      ⚠️ Bot ليس عضو في المجموعة (Status: {status})")
+                    return False
+            else:
+                error_desc = result.get('description', 'Unknown')
+                print(f"      ⚠️ فشل التحقق من عضوية البوت: {error_desc}")
+                # If we can't check, assume it's ok (might be a permissions issue)
+                return True
+        except Exception as e:
+            print(f"      ⚠️ خطأ في التحقق من عضوية البوت: {str(e)}")
+            # If check fails, assume it's ok to try sending
+            return True
     
     def send_project_notification(self, project, send_files=True, pin_message=False):
         """
@@ -42,6 +109,19 @@ class TelegramProjectNotifier:
                 'success_count': 0,
                 'failed_count': 0
             }
+        
+        # Verify bot token before sending
+        print("🔍 التحقق من صحة Bot Token...")
+        if not self.verify_bot_token():
+            print("❌ فشل التحقق من Bot Token! لن يتم إرسال الرسائل.")
+            return {
+                'success': [],
+                'failed': [],
+                'total': 0,
+                'success_count': 0,
+                'failed_count': 0
+            }
+        print()
         
         results = {
             'success': [],
@@ -78,6 +158,20 @@ class TelegramProjectNotifier:
                     continue
                 
                 print(f"   ✅ chat_id: {chat_id}")
+                
+                # Check if bot is in the group
+                print("   🔍 التحقق من عضوية البوت في المجموعة...")
+                if not self.check_bot_in_chat(chat_id):
+                    error_msg = "البوت ليس عضواً في المجموعة"
+                    print(f"   ❌ فشل: {error_msg}")
+                    results['failed'].append({
+                        'section_id': section.id,
+                        'section_name': section.section_name,
+                        'error': error_msg,
+                        'students_count': getattr(section, 'registrations_count', 0)
+                    })
+                    results['failed_count'] += 1
+                    continue
                 
                 # Generate submission link with JWT
                 print("   🔗 توليد رابط التسليم...")
@@ -404,6 +498,8 @@ class TelegramProjectNotifier:
     def _send_message_with_keyboard(self, chat_id, text, keyboard):
         """Send message with inline keyboard"""
         if not self.api_url:
+            print("      ❌ فشل: api_url غير موجود (bot token مفقود)")
+            logger.error("Cannot send message: api_url is None (bot token missing)")
             return None
         
         try:
@@ -417,8 +513,33 @@ class TelegramProjectNotifier:
             if keyboard and keyboard.get('inline_keyboard'):
                 data['reply_markup'] = keyboard
             
+            # Log request details
+            print(f"      📤 إرسال الطلب إلى: {url}")
+            print(f"      📍 chat_id: {chat_id}")
+            print(f"      ⚙️ keyboard: {'موجودة' if keyboard else 'غير موجودة'}")
+            
             response = requests.post(url, json=data, timeout=10)
+            
+            # Log response status
+            print(f"      📊 HTTP Status: {response.status_code}")
+            
+            # Check HTTP status first
+            if response.status_code != 200:
+                print(f"      ❌ HTTP Error: {response.status_code}")
+                print(f"      📄 Response: {response.text[:200]}")
+                logger.error(f"Telegram API HTTP error {response.status_code}: {response.text[:500]}")
+                raise Exception(f"HTTP {response.status_code}: {response.text[:200]}")
+            
             result = response.json()
+            
+            # Log full response for debugging
+            print(f"      📦 Response OK: {result.get('ok')}")
+            if result.get('result'):
+                msg_id = result['result'].get('message_id', 'N/A')
+                chat = result['result'].get('chat', {})
+                chat_title = chat.get('title', 'N/A')
+                print(f"      ✅ message_id: {msg_id}")
+                print(f"      💬 chat_title: {chat_title}")
             
             if result.get('ok'):
                 return result.get('result')
@@ -428,10 +549,15 @@ class TelegramProjectNotifier:
                 print(f"      ⚠️ Telegram API Error:")
                 print(f"         Code: {error_code}")
                 print(f"         Description: {error_desc}")
-                logger.error(f"Telegram API error: {error_desc}")
+                logger.error(f"Telegram API error ({error_code}): {error_desc}")
                 raise Exception(f"Telegram API error ({error_code}): {error_desc}")
             
+        except requests.exceptions.RequestException as e:
+            print(f"      ❌ Network Error: {str(e)}")
+            logger.error(f"Network error sending message: {str(e)}")
+            raise Exception(f"Network error: {str(e)}")
         except Exception as e:
+            print(f"      ❌ Exception: {str(e)}")
             logger.error(f"Error sending message with keyboard: {str(e)}")
             # Propagate the exception so upper layers can report detailed error
             raise
