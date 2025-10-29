@@ -4,10 +4,11 @@ Updated: 2025-10-24 22:42 - Force reload
 """
 import os
 import logging
+import jwt
 from django.conf import settings
 from django.utils import timezone
 from rest_framework.decorators import api_view, permission_classes, parser_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
@@ -438,6 +439,55 @@ def delete_project(request, project_id):
         
         return Response({
             'message': 'تم حذف المشروع بنجاح'
+        }, status=status.HTTP_200_OK)
+        
+    except Project.DoesNotExist:
+        return Response({
+            'error': 'المشروع غير موجود'
+        }, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])  # لا يحتاج authentication
+def project_detail_public(request, project_id):
+    """
+    Get project details via JWT token (for students submitting projects)
+    No authentication required, but validates JWT token from query params
+    """
+    
+    try:
+        # Get token from query parameters or headers
+        token = request.query_params.get('token') or request.META.get('HTTP_AUTHORIZATION', '').replace('Bearer ', '')
+        
+        if token:
+            try:
+                # Verify JWT token
+                payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+                
+                # Verify project_id matches token
+                if payload.get('project_id') != project_id:
+                    return Response({
+                        'error': 'رابط غير صالح'
+                    }, status=status.HTTP_403_FORBIDDEN)
+                
+            except jwt.ExpiredSignatureError:
+                return Response({
+                    'error': 'الرابط منتهي الصلاحية'
+                }, status=status.HTTP_403_FORBIDDEN)
+            except jwt.InvalidTokenError:
+                return Response({
+                    'error': 'رابط غير صالح'
+                }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Get project
+        project = Project.objects.select_related('teacher').prefetch_related('sections').get(id=project_id)
+        
+        # Serialize project data
+        serializer = ProjectDetailSerializer(project)
+        
+        return Response({
+            'success': True,
+            'project': serializer.data
         }, status=status.HTTP_200_OK)
         
     except Project.DoesNotExist:

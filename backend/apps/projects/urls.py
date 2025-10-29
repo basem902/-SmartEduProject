@@ -23,6 +23,7 @@ urlpatterns = [
     path('create/', views_create.create_project, name='create_project'),
     path('list/', views_create.list_projects, name='list_projects'),
     path('<int:project_id>/detail/', views_create.project_detail, name='project_detail_new'),
+    path('<int:project_id>/detail-public/', views_create.project_detail_public, name='project_detail_public'),  # للطلاب
     path('<int:project_id>/delete/', views_create.delete_project, name='delete_project'),
     
     # Old URLs (keep for compatibility)

@@ -24,7 +24,25 @@ const state = {
 document.addEventListener('DOMContentLoaded', async () => {
     // الحصول على project_id من URL
     const urlParams = new URLSearchParams(window.location.search);
-    state.projectId = urlParams.get('project_id');
+    
+    // Check for token first (JWT)
+    const token = urlParams.get('token');
+    if (token) {
+        try {
+            // Decode JWT token to get project_id
+            const payload = parseJwt(token);
+            state.projectId = payload.project_id;
+            state.submitToken = token; // حفظ الـ token للاستخدام لاحقاً
+        } catch (error) {
+            console.error('Error decoding token:', error);
+            showError('رابط غير صالح');
+            setTimeout(() => window.location.href = '../index.html', 2000);
+            return;
+        }
+    } else {
+        // Fallback to direct project_id
+        state.projectId = urlParams.get('project_id');
+    }
     
     if (!state.projectId) {
         showError('معرف المشروع مفقود');
@@ -39,6 +57,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupEventListeners();
 });
 
+// Helper function to decode JWT token
+function parseJwt(token) {
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+    } catch (error) {
+        console.error('JWT parse error:', error);
+        throw new Error('Invalid token format');
+    }
+}
+
 // ============================================
 // Load Project Info
 // ============================================
@@ -47,13 +80,25 @@ async function loadProjectInfo() {
     showLoading('جاري تحميل معلومات المشروع...');
     
     try {
-        const response = await fetch(`${API_BASE_URL}/projects/${state.projectId}/`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('access_token') || ''}`
-            }
-        });
+        // استخدام endpoint عام إذا كان لدينا token
+        let url = `${API_BASE_URL}/projects/${state.projectId}/`;
+        const headers = {};
         
-        if (!response.ok) throw new Error('فشل تحميل المشروع');
+        if (state.submitToken) {
+            // استخدام endpoint عام مع token
+            url = `${API_BASE_URL}/projects/${state.projectId}/detail-public/?token=${state.submitToken}`;
+        } else {
+            // استخدام endpoint مع authentication
+            url = `${API_BASE_URL}/projects/${state.projectId}/detail/`;
+            headers['Authorization'] = `Bearer ${localStorage.getItem('access_token') || ''}`;
+        }
+        
+        const response = await fetch(url, { headers });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || 'فشل تحميل المشروع');
+        }
         
         const data = await response.json();
         state.project = data.project;
