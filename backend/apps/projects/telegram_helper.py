@@ -148,8 +148,12 @@ class TelegramProjectNotifier:
             try:
                 telegram_group = TelegramGroup.objects.get(section=section)
                 if telegram_group and telegram_group.chat_id:
-                    logger.info(f"✅ Found chat_id for section {section.id} ({section.section_name}): {telegram_group.chat_id}")
-                    return telegram_group.chat_id
+                    raw_cid = telegram_group.chat_id
+                    cid = self._normalize_chat_id(raw_cid)
+                    if str(cid) != str(raw_cid):
+                        logger.info(f"🔧 Normalized chat_id for section {section.id} from {raw_cid} to {cid}")
+                    logger.info(f"✅ Found chat_id for section {section.id} ({section.section_name}): {cid}")
+                    return cid
                 else:
                     logger.warning(f"⚠️ Section {section.id} ({section.section_name}) has telegram_group but no chat_id")
                     return None
@@ -160,14 +164,32 @@ class TelegramProjectNotifier:
             # Fallback: try from SectionLink model
             if hasattr(section, 'link') and section.link:
                 if hasattr(section.link, 'chat_id') and section.link.chat_id:
+                    raw_cid = section.link.chat_id
+                    cid = self._normalize_chat_id(raw_cid)
+                    if str(cid) != str(raw_cid):
+                        logger.info(f"🔧 Normalized link chat_id for section {section.id} from {raw_cid} to {cid}")
                     logger.info(f"✅ Found chat_id from link for section {section.id}")
-                    return section.link.chat_id
+                    return cid
             
             return None
             
         except Exception as e:
             logger.error(f"❌ Error getting chat ID for section {section.id}: {str(e)}", exc_info=True)
             return None
+
+    def _normalize_chat_id(self, chat_id):
+        """Ensure Telegram chat_id is negative with -100 prefix for groups/supergroups."""
+        try:
+            if chat_id is None:
+                return None
+            cid = int(chat_id)
+            # already negative (likely correct for groups)
+            if cid < 0:
+                return cid
+            # positive -> convert to -100 prefix form
+            return -(100000000000 + cid)
+        except Exception:
+            return chat_id
     
     def _generate_submission_link(self, project, section):
         """Generate secure submission link with JWT token"""
