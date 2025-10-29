@@ -46,8 +46,8 @@ def normalize_telegram_chatid(chat_id):
         return chat_id
     
     # إذا كان موجباً، حوله لسالب مع -100 prefix
-    # Formula: -(100000000000 + chat_id)
-    return -(100000000000 + chat_id)
+    # Formula: -(1000000000000 + chat_id)
+    return -(1000000000000 + chat_id)
 
 
 # ==================== إعدادات المعلم ====================

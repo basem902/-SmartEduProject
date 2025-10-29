@@ -183,11 +183,20 @@ class TelegramProjectNotifier:
             if chat_id is None:
                 return None
             cid = int(chat_id)
-            # already negative (likely correct for groups)
+            # already negative
             if cid < 0:
+                # if already has -100 prefix, keep
+                if str(cid).startswith('-100'):
+                    return cid
+                # attempt to fix old 1e11-based normalization (e.g., -1032...)
+                abs_cid = abs(cid)
+                if 100000000000 <= abs_cid < 1000000000000:
+                    # revert to positive id then convert to -100 prefix
+                    positive_id = abs_cid - 100000000000
+                    return -(1000000000000 + positive_id)
                 return cid
-            # positive -> convert to -100 prefix form
-            return -(100000000000 + cid)
+            # positive -> convert to -100 prefix form (1e12)
+            return -(1000000000000 + cid)
         except Exception:
             return chat_id
     
