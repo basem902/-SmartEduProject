@@ -20,19 +20,19 @@ logger = logging.getLogger(__name__)
 
 def parse_formdata_array(request, field_name, as_int=False):
     """
-    Parse array field from both JSON and FormData
-    - JSON: data is dict with lists
-    - FormData: data is QueryDict with getlist()
+    Parse array field from both JSON and FormData safely.
+    - If request.data supports getlist (e.g., QueryDict from multipart FormData), use it.
+    - Otherwise, treat as JSON and expect a list value under field_name.
     """
-    # Check if data is dict (JSON) or QueryDict (FormData)
-    if isinstance(request.data, dict):
-        # JSON request
-        values = request.data.get(field_name, [])
+    data = request.data
+    
+    # Prefer QueryDict-style access when available
+    if hasattr(data, 'getlist'):
+        values = data.getlist(field_name)
+    else:
+        values = data.get(field_name, [])
         if not isinstance(values, list):
             values = [values] if values else []
-    else:
-        # FormData request
-        values = request.data.getlist(field_name)
     
     if not values:
         logger.warning(f"⚠️ {field_name}: empty or not found")
