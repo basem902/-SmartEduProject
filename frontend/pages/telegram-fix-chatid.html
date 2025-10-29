@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إصلاح Telegram chat_id</title>
+    <link rel="stylesheet" href="/assets/css/base.css">
+    <style>
+        body {
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #667eea;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+        .info-box {
+            background: #f8f9fa;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+        .info-box h3 {
+            color: #f57c00;
+            margin-bottom: 10px;
+        }
+        .info-box ul {
+            margin: 10px 0;
+            padding-right: 20px;
+        }
+        .info-box li {
+            margin: 5px 0;
+            color: #666;
+        }
+        .btn-fix {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .btn-fix:hover {
+            transform: translateY(-2px);
+        }
+        .btn-fix:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .result-box {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+        .result-box.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .result-box.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .result-box h3 {
+            margin-bottom: 15px;
+        }
+        .groups-list {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+        .group-item {
+            background: white;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #28a745;
+        }
+        .group-item strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .group-item .old-id {
+            color: #dc3545;
+            text-decoration: line-through;
+        }
+        .group-item .new-id {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 إصلاح Telegram chat_id</h1>
+            <p>تحويل chat_id من موجب إلى سالب تلقائياً</p>
+        </div>
+
+        <div class="info-box">
+            <h3>⚠️ ما هذه الأداة؟</h3>
+            <p>عند إضافة مجموعات Telegram يدوياً، أحياناً يُحفظ chat_id بشكل موجب (مثل: 3298260616)</p>
+            <p>لكن Telegram API يتطلب أن يكون سالباً للمجموعات (مثل: -1003298260616)</p>
+            <p><strong>هذه الأداة تصحح جميع chat_id تلقائياً!</strong></p>
+            
+            <h3 style="margin-top: 20px;">✅ الأداة ستقوم بـ:</h3>
+            <ul>
+                <li>البحث عن جميع مجموعات Telegram بـ chat_id موجب</li>
+                <li>تحويلها إلى سالب بإضافة "-100" في البداية</li>
+                <li>حفظ التغييرات في قاعدة البيانات</li>
+                <li>عرض تقرير مفصل بالتغييرات</li>
+            </ul>
+        </div>
+
+        <button id="fixBtn" class="btn-fix">
+            <span id="btnText">🔧 بدء الإصلاح</span>
+        </button>
+
+        <div id="resultBox" class="result-box">
+            <h3 id="resultTitle"></h3>
+            <div id="resultContent"></div>
+        </div>
+    </div>
+
+    <script src="/assets/js/config.js"></script>
+    <script src="/assets/js/api.js"></script>
+    <script>
+        const fixBtn = document.getElementById('fixBtn');
+        const btnText = document.getElementById('btnText');
+        const resultBox = document.getElementById('resultBox');
+        const resultTitle = document.getElementById('resultTitle');
+        const resultContent = document.getElementById('resultContent');
+
+        fixBtn.addEventListener('click', async () => {
+            // Disable button
+            fixBtn.disabled = true;
+            btnText.innerHTML = '<div class="spinner"></div>';
+            resultBox.style.display = 'none';
+
+            try {
+                const token = localStorage.getItem('access_token');
+                if (!token) {
+                    throw new Error('يجب تسجيل الدخول أولاً');
+                }
+
+                const response = await fetch(`${API_BASE}/sections/telegram/fix-chatid/`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'حدث خطأ');
+                }
+
+                // Show success result
+                resultBox.className = 'result-box success';
+                resultBox.style.display = 'block';
+                resultTitle.textContent = '✅ ' + data.message;
+
+                if (data.fixed_count > 0) {
+                    let html = `<p><strong>تم إصلاح ${data.fixed_count} مجموعة:</strong></p>`;
+                    html += '<div class="groups-list">';
+                    
+                    data.groups.forEach(group => {
+                        html += `
+                            <div class="group-item">
+                                <strong>${group.group_name}</strong>
+                                <div>
+                                    <span class="old-id">${group.old_chat_id}</span>
+                                    →
+                                    <span class="new-id">${group.new_chat_id}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                    html += `
+                        <p style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #c3e6cb;">
+                            <strong>💡 الخطوات التالية:</strong><br>
+                            1. تأكد من إضافة البوت لجميع المجموعات<br>
+                            2. اجعل البوت Admin بصلاحيات الإرسال والتثبيت<br>
+                            3. جرب إرسال رسالة عبر telegram-send-direct.html
+                        </p>
+                    `;
+                    resultContent.innerHTML = html;
+                } else {
+                    resultContent.innerHTML = '<p>✅ جميع المجموعات كانت صحيحة من قبل!</p>';
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                resultBox.className = 'result-box error';
+                resultBox.style.display = 'block';
+                resultTitle.textContent = '❌ فشل الإصلاح';
+                resultContent.innerHTML = `<p>${error.message}</p>`;
+            } finally {
+                // Re-enable button
+                fixBtn.disabled = false;
+                btnText.textContent = '🔧 إعادة الإصلاح';
+            }
+        });
+    </script>
+</body>
+</html>

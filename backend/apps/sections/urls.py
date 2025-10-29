@@ -49,4 +49,7 @@ urlpatterns = [
     # ==================== Teacher Subjects Management ====================
     path('subjects/assign/', views.assign_subjects_to_sections, name='assign_subjects'),
     path('section/<int:section_id>/subjects/', views.get_section_subjects, name='get_section_subjects'),
+    
+    # ==================== Telegram Utilities ====================
+    path('telegram/fix-chatid/', views.fix_telegram_chatid, name='fix_telegram_chatid'),
 ]

@@ -2539,3 +2539,70 @@ def get_section_subjects(request, section_id):
             'error': 'حدث خطأ',
             'details': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def fix_telegram_chatid(request):
+    """
+    Fix Telegram Group chat_id from positive to negative
+    تصحيح chat_id من موجب إلى سالب (-100 prefix)
+    """
+    try:
+        # Get teacher
+        teacher = Teacher.objects.get(user=request.user)
+        
+        # Get all telegram groups with positive chat_id
+        groups_to_fix = TelegramGroup.objects.filter(
+            section__grade__teacher=teacher,
+            chat_id__gt=0
+        )
+        
+        total_count = groups_to_fix.count()
+        
+        if total_count == 0:
+            return Response({
+                'success': True,
+                'message': 'جميع المجموعات صحيحة بالفعل',
+                'fixed_count': 0
+            }, status=status.HTTP_200_OK)
+        
+        fixed_count = 0
+        fixed_groups = []
+        
+        for group in groups_to_fix:
+            old_chat_id = group.chat_id
+            # Convert: 3298260616 → -1003298260616
+            new_chat_id = int(f'-100{old_chat_id}')
+            
+            group.chat_id = new_chat_id
+            group.save(update_fields=['chat_id'])
+            
+            fixed_groups.append({
+                'id': group.id,
+                'section_id': group.section_id,
+                'group_name': group.group_name,
+                'old_chat_id': old_chat_id,
+                'new_chat_id': new_chat_id
+            })
+            fixed_count += 1
+        
+        logger.info(f"Fixed {fixed_count} Telegram groups for teacher {teacher.full_name}")
+        
+        return Response({
+            'success': True,
+            'message': f'تم تصحيح {fixed_count} مجموعة بنجاح',
+            'fixed_count': fixed_count,
+            'groups': fixed_groups
+        }, status=status.HTTP_200_OK)
+        
+    except Teacher.DoesNotExist:
+        return Response({
+            'error': 'المعلم غير موجود'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        logger.error(f"Error in fix_telegram_chatid: {str(e)}")
+        return Response({
+            'error': 'حدث خطأ',
+            'details': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
