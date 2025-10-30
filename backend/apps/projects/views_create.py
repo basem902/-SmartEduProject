@@ -212,6 +212,14 @@ def create_project(request):
         sections = Section.objects.filter(id__in=section_ids)
         project.sections.add(*sections)
         
+        # Create default group for each section
+        from .models import Group
+        for section in sections:
+            Group.objects.create(
+                project=project,
+                group_name=f"مجموعة {section.section_name}"
+            )
+        
         # Handle files
         files_saved = handle_project_files(request, project)
         
@@ -226,6 +234,7 @@ def create_project(request):
             'project_id': project.id,
             'title': project.title,
             'sections_count': project.sections.count(),
+            'groups_count': project.groups.count(),  # عدد المجموعات المُنشأة
             'files_count': project.files.count(),
             'telegram_sent': project.telegram_sent,
             'telegram_results': telegram_results,  # ✅ إرجاع النتائج الكاملة
