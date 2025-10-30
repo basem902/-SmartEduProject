@@ -7,9 +7,9 @@
 const state = {
     currentStep: 1,
     projectId: null,
+    sectionId: null,
     project: null,
     studentName: '',
-    studentId: '',
     submitToken: '',
     selectedFile: null,
     validationResult: null
@@ -27,15 +27,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     const token = urlParams.get('token');
     if (token) {
         try {
-            // Decode JWT token to get project_id
+            // Decode JWT token to get project_id and section_id
             const payload = parseJwt(token);
             const pid = payload.project_id || payload.projectId || payload.project || payload.pid || payload.id;
+            const sid = payload.section_id || payload.sectionId || payload.section;
             if (pid) {
                 state.projectId = pid;
+                state.sectionId = sid; // حفظ section_id من الـ token
                 state.submitToken = token; // حفظ الـ token للاستخدام لاحقاً
             } else {
                 // Token without project id -> ignore token and fallback
                 state.projectId = urlParams.get('project_id');
+                state.sectionId = urlParams.get('section_id');
                 state.submitToken = '';
             }
         } catch (error) {
@@ -124,8 +127,16 @@ function displayProjectInfo(project) {
     
     // المعلومات الأساسية
     document.getElementById('projectSubject').textContent = project.subject || '-';
-    document.getElementById('projectGrade').textContent = project.grade || '-';
-    document.getElementById('projectTeacher').textContent = project.teacher?.full_name || '-';
+    
+    // عرض الشعبة من الـ token أو من قائمة الشعب
+    if (state.sectionId && project.sections && project.sections.length > 0) {
+        const section = project.sections.find(s => s.id === state.sectionId);
+        document.getElementById('projectSection').textContent = section ? section.name : 'غير محدد';
+    } else if (project.sections && project.sections.length > 0) {
+        document.getElementById('projectSection').textContent = project.sections[0].name;
+    } else {
+        document.getElementById('projectSection').textContent = 'غير محدد';
+    }
     
     // التعليمات والشروط
     if (project.instructions) {
@@ -141,7 +152,6 @@ function displayProjectInfo(project) {
     // قيود الملف
     document.getElementById('maxSize').textContent = `${project.max_file_size} MB`;
     document.getElementById('maxSizeText').textContent = `${project.max_file_size} MB`;
-    document.getElementById('allowedTypes').textContent = project.allowed_extensions;
 }
 
 // ============================================
@@ -174,10 +184,9 @@ async function handleStudentForm(e) {
     e.preventDefault();
     
     state.studentName = document.getElementById('studentName').value.trim();
-    state.studentId = document.getElementById('studentId').value.trim();
     
-    if (!state.studentName || !state.studentId) {
-        showError('يرجى إدخال جميع البيانات');
+    if (!state.studentName) {
+        showError('يرجى إدخال الاسم الكامل');
         return;
     }
     
@@ -427,7 +436,10 @@ async function handleFileUpload() {
         formData.append('file', state.selectedFile);
         formData.append('project_id', state.projectId);
         formData.append('submit_token', state.submitToken);
-        formData.append('student_id', state.studentId);
+        formData.append('student_name', state.studentName);
+        if (state.sectionId) {
+            formData.append('section_id', state.sectionId);
+        }
         
         const response = await fetch(`${API_BASE_URL}/projects/submissions/upload/`, {
             method: 'POST',
