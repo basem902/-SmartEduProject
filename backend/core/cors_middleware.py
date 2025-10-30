@@ -12,7 +12,7 @@ class CorsMiddleware:
     def __call__(self, request):
         # Handle preflight OPTIONS request
         if request.method == 'OPTIONS':
-            response = self._build_preflight_response()
+            response = self._build_preflight_response(request)
             return response
 
         # Get response from next middleware/view
@@ -23,11 +23,13 @@ class CorsMiddleware:
         
         return response
 
-    def _build_preflight_response(self):
+    def _build_preflight_response(self, request):
         """Build response for OPTIONS preflight request"""
         from django.http import HttpResponse
         response = HttpResponse()
         response.status_code = 200
+        # Add CORS headers to preflight response as well
+        self._add_cors_headers(response, request)
         return response
 
     def _add_cors_headers(self, response, request):
