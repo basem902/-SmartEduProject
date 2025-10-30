@@ -186,7 +186,7 @@ class AdminDashboard {
             projects: {
                 icon: '📁',
                 label: 'المشاريع والتسليمات',
-                tables: ['projects', 'students', 'groups', 'project_files', 'submissions']
+                tables: ['projects', 'students', 'project_files', 'submissions']
             },
             otp: {
                 icon: '🔐',
