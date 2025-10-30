@@ -2,7 +2,7 @@
  * Service Worker للـ PWA
  */
 
-const CACHE_NAME = 'smartedu-v1.3.2';
+const CACHE_NAME = 'smartedu-v1.3.3';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -62,8 +62,28 @@ self.addEventListener('activate', event => {
 
 // اعتراض الطلبات
 self.addEventListener('fetch', event => {
+  const url = event.request.url;
+
+  // تجاهل أي طلب ليس http/https (مثل chrome-extension)
+  if (!url.startsWith('http')) {
+    return; // دع المتصفح يتولى الطلب
+  }
+
   // السماح لطلبات API بالمرور مباشرة للشبكة
-  if (event.request.url.includes('/api/') || event.request.url.includes('localhost:8000')) {
+  if (url.includes('/api/') || url.includes('localhost:8000')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // تجاهل غير GET
+  if (event.request.method !== 'GET') {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // تجاهل الطلبات عبر أصل مختلف
+  const reqOrigin = new URL(url).origin;
+  if (reqOrigin !== self.location.origin) {
     event.respondWith(fetch(event.request));
     return;
   }
@@ -71,33 +91,28 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
       .then(response => {
-        // إرجاع من Cache إذا وُجد
-        if (response) {
-          return response;
-        }
+        if (response) return response;
 
-        // محاولة جلب من الشبكة
         return fetch(event.request)
           .then(response => {
-            // التحقق من صحة الاستجابة
             if (!response || response.status !== 200 || response.type !== 'basic') {
               return response;
             }
 
-            // نسخ الاستجابة
             const responseToCache = response.clone();
 
-            caches.open(CACHE_NAME)
-              .then(cache => {
+            caches.open(CACHE_NAME).then(cache => {
+              try {
                 cache.put(event.request, responseToCache);
-              });
+              } catch (e) {
+                // تجاهل أخطاء التخزين في الكاش
+                console.warn('SW cache.put failed:', e && e.message);
+              }
+            });
 
             return response;
           })
-          .catch(() => {
-            // إرجاع صفحة offline عند انقطاع الاتصال
-            return caches.match('/pages/offline.html');
-          });
+          .catch(() => caches.match('/pages/offline.html'));
       })
   );
 });
