@@ -34,7 +34,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
-    'channels',  # ✅ WebSocket support
+    # 'channels',  # WebSocket support - disabled for production deployment
     
     # Local apps
     'apps.accounts',
@@ -262,22 +262,22 @@ GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5500')
 
 # ============================================================
-# WebSocket & Channels Configuration
+# WebSocket & Channels Configuration - DISABLED FOR PRODUCTION
 # ============================================================
 
-ASGI_APPLICATION = 'core.asgi.application'
+# ASGI_APPLICATION = 'core.asgi.application'
 
 # Channel layers (in-memory for development, Redis for production)
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer'
-        # For production with Redis:
-        # 'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        # 'CONFIG': {
-        #     "hosts": [('127.0.0.1', 6379)],
-        # },
-    }
-}
+# CHANNEL_LAYERS = {
+#     'default': {
+#         'BACKEND': 'channels.layers.InMemoryChannelLayer'
+#         # For production with Redis:
+#         # 'BACKEND': 'channels_redis.core.RedisChannelLayer',
+#         # 'CONFIG': {
+#         #     "hosts": [('127.0.0.1', 6379)],
+#         # },
+#     }
+# }
 
 # ============================================================
 # Celery Configuration (Background Tasks)
