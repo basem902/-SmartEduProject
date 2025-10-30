@@ -13,7 +13,7 @@ if (typeof window.API_BASE === 'undefined') {
         window.API_BASE = 'http://localhost:8000/api';
     } else {
         // Production
-        window.API_BASE = 'https://smarteduproject-k0um.onrender.com/api';
+        window.API_BASE = '/api';
     }
 }
 
