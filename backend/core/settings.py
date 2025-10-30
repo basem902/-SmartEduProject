@@ -152,10 +152,19 @@ SIMPLE_JWT = {
 cors_origins_str = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:5500,http://127.0.0.1:5500')
 CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins_str.split(',') if origin.strip()]
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = False  # للأمان
 
-# Debug CORS (مؤقت)
+# TEMPORARY: Allow all origins in production for testing
+# TODO: Remove this after fixing CORS
+if not DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+    print("⚠️ WARNING: CORS_ALLOW_ALL_ORIGINS is TRUE (Production)")
+else:
+    CORS_ALLOW_ALL_ORIGINS = False
+
+# Debug CORS
 print(f"🔍 DEBUG - CORS_ALLOWED_ORIGINS: {CORS_ALLOWED_ORIGINS}")
+print(f"🔍 DEBUG - CORS_ALLOW_ALL_ORIGINS: {CORS_ALLOW_ALL_ORIGINS}")
+print(f"🔍 DEBUG - DEBUG Mode: {DEBUG}")
 
 # CORS Headers (إضافي لحل مشكلة Render)
 CORS_ALLOW_HEADERS = [
