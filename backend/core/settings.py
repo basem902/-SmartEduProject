@@ -234,3 +234,35 @@ CHANNEL_LAYERS = {
         # },
     }
 }
+
+# ============================================================
+# Celery Configuration (Background Tasks)
+# ============================================================
+
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Riyadh'
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutes
+CELERY_TASK_SOFT_TIME_LIMIT = 25 * 60  # 25 minutes
+
+# ============================================================
+# AI Validation Settings
+# ============================================================
+
+AI_VALIDATION_ENABLED = os.getenv('AI_VALIDATION_ENABLED', 'True').lower() == 'true'
+AI_DEFAULT_THRESHOLD = int(os.getenv('AI_DEFAULT_THRESHOLD', '70'))
+PLAGIARISM_THRESHOLD = int(os.getenv('PLAGIARISM_THRESHOLD', '50'))
+MAX_SUBMISSION_ATTEMPTS = int(os.getenv('MAX_SUBMISSION_ATTEMPTS', '5'))
+
+# Video Processing
+VIDEO_MAX_DURATION = int(os.getenv('VIDEO_MAX_DURATION', '30'))
+VIDEO_MIN_DURATION = int(os.getenv('VIDEO_MIN_DURATION', '15'))
+VIDEO_MAX_SIZE_MB = int(os.getenv('VIDEO_MAX_SIZE_MB', '50'))
+VIDEO_ALLOWED_FORMATS = os.getenv('VIDEO_ALLOWED_FORMATS', 'mp4,mov,avi').split(',')
+
+# OCR Settings
+TESSERACT_LANGUAGES = os.getenv('TESSERACT_LANGUAGES', 'ara+eng')

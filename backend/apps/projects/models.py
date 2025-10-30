@@ -26,6 +26,44 @@ class Project(models.Model):
     send_reminder = models.BooleanField(default=True, verbose_name='إرسال تذكير')
     ai_check_plagiarism = models.BooleanField(default=False, verbose_name='فحص الانتحال بالذكاء الاصطناعي')
     
+    # AI Validation Settings (NEW)
+    file_type = models.CharField(
+        max_length=20,
+        choices=[
+            ('video', 'فيديو'),
+            ('pdf', 'PDF'),
+            ('image', 'صور'),
+            ('document', 'مستندات (Word/Excel/PPT)'),
+            ('audio', 'صوت'),
+        ],
+        default='pdf',
+        verbose_name='نوع الملف المطلوب'
+    )
+    file_constraints = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name='قيود الملف',
+        help_text='مثال: {"max_size_mb": 50, "duration": {"min": 15, "max": 30}}'
+    )
+    validation_requirements = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name='متطلبات التحقق',
+        help_text='مثال: [{"type": "name_in_video", "location": "last_5_seconds"}]'
+    )
+    max_attempts = models.IntegerField(
+        default=5,
+        verbose_name='الحد الأقصى للمحاولات'
+    )
+    plagiarism_threshold = models.IntegerField(
+        default=50,
+        verbose_name='نسبة التشابه المسموحة (%)'
+    )
+    ai_validation_enabled = models.BooleanField(
+        default=True,
+        verbose_name='تفعيل التحقق بالذكاء الاصطناعي'
+    )
+    
     # Instructions
     instructions = models.TextField(blank=True, null=True, verbose_name='تعليمات المشروع')
     requirements = models.TextField(blank=True, null=True, verbose_name='شروط التسليم')
@@ -135,20 +173,59 @@ class Submission(models.Model):
     
     STATUS_CHOICES = [
         ('pending', 'قيد المراجعة'),
+        ('processing', 'جاري التحليل'),
         ('approved', 'مقبول'),
         ('rejected', 'مرفوض'),
+        ('needs_review', 'يحتاج مراجعة يدوية'),
     ]
     
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='submissions', verbose_name='المشروع')
     group = models.ForeignKey(Group, on_delete=models.CASCADE, null=True, blank=True, related_name='submissions', verbose_name='المجموعة')
     student = models.ForeignKey(Student, on_delete=models.CASCADE, null=True, blank=True, related_name='submissions', verbose_name='الطالب')
+    
+    # Student Info (for direct submission without account)
+    submitted_student_name = models.CharField(max_length=100, null=True, blank=True, verbose_name='اسم الطالب')
+    submitted_student_id = models.CharField(max_length=50, null=True, blank=True, verbose_name='رقم الطالب')
+    
     file_path = models.CharField(max_length=500, verbose_name='مسار الملف')
     file_name = models.CharField(max_length=255, verbose_name='اسم الملف')
     file_size = models.IntegerField(verbose_name='حجم الملف (بايت)')
     file_type = models.CharField(max_length=50, verbose_name='نوع الملف')
     file_hash = models.CharField(max_length=64, null=True, blank=True, verbose_name='Hash الملف')
     
-    # نتائج الفحص والتحقق
+    # AI Validation (NEW)
+    attempt_number = models.IntegerField(default=1, verbose_name='رقم المحاولة')
+    validation_status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pending',
+        verbose_name='حالة التحقق'
+    )
+    ai_score = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name='تقييم الذكاء الاصطناعي (0-100)'
+    )
+    validation_results = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name='نتائج التحقق التفصيلية'
+    )
+    rejection_reasons = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name='أسباب الرفض'
+    )
+    processing_time = models.FloatField(
+        null=True,
+        blank=True,
+        verbose_name='مدة المعالجة (ثواني)'
+    )
+    processed_at = models.DateTimeField(null=True, blank=True, verbose_name='تاريخ الانتهاء من المعالجة')
+    
+    # نتائج الفحص والتحقق (القديمة - متوافقة)
     validation_data = models.JSONField(null=True, blank=True, verbose_name='بيانات التحقق')
     virus_scanned = models.BooleanField(default=False, verbose_name='تم فحص الفيروسات')
     virus_clean = models.BooleanField(default=True, verbose_name='خالي من الفيروسات')

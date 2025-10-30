@@ -10,8 +10,6 @@ const state = {
     project: null,
     studentName: '',
     studentId: '',
-    otpId: null,
-    botDeeplink: '',
     submitToken: '',
     selectedFile: null,
     validationResult: null
@@ -154,11 +152,7 @@ function setupEventListeners() {
     // Step 1: Student Form
     document.getElementById('studentForm').addEventListener('submit', handleStudentForm);
     
-    // Step 2: OTP Form
-    document.getElementById('otpForm').addEventListener('submit', handleOTPForm);
-    document.getElementById('openBotBtn').addEventListener('click', openTelegramBot);
-    
-    // Step 3: File Upload
+    // Step 2: File Upload
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
     
@@ -187,115 +181,12 @@ async function handleStudentForm(e) {
         return;
     }
     
-    // طلب OTP
-    await initOTP();
-}
-
-async function initOTP() {
-    showLoading('جاري إنشاء رمز التحقق...');
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/otp/init/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                project_id: state.projectId,
-                student_name: state.studentName,
-                student_id: state.studentId
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.error || 'فشل إنشاء رمز التحقق');
-        }
-        
-        state.otpId = data.otp_id;
-        state.botDeeplink = data.bot_deeplink;
-        
-        // تفعيل زر فتح البوت
-        const botBtn = document.getElementById('openBotBtn');
-        botBtn.disabled = false;
-        botBtn.classList.add('pulse');
-        
-        hideLoading();
-        nextStep();
-        
-    } catch (error) {
-        console.error('Error init OTP:', error);
-        hideLoading();
-        showError(error.message);
-    }
+    // الانتقال مباشرة للخطوة 2 (رفع الملف)
+    nextStep();
 }
 
 // ============================================
-// Step 2: OTP Verification
-// ============================================
-
-function openTelegramBot() {
-    if (state.botDeeplink) {
-        window.open(state.botDeeplink, '_blank');
-        
-        // تركيز على حقل OTP
-        setTimeout(() => {
-            document.getElementById('otpCode').focus();
-        }, 500);
-    }
-}
-
-async function handleOTPForm(e) {
-    e.preventDefault();
-    
-    const otpCode = document.getElementById('otpCode').value.trim();
-    
-    if (!otpCode || otpCode.length !== 6) {
-        showError('يرجى إدخال رمز مكون من 6 أرقام');
-        return;
-    }
-    
-    await verifyOTP(otpCode);
-}
-
-async function verifyOTP(code) {
-    showLoading('جاري التحقق من الرمز...');
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/otp/verify/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                otp_id: state.otpId,
-                code: code
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.error || 'رمز التحقق غير صحيح');
-        }
-        
-        state.submitToken = data.submit_token;
-        
-        hideLoading();
-        showSuccess('✅ تم التحقق بنجاح!');
-        
-        setTimeout(() => nextStep(), 1000);
-        
-    } catch (error) {
-        console.error('Error verify OTP:', error);
-        hideLoading();
-        showError(error.message);
-    }
-}
-
-// ============================================
-// Step 3: File Upload
+// Step 2: File Upload
 // ============================================
 
 function handleDragOver(e) {
@@ -594,7 +485,7 @@ function displaySubmissionDetails(submission) {
 // ============================================
 
 function nextStep() {
-    if (state.currentStep < 4) {
+    if (state.currentStep < 3) {
         // إخفاء الخطوة الحالية
         document.getElementById(`step${state.currentStep}`).classList.remove('active');
         document.querySelector(`.step[data-step="${state.currentStep}"]`).classList.remove('active');

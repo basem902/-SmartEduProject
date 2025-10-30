@@ -531,3 +531,169 @@ def send_project_telegram(request, project_id):
             'error': 'حدث خطأ أثناء إرسال الإشعار',
             'details': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@parser_classes([MultiPartParser, FormParser])
+def submit_project_with_ai(request, project_id):
+    """
+    استلام المشروع مع التحقق بالذكاء الاصطناعي
+    """
+    try:
+        project = Project.objects.get(id=project_id, is_active=True)
+        
+        # 1. التحقق من البيانات الأساسية
+        student_name = request.data.get('student_name')
+        student_id = request.data.get('student_id')
+        file = request.FILES.get('file')
+        
+        if not all([student_name, student_id, file]):
+            return Response({
+                'error': 'جميع الحقول مطلوبة (student_name, student_id, file)'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # 2. التحقق من عدد المحاولات
+        previous_attempts = Submission.objects.filter(
+            project=project,
+            submitted_student_id=student_id
+        ).count()
+        
+        if previous_attempts >= project.max_attempts:
+            return Response({
+                'error': f'لقد تجاوزت الحد الأقصى للمحاولات ({project.max_attempts})',
+                'attempts': previous_attempts,
+                'max_attempts': project.max_attempts
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # 3. التحقق من الموعد النهائي
+        if project.is_expired and not project.allow_late_submission:
+            return Response({
+                'error': 'انتهى موعد التسليم',
+                'deadline': project.deadline
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # 4. التحقق من نوع الملف
+        import os
+        file_extension = os.path.splitext(file.name)[1].lower().replace('.', '')
+        allowed_formats = project.file_constraints.get('formats', []) or project.allowed_file_types
+        
+        if allowed_formats and file_extension not in allowed_formats:
+            return Response({
+                'error': f'نوع الملف غير مقبول. المسموح: {", ".join(allowed_formats)}',
+                'file_type': file_extension,
+                'allowed': allowed_formats
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # 5. التحقق من الحجم
+        max_size_mb = project.file_constraints.get('max_size_mb') or project.max_file_size
+        max_size_bytes = max_size_mb * 1024 * 1024
+        
+        if file.size > max_size_bytes:
+            return Response({
+                'error': f'حجم الملف كبير جداً. الحد الأقصى: {max_size_mb} MB',
+                'file_size': file.size / (1024 * 1024),  # MB
+                'max_size': max_size_mb
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # 6. حفظ الملف بشكل آمن
+        upload_result = secure_upload(
+            file,
+            subfolder=f'projects/{project.id}',
+            allowed_extensions=allowed_formats
+        )
+        
+        if not upload_result['success']:
+            return Response({
+                'error': 'فشل رفع الملف',
+                'details': upload_result.get('error', 'Unknown error')
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        file_path = upload_result['file_path']
+        
+        # 7. إنشاء Submission
+        submission = Submission.objects.create(
+            project=project,
+            submitted_student_name=student_name,
+            submitted_student_id=student_id,
+            file_path=file_path,
+            file_name=file.name,
+            file_size=file.size,
+            file_type=file_extension,
+            attempt_number=previous_attempts + 1,
+            validation_status='pending'
+        )
+        
+        logger.info(f"✅ تم إنشاء Submission #{submission.id} للمشروع #{project.id}")
+        
+        # 8. إضافة للـ Queue للمعالجة بالـ AI
+        if project.ai_validation_enabled:
+            from .tasks import process_submission_with_ai
+            process_submission_with_ai.delay(submission.id)
+            
+            message = 'تم رفع المشروع بنجاح. جاري التحليل بالذكاء الاصطناعي...'
+        else:
+            submission.validation_status = 'pending'
+            submission.save()
+            message = 'تم رفع المشروع بنجاح. في انتظار مراجعة المعلم.'
+        
+        return Response({
+            'success': True,
+            'message': message,
+            'submission': {
+                'id': submission.id,
+                'attempt_number': submission.attempt_number,
+                'remaining_attempts': project.max_attempts - submission.attempt_number,
+                'status': submission.validation_status,
+                'submitted_at': submission.submitted_at
+            }
+        }, status=status.HTTP_201_CREATED)
+        
+    except Project.DoesNotExist:
+        return Response({
+            'error': 'المشروع غير موجود أو غير نشط'
+        }, status=status.HTTP_404_NOT_FOUND)
+    
+    except Exception as e:
+        logger.error(f"❌ Error in submit_project_with_ai: {str(e)}", exc_info=True)
+        return Response({
+            'error': 'حدث خطأ أثناء رفع المشروع',
+            'details': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def check_submission_status_view(request, submission_id):
+    """
+    التحقق من حالة التسليم
+    """
+    try:
+        submission = Submission.objects.get(id=submission_id)
+        
+        response_data = {
+            'submission_id': submission.id,
+            'status': submission.validation_status,
+            'ai_score': float(submission.ai_score) if submission.ai_score else None,
+            'rejection_reasons': submission.rejection_reasons,
+            'validation_results': submission.validation_results,
+            'processing_time': submission.processing_time,
+            'processed_at': submission.processed_at.isoformat() if submission.processed_at else None,
+            'submitted_at': submission.submitted_at.isoformat(),
+            'attempt_number': submission.attempt_number
+        }
+        
+        # إضافة معلومات المشروع
+        response_data['project'] = {
+            'id': submission.project.id,
+            'title': submission.project.title,
+            'max_attempts': submission.project.max_attempts,
+            'remaining_attempts': submission.project.max_attempts - submission.attempt_number
+        }
+        
+        return Response(response_data, status=status.HTTP_200_OK)
+        
+    except Submission.DoesNotExist:
+        return Response({
+            'error': 'التسليم غير موجود'
+        }, status=status.HTTP_404_NOT_FOUND)

@@ -38,4 +38,8 @@ urlpatterns = [
     # Telegram Notifications
     path('<int:project_id>/send-telegram/', views.send_project_telegram, name='send_project_telegram'),
     path('<int:project_id>/telegram/bot-status/', views_telegram.check_bot_status, name='check_bot_status'),
+    
+    # AI Submission (NEW)
+    path('<int:project_id>/submit-ai/', views.submit_project_with_ai, name='submit_project_with_ai'),
+    path('submissions/<int:submission_id>/status/', views.check_submission_status_view, name='check_submission_status'),
 ]
