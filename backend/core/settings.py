@@ -45,9 +45,10 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'core.cors_middleware.CorsMiddleware',  # ✅ Custom CORS - MUST be first
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # ✅ For static files on Render
-    'corsheaders.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # Backup CORS
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -151,13 +152,13 @@ SIMPLE_JWT = {
 # CORS Settings
 cors_origins_str = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:5500,http://127.0.0.1:5500')
 CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins_str.split(',') if origin.strip()]
+
+# CORS Configuration
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = False  # للأمان
+CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL_ORIGINS', 'False') == 'True'
+CORS_PREFLIGHT_MAX_AGE = 86400  # 24 hours
 
-# Debug CORS (مؤقت)
-print(f"🔍 DEBUG - CORS_ALLOWED_ORIGINS: {CORS_ALLOWED_ORIGINS}")
-
-# CORS Headers (إضافي لحل مشكلة Render)
+# CORS Headers
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
@@ -178,6 +179,24 @@ CORS_ALLOW_METHODS = [
     'POST',
     'PUT',
 ]
+
+# CSRF Settings for Production
+CSRF_TRUSTED_ORIGINS = [
+    'https://smartedu-basem.netlify.app',
+    'https://smarteduproject-k0um.onrender.com',
+    'https://*.onrender.com',
+    'https://*.netlify.app',
+]
+
+# Debug CORS
+print("=" * 80)
+print("🔍 CORS CONFIGURATION:")
+print(f"  - CORS_ALLOWED_ORIGINS: {CORS_ALLOWED_ORIGINS}")
+print(f"  - CORS_ALLOW_ALL_ORIGINS: {CORS_ALLOW_ALL_ORIGINS}")
+print(f"  - CORS_ALLOW_CREDENTIALS: {CORS_ALLOW_CREDENTIALS}")
+print(f"  - CSRF_TRUSTED_ORIGINS: {CSRF_TRUSTED_ORIGINS}")
+print(f"  - DEBUG: {DEBUG}")
+print("=" * 80)
 
 # Email Settings (Gmail SMTP)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
