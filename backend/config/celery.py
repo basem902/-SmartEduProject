@@ -5,7 +5,7 @@ import os
 from celery import Celery
 
 # Set default Django settings
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 
 # Create Celery app
 app = Celery('smartedu')
