@@ -2,8 +2,14 @@
 # exit on error
 set -o errexit
 
-# Install dependencies
-pip install -r requirements.txt
+# Install dependencies (use production requirements if exists)
+if [ -f requirements-production.txt ]; then
+    echo "📦 Installing production dependencies..."
+    pip install -r requirements-production.txt
+else
+    echo "📦 Installing all dependencies..."
+    pip install -r requirements.txt
+fi
 
 # Collect static files
 python manage.py collectstatic --no-input
