@@ -409,17 +409,88 @@ class AIValidator:
             }
     
     def validate_audio(self, submission):
-        """التحقق من الصوت"""
-        logger.info(f"🎵 فحص الصوت #{submission.id}")
+        """
+        التحقق الشامل من الصوت
+        1. فحص المدة
+        2. Speech-to-Text
+        3. تحليل المحتوى بـ Gemini
+        4. كشف التشابه
+        """
+        logger.info(f"🎵 بدء فحص الصوت #{submission.id}")
         
-        return {
-            'status': 'approved',
-            'overall_score': 75.0,
-            'checks': {
-                'duration': {'status': 'pass'}
-            },
-            'rejection_reasons': []
+        project = submission.project
+        file_path = submission.file_path
+        
+        results = {
+            'checks': {},
+            'rejection_reasons': [],
+            'warnings': [],
+            'overall_score': 0
         }
+        
+        try:
+            # 1. فحص مدة الصوت
+            duration_result = self._check_audio_duration(file_path, project)
+            results['checks']['duration'] = duration_result
+            
+            if duration_result['status'] == 'fail':
+                results['rejection_reasons'].append(duration_result['message'])
+                results['status'] = 'rejected'
+                return results
+            
+            # 2. Speech-to-Text
+            stt_result = self._audio_to_text(file_path)
+            results['checks']['speech_to_text'] = stt_result
+            
+            if stt_result['status'] == 'fail':
+                results['rejection_reasons'].append(stt_result['message'])
+            
+            transcribed_text = stt_result.get('text', '')
+            
+            # 3. تحليل المحتوى بـ Gemini
+            content_result = self._analyze_audio_content(transcribed_text, project)
+            results['checks']['content_analysis'] = content_result
+            
+            if content_result['status'] == 'fail':
+                results['rejection_reasons'].append(content_result['message'])
+            
+            # 4. كشف التشابه
+            similarity_result = self._check_audio_similarity(transcribed_text, submission)
+            results['checks']['similarity'] = similarity_result
+            
+            if similarity_result['status'] == 'fail':
+                results['rejection_reasons'].append(similarity_result['message'])
+            elif similarity_result['status'] == 'warning':
+                results['warnings'].append(similarity_result['message'])
+            
+            # حساب الدرجة النهائية
+            scores = [
+                duration_result.get('score', 0),
+                stt_result.get('score', 0),
+                content_result.get('score', 0),
+                similarity_result.get('score', 0)
+            ]
+            results['overall_score'] = sum(scores) / len(scores)
+            
+            # تحديد الحالة النهائية
+            if results['rejection_reasons']:
+                results['status'] = 'rejected'
+            elif results['overall_score'] < 60:
+                results['status'] = 'needs_review'
+            else:
+                results['status'] = 'approved'
+            
+            logger.info(f"✅ انتهى فحص الصوت #{submission.id} - الحالة: {results['status']}")
+            return results
+            
+        except Exception as e:
+            logger.error(f"❌ خطأ في فحص الصوت #{submission.id}: {str(e)}", exc_info=True)
+            return {
+                'status': 'needs_review',
+                'overall_score': 0,
+                'rejection_reasons': [f'حدث خطأ في فحص الصوت: {str(e)}'],
+                'checks': results.get('checks', {})
+            }
     
     # ====================================
     # Video Validation Helper Methods
@@ -1666,4 +1737,356 @@ JSON فقط."""
                 'status': 'warning',
                 'message': 'تعذر التحليل',
                 'score': 70
+            }
+    
+    # ====================================
+    # Audio Validation Helper Methods
+    # ====================================
+    
+    def _check_audio_duration(self, file_path, project):
+        """
+        فحص مدة الصوت
+        
+        Args:
+            file_path: مسار الملف الصوتي
+            project: كائن المشروع
+            
+        Returns:
+            dict: نتيجة الفحص
+        """
+        try:
+            from pydub import AudioSegment
+            
+            # تحميل الملف الصوتي
+            audio = AudioSegment.from_file(file_path)
+            duration = len(audio) / 1000.0  # بالثواني
+            
+            # قراءة القيود من المشروع
+            constraints = project.file_constraints or {}
+            duration_constraints = constraints.get('duration', {})
+            
+            min_duration = duration_constraints.get('min', 10)  # default 10 seconds
+            max_duration = duration_constraints.get('max', 180)  # default 3 minutes
+            
+            logger.info(f"🎵 مدة الصوت: {duration:.1f} ثانية (المطلوب: {min_duration}-{max_duration})")
+            
+            # التقييم
+            if duration < min_duration:
+                return {
+                    'status': 'fail',
+                    'message': f'الصوت قصير جداً ({duration:.1f}ث). المطلوب على الأقل {min_duration} ثانية',
+                    'duration': duration,
+                    'score': 0
+                }
+            elif duration > max_duration:
+                return {
+                    'status': 'fail',
+                    'message': f'الصوت طويل جداً ({duration:.1f}ث). الحد الأقصى {max_duration} ثانية',
+                    'duration': duration,
+                    'score': 0
+                }
+            else:
+                return {
+                    'status': 'pass',
+                    'message': f'مدة الصوت مناسبة ({duration:.1f}ث)',
+                    'duration': duration,
+                    'score': 100
+                }
+                
+        except Exception as e:
+            logger.error(f"❌ خطأ في فحص مدة الصوت: {str(e)}")
+            return {
+                'status': 'fail',
+                'message': f'خطأ في قراءة الملف الصوتي: {str(e)}',
+                'score': 0
+            }
+    
+    def _audio_to_text(self, file_path):
+        """
+        تحويل الصوت إلى نص (Speech-to-Text)
+        
+        Args:
+            file_path: مسار الملف الصوتي
+            
+        Returns:
+            dict: النص المستخرج
+        """
+        try:
+            import speech_recognition as sr
+            from pydub import AudioSegment
+            import os
+            
+            recognizer = sr.Recognizer()
+            
+            # تحويل الملف إلى WAV إذا لزم الأمر
+            audio = AudioSegment.from_file(file_path)
+            
+            # تحديد مدة الصوت للمعالجة (أول دقيقة فقط لتوفير الوقت)
+            duration_ms = min(len(audio), 60000)  # أول دقيقة
+            audio_sample = audio[:duration_ms]
+            
+            # حفظ مؤقتاً كـ WAV
+            temp_wav = file_path + '.temp.wav'
+            audio_sample.export(temp_wav, format='wav')
+            
+            try:
+                # قراءة الملف الصوتي
+                with sr.AudioFile(temp_wav) as source:
+                    audio_data = recognizer.record(source)
+                
+                # محاولة التعرف على النص (العربية أولاً، ثم الإنجليزية)
+                text = ''
+                try:
+                    text = recognizer.recognize_google(audio_data, language='ar-SA')
+                    logger.info(f"📝 تم التعرف على النص بالعربية")
+                except:
+                    try:
+                        text = recognizer.recognize_google(audio_data, language='en-US')
+                        logger.info(f"📝 تم التعرف على النص بالإنجليزية")
+                    except:
+                        pass
+                
+                # حذف الملف المؤقت
+                if os.path.exists(temp_wav):
+                    os.remove(temp_wav)
+                
+                word_count = len(text.split())
+                
+                logger.info(f"📝 Speech-to-Text: {word_count} كلمة")
+                
+                if word_count < 5:
+                    return {
+                        'status': 'fail',
+                        'message': 'لم يتم التعرف على كلام واضح في الملف الصوتي',
+                        'text': text,
+                        'word_count': word_count,
+                        'score': 0
+                    }
+                
+                return {
+                    'status': 'pass',
+                    'message': f'تم استخراج {word_count} كلمة',
+                    'text': text,
+                    'word_count': word_count,
+                    'score': 100
+                }
+                
+            finally:
+                # تأكد من حذف الملف المؤقت
+                if os.path.exists(temp_wav):
+                    try:
+                        os.remove(temp_wav)
+                    except:
+                        pass
+                
+        except Exception as e:
+            logger.error(f"❌ خطأ في Speech-to-Text: {str(e)}")
+            return {
+                'status': 'warning',
+                'message': f'تعذر تحويل الصوت إلى نص: {str(e)}',
+                'text': '',
+                'word_count': 0,
+                'score': 50
+            }
+    
+    def _analyze_audio_content(self, text, project):
+        """
+        تحليل محتوى الصوت باستخدام Gemini
+        
+        Args:
+            text: النص المستخرج من الصوت
+            project: كائن المشروع
+            
+        Returns:
+            dict: نتيجة التحليل
+        """
+        try:
+            if not self.gemini_flash:
+                return {
+                    'status': 'warning',
+                    'message': 'Gemini غير متاح',
+                    'score': 70
+                }
+            
+            if not text or len(text.strip()) < 10:
+                return {
+                    'status': 'warning',
+                    'message': 'النص المستخرج قصير جداً للتحليل',
+                    'score': 60
+                }
+            
+            # تجهيز Prompt
+            prompt = f"""حلل هذا النص المستخرج من ملف صوتي بصيغة JSON:
+
+معلومات المشروع:
+- العنوان: {project.title}
+- الوصف: {project.description or 'غير محدد'}
+
+النص المستخرج:
+{text}
+
+أجب (JSON):
+1. content_quality: جودة المحتوى (0-100)
+2. relevance: ارتباط بالمشروع (0-100)
+3. language_quality: جودة اللغة (0-100)
+4. recommendation: (approved/rejected/needs_review)
+
+JSON فقط."""
+            
+            response = self.gemini_flash.generate_content(prompt)
+            
+            # تحليل النتيجة
+            import json
+            try:
+                result = json.loads(response.text)
+            except:
+                result = {
+                    'content_quality': 75,
+                    'relevance': 75,
+                    'language_quality': 75,
+                    'recommendation': 'approved'
+                }
+            
+            # حساب الدرجة
+            quality = result.get('content_quality', 70)
+            relevance = result.get('relevance', 70)
+            language = result.get('language_quality', 70)
+            overall = (quality + relevance + language) / 3
+            
+            if overall < 50:
+                return {
+                    'status': 'fail',
+                    'message': f'جودة المحتوى منخفضة ({overall:.0f}%)',
+                    'analysis': result,
+                    'score': overall
+                }
+            elif overall < 70:
+                return {
+                    'status': 'warning',
+                    'message': f'جودة المحتوى مقبولة ({overall:.0f}%)',
+                    'analysis': result,
+                    'score': overall
+                }
+            else:
+                return {
+                    'status': 'pass',
+                    'message': f'جودة المحتوى ممتازة ({overall:.0f}%)',
+                    'analysis': result,
+                    'score': overall
+                }
+                
+        except Exception as e:
+            logger.error(f"❌ خطأ في تحليل محتوى الصوت: {str(e)}")
+            return {
+                'status': 'warning',
+                'message': 'تعذر تحليل المحتوى',
+                'score': 70
+            }
+    
+    def _check_audio_similarity(self, text, submission):
+        """
+        كشف التشابه في الملفات الصوتية
+        
+        Args:
+            text: النص المستخرج من الصوت
+            submission: كائن التسليم
+            
+        Returns:
+            dict: نتيجة الفحص
+        """
+        try:
+            from .models import Submission
+            from sklearn.feature_extraction.text import TfidfVectorizer
+            from sklearn.metrics.pairwise import cosine_similarity
+            import numpy as np
+            
+            if not text or len(text.strip()) < 10:
+                return {
+                    'status': 'warning',
+                    'message': 'النص قصير جداً لفحص التشابه',
+                    'score': 70
+                }
+            
+            # البحث عن صوتيات سابقة
+            previous_submissions = Submission.objects.filter(
+                project=submission.project,
+                file_type='audio',
+                validation_data__audio_text__isnull=False
+            ).exclude(id=submission.id)[:20]
+            
+            if not previous_submissions.exists():
+                # حفظ النص للمقارنة المستقبلية
+                submission.validation_data = submission.validation_data or {}
+                submission.validation_data['audio_text'] = text[:3000]
+                
+                return {
+                    'status': 'pass',
+                    'message': 'لا توجد صوتيات سابقة للمقارنة',
+                    'score': 100
+                }
+            
+            # تجهيز النصوص
+            current_text = text[:3000]
+            previous_texts = [
+                sub.validation_data.get('audio_text', '')[:3000]
+                for sub in previous_submissions
+                if sub.validation_data and sub.validation_data.get('audio_text')
+            ]
+            
+            if not previous_texts:
+                submission.validation_data = submission.validation_data or {}
+                submission.validation_data['audio_text'] = current_text
+                return {
+                    'status': 'pass',
+                    'message': 'لا توجد نصوص سابقة صالحة للمقارنة',
+                    'score': 100
+                }
+            
+            # TF-IDF + Cosine Similarity
+            all_texts = [current_text] + previous_texts
+            vectorizer = TfidfVectorizer(max_features=500)
+            tfidf_matrix = vectorizer.fit_transform(all_texts)
+            
+            # حساب التشابه
+            current_vector = tfidf_matrix[0:1]
+            previous_vectors = tfidf_matrix[1:]
+            similarities = cosine_similarity(current_vector, previous_vectors)[0]
+            
+            max_similarity = float(np.max(similarities)) * 100
+            
+            # حفظ النص الحالي
+            submission.validation_data = submission.validation_data or {}
+            submission.validation_data['audio_text'] = current_text
+            
+            logger.info(f"📊 أعلى نسبة تشابه: {max_similarity:.1f}%")
+            
+            # التقييم
+            if max_similarity > 80:
+                return {
+                    'status': 'fail',
+                    'message': f'تشابه عالي جداً ({max_similarity:.0f}%) مع تسليم سابق',
+                    'max_similarity': max_similarity,
+                    'score': 0
+                }
+            elif max_similarity > 60:
+                return {
+                    'status': 'warning',
+                    'message': f'تشابه متوسط ({max_similarity:.0f}%) مع تسليم سابق',
+                    'max_similarity': max_similarity,
+                    'score': 70
+                }
+            else:
+                return {
+                    'status': 'pass',
+                    'message': f'نسبة التشابه منخفضة ({max_similarity:.0f}%)',
+                    'max_similarity': max_similarity,
+                    'score': 100
+                }
+                
+        except Exception as e:
+            logger.error(f"❌ خطأ في فحص التشابه: {str(e)}")
+            return {
+                'status': 'warning',
+                'message': 'تعذر فحص التشابه',
+                'score': 80
             }
