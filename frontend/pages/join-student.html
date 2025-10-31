@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>انضم إلى قروب الصف - SmartEdu</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 550px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .logo {
+            font-size: 70px;
+            margin-bottom: 15px;
+            animation: bounce 1s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .section-info {
+            background: linear-gradient(135deg, #667eea15, #764ba215);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .section-info p {
+            color: #555;
+            font-size: 15px;
+            margin: 5px 0;
+        }
+
+        .section-info strong {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .feedback.error {
+            background: #ffe0e0;
+            color: #d00;
+        }
+
+        .feedback.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .feedback.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .hint {
+            color: #999;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #666;
+            margin-top: 15px;
+        }
+
+        .btn-secondary:hover {
+            background: #e8e8e8;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Success Section */
+        .success-section {
+            display: none;
+            text-align: center;
+        }
+
+        .success-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: scaleIn 0.5s ease-out;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+            }
+            to {
+                transform: scale(1);
+            }
+        }
+
+        .success-title {
+            color: #28a745;
+            font-size: 26px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .student-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 25px 0;
+            text-align: right;
+        }
+
+        .student-card h3 {
+            color: #667eea;
+            font-size: 22px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .student-detail {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .student-detail:last-child {
+            border-bottom: none;
+        }
+
+        .student-detail strong {
+            color: #555;
+            font-weight: 600;
+        }
+
+        .student-detail span {
+            color: #333;
+        }
+
+        .telegram-card {
+            background: linear-gradient(135deg, #0088cc15, #229ED915);
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 25px;
+        }
+
+        .telegram-card h4 {
+            color: #0088cc;
+            font-size: 20px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .telegram-card p {
+            color: #666;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .btn-telegram {
+            background: linear-gradient(135deg, #0088cc, #229ED9);
+            color: white;
+            text-decoration: none;
+            padding: 16px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-telegram:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 136, 204, 0.3);
+        }
+
+        /* Error Section */
+        .error-section {
+            display: none;
+            text-align: center;
+        }
+
+        .error-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .error-title {
+            color: #dc3545;
+            font-size: 24px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .error-message {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .error-action {
+            color: #999;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        .suggestions {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 25px 0;
+            display: none;
+        }
+
+        .suggestions h4 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .suggestions-list {
+            list-style: none;
+        }
+
+        .suggestions-list li {
+            padding: 12px;
+            background: white;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .suggestions-list li:hover {
+            background: #667eea;
+            color: white;
+            transform: translateX(-5px);
+        }
+
+        .suggestion-name {
+            font-weight: 600;
+        }
+
+        .suggestion-similarity {
+            font-size: 12px;
+            background: #667eea;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+
+        .suggestions-list li:hover .suggestion-similarity {
+            background: white;
+            color: #667eea;
+        }
+
+        /* Confetti */
+        .confetti-particle {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            animation: fall linear forwards;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .logo {
+                font-size: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">🎓</div>
+            <h1>انضم إلى قروب الصف</h1>
+            <p class="subtitle">التحقق من هويتك كطالب</p>
+            
+            <div class="section-info">
+                <p><strong>الصف:</strong> <span id="gradeName">...</span></p>
+                <p><strong>الشعبة:</strong> <span id="sectionName">...</span></p>
+            </div>
+        </div>
+
+        <!-- Form Section -->
+        <div id="formSection">
+            <form id="verificationForm">
+                <div class="form-group">
+                    <label for="studentName">الاسم الرباعي الكامل *</label>
+                    <input 
+                        type="text" 
+                        id="studentName" 
+                        placeholder="مثال: محمد أحمد علي حسن"
+                        required
+                        autocomplete="off"
+                    >
+                    <div id="nameFeedback" class="feedback"></div>
+                    <p class="hint">💡 يجب إدخال الاسم الرباعي بالعربية</p>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="submitBtn">
+                    ✅ تحقق واستمر
+                </button>
+            </form>
+        </div>
+
+        <!-- Success Section -->
+        <div id="successSection" class="success-section">
+            <div class="success-icon">🎉</div>
+            <h2 class="success-title">تم التحقق بنجاح!</h2>
+            
+            <div class="student-card">
+                <h3>مرحباً <span id="successName"></span>!</h3>
+                
+                <div class="student-detail">
+                    <strong>الاسم:</strong>
+                    <span id="successNameFull"></span>
+                </div>
+                <div class="student-detail">
+                    <strong>الصف:</strong>
+                    <span id="successGrade"></span>
+                </div>
+                <div class="student-detail">
+                    <strong>الشعبة:</strong>
+                    <span id="successSection"></span>
+                </div>
+                <div class="student-detail">
+                    <strong>المدرسة:</strong>
+                    <span id="successSchool"></span>
+                </div>
+            </div>
+
+            <div class="telegram-card">
+                <h4>📱 انضم إلى قروب التليجرام</h4>
+                <p id="groupName">...</p>
+                <a href="#" id="joinBtn" class="btn-telegram" target="_blank">
+                    📲 انضم الآن
+                </a>
+            </div>
+        </div>
+
+        <!-- Error Section -->
+        <div id="errorSection" class="error-section">
+            <div class="error-icon">❌</div>
+            <h2 class="error-title">لم يتم العثور على الاسم</h2>
+            <p class="error-message" id="errorMessage"></p>
+            <p class="error-action" id="errorAction"></p>
+
+            <div id="suggestions" class="suggestions">
+                <h4>💡 هل تقصد أحد هذه الأسماء؟</h4>
+                <ul id="suggestionsList" class="suggestions-list"></ul>
+            </div>
+
+            <button class="btn btn-secondary" onclick="verification.tryAgain()">
+                🔄 حاول مرة أخرى
+            </button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/assets/js/config.js"></script>
+    <script src="../js/join-student.js"></script>
+    <script>
+        // Get section_id from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const sectionId = urlParams.get('section');
+
+        if (!sectionId) {
+            alert('رابط غير صالح - معرف الشعبة مطلوب');
+        } else {
+            // Initialize verification system
+            const verification = new StudentJoinVerification({
+                apiUrl: window.API_BASE || 'http://localhost:8000/api',
+                sectionId: parseInt(sectionId)
+            });
+
+            // Make it global for inline onclick
+            window.verification = verification;
+        }
+    </script>
+</body>
+</html>

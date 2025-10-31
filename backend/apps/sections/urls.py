@@ -52,4 +52,7 @@ urlpatterns = [
     
     # ==================== Telegram Utilities ====================
     path('telegram/fix-chatid/', views.fix_telegram_chatid, name='fix_telegram_chatid'),
+    
+    # ==================== Student Join Verification ====================
+    path('verify-student-join/', views.verify_student_for_join, name='verify_student_for_join'),
 ]

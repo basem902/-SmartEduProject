@@ -2641,3 +2641,170 @@ def fix_telegram_chatid(request):
             'error': 'حدث خطأ',
             'details': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# ==================== التحقق من الطالب للانضمام ====================
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def verify_student_for_join(request):
+    """
+    التحقق من الطالب قبل الانضمام إلى قروب التليجرام
+    
+    Request Body:
+    {
+        "student_name": "باسم محمد علي أحمد",
+        "section_id": 6
+    }
+    
+    Response:
+    {
+        "success": true,
+        "student": {
+            "name": "...",
+            "grade": "...",
+            "section": "...",
+            "school": "..."
+        },
+        "telegram_group": {
+            "name": "...",
+            "invite_link": "...",
+            "chat_id": -1001234567890
+        }
+    }
+    """
+    import re
+    from difflib import SequenceMatcher
+    
+    try:
+        student_name = request.data.get('student_name', '').strip()
+        section_id = request.data.get('section_id')
+        
+        # 1. التحقق من صحة المدخلات
+        if not student_name:
+            return Response({
+                'success': False,
+                'error': 'missing_name',
+                'message': 'يرجى إدخال الاسم الكامل'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if not section_id:
+            return Response({
+                'success': False,
+                'error': 'missing_section',
+                'message': 'معرف الشعبة مطلوب'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # 2. التحقق من صحة الاسم (رباعي + عربي)
+        name_parts = student_name.split()
+        if len(name_parts) < 4:
+            return Response({
+                'success': False,
+                'error': 'invalid_name_format',
+                'message': f'الاسم يجب أن يكون رباعياً ({len(name_parts)}/4 أجزاء)',
+                'suggestion': 'مثال: محمد أحمد علي حسن'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # التحقق من الحروف العربية فقط
+        arabic_pattern = re.compile(r'^[\u0600-\u06FF\s]+$')
+        if not arabic_pattern.match(student_name):
+            return Response({
+                'success': False,
+                'error': 'invalid_name_characters',
+                'message': 'الاسم يجب أن يحتوي على حروف عربية فقط',
+                'suggestion': 'تأكد من عدم وجود أرقام أو رموز'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # 3. تطبيع الاسم
+        def normalize_arabic_name(name):
+            name = ' '.join(name.split())
+            name = re.sub('[إأآا]', 'ا', name)
+            name = re.sub('ى', 'ي', name)
+            name = re.sub('ة', 'ه', name)
+            return name.strip().lower()
+        
+        normalized_name = normalize_arabic_name(student_name)
+        
+        # 4. البحث عن الشعبة
+        try:
+            section = Section.objects.select_related('grade').get(id=section_id)
+        except Section.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': 'section_not_found',
+                'message': 'الشعبة غير موجودة'
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        # 5. البحث عن الطالب في هذه الشعبة
+        students = StudentRegistration.objects.filter(
+            section=section,
+            normalized_name=normalized_name
+        )
+        
+        # 6. إذا لم يُوجد، البحث بالتشابه
+        if not students.exists():
+            all_students = StudentRegistration.objects.filter(section=section)
+            
+            similar_students = []
+            for student in all_students:
+                similarity = SequenceMatcher(
+                    None, 
+                    normalized_name, 
+                    student.normalized_name
+                ).ratio()
+                
+                if similarity >= 0.75:  # 75% تشابه
+                    similar_students.append({
+                        'name': student.full_name,
+                        'similarity': round(similarity * 100, 1)
+                    })
+            
+            # ترتيب حسب التشابه
+            similar_students.sort(key=lambda x: x['similarity'], reverse=True)
+            
+            return Response({
+                'success': False,
+                'error': 'student_not_found',
+                'message': 'الاسم غير موجود في هذه الشعبة',
+                'suggestions': similar_students[:3] if similar_students else [],
+                'action': 'تواصل مع معلمك لإضافة اسمك' if not similar_students else 'هل تقصد أحد هذه الأسماء؟'
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        student = students.first()
+        
+        # 7. جلب معلومات القروب
+        telegram_group = None
+        try:
+            telegram_group = TelegramGroup.objects.get(section=section)
+        except TelegramGroup.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': 'telegram_group_not_found',
+                'message': 'قروب التليجرام غير موجود لهذه الشعبة',
+                'action': 'تواصل مع معلمك'
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        # 8. نجح التحقق - إرجاع البيانات
+        return Response({
+            'success': True,
+            'student': {
+                'id': student.id,
+                'name': student.full_name,
+                'grade': student.grade.display_name if student.grade else '-',
+                'section': student.section.section_name,
+                'school': student.school_name or section.grade.school_name
+            },
+            'telegram_group': {
+                'name': telegram_group.group_name,
+                'invite_link': telegram_group.invite_link,
+                'chat_id': telegram_group.chat_id
+            }
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        logger.error(f"❌ Error in verify_student_for_join: {str(e)}", exc_info=True)
+        return Response({
+            'success': False,
+            'error': 'server_error',
+            'message': 'حدث خطأ أثناء التحقق. يرجى المحاولة مرة أخرى'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -201,6 +201,131 @@ class SmartEduAIBot:
                 "سيتم إبلاغ معلمك."
             )
     
+    async def handle_new_member(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """
+        معالج الأعضاء الجدد في القروب
+        يتحقق من هوية الطالب ويحدث قاعدة البيانات
+        """
+        try:
+            message = update.message
+            chat_id = message.chat.id
+            
+            # الحصول على العضو الجديد
+            new_members = message.new_chat_members
+            
+            for new_member in new_members:
+                # تجاهل البوتات
+                if new_member.is_bot:
+                    continue
+                
+                user_id = new_member.id
+                username = new_member.username
+                first_name = new_member.first_name
+                last_name = new_member.last_name or ""
+                full_name_telegram = f"{first_name} {last_name}".strip()
+                
+                logger.info(f"👤 عضو جديد: {full_name_telegram} (@{username}) في القروب {chat_id}")
+                
+                # البحث في قاعدة البيانات
+                try:
+                    import sys
+                    import os
+                    import django
+                    
+                    # إعداد Django
+                    backend_path = os.path.join(os.path.dirname(__file__), '..', 'backend')
+                    sys.path.insert(0, backend_path)
+                    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
+                    django.setup()
+                    
+                    from apps.sections.models import TelegramGroup, StudentRegistration
+                    from difflib import SequenceMatcher
+                    from django.utils import timezone
+                    
+                    # البحث عن القروب
+                    telegram_group = TelegramGroup.objects.filter(chat_id=chat_id).first()
+                    
+                    if not telegram_group:
+                        logger.warning(f"⚠️ القروب {chat_id} غير موجود في قاعدة البيانات")
+                        await message.reply_text(
+                            f"مرحباً {first_name}! 👋\n\n"
+                            f"⚠️ هذا القروب غير مسجل في النظام.\n"
+                            f"يرجى التواصل مع المعلم."
+                        )
+                        continue
+                    
+                    # البحث عن طلاب في هذه الشعبة (لم ينضموا بعد)
+                    students = StudentRegistration.objects.filter(
+                        section=telegram_group.section,
+                        joined_telegram=False
+                    )
+                    
+                    # مطابقة الاسم
+                    best_match = None
+                    highest_similarity = 0
+                    
+                    for student in students:
+                        # مقارنة الاسم
+                        similarity = SequenceMatcher(
+                            None,
+                            full_name_telegram.lower(),
+                            student.full_name.lower()
+                        ).ratio()
+                        
+                        if similarity > highest_similarity:
+                            highest_similarity = similarity
+                            best_match = student
+                    
+                    # إذا كان التشابه أكثر من 60%
+                    if best_match and highest_similarity >= 0.6:
+                        # تحديث قاعدة البيانات
+                        best_match.telegram_user_id = user_id
+                        best_match.telegram_username = username
+                        best_match.joined_telegram = True
+                        best_match.joined_at = timezone.now()
+                        best_match.save()
+                        
+                        logger.info(f"✅ تم ربط الطالب: {best_match.full_name} مع {full_name_telegram} (تشابه: {highest_similarity*100:.1f}%)")
+                        
+                        # رسالة ترحيب
+                        welcome_message = (
+                            f"🎉 **مرحباً {best_match.full_name}!**\n\n"
+                            f"✅ تم تسجيلك بنجاح في قروب **{telegram_group.group_name}**\n\n"
+                            f"📚 **معلوماتك:**\n"
+                            f"• الصف: {best_match.grade.display_name}\n"
+                            f"• الشعبة: {best_match.section.section_name}\n"
+                            f"• المدرسة: {best_match.school_name}\n\n"
+                            f"📤 يمكنك الآن رفع مشاريعك من خلال الروابط التي سيرسلها المعلم.\n\n"
+                            f"💡 **نصيحة:** احتفظ بهذا القروب نشطاً لتتلقى الإشعارات المهمة!"
+                        )
+                        
+                        await message.reply_text(welcome_message, parse_mode='Markdown')
+                        
+                    else:
+                        # لم يُوجد في قاعدة البيانات
+                        logger.warning(f"⚠️ العضو {full_name_telegram} غير موجود في قاعدة البيانات (أعلى تشابه: {highest_similarity*100:.1f}%)")
+                        
+                        await message.reply_text(
+                            f"مرحباً {first_name}! 👋\n\n"
+                            f"⚠️ لم أتمكن من التعرف على اسمك في قائمة الطلاب.\n\n"
+                            f"📝 **خطوات التسجيل:**\n"
+                            f"1️⃣ تأكد من التسجيل أولاً من خلال الرابط الذي أرسله المعلم\n"
+                            f"2️⃣ تأكد من إدخال اسمك الكامل بشكل صحيح\n"
+                            f"3️⃣ إذا استمرت المشكلة، تواصل مع المعلم\n\n"
+                            f"💡 **ملاحظة:** يجب أن يتطابق اسمك في Telegram مع الاسم المسجل."
+                        )
+                        
+                except Exception as db_error:
+                    logger.error(f"❌ خطأ في قاعدة البيانات: {str(db_error)}", exc_info=True)
+                    await message.reply_text(
+                        f"مرحباً {first_name}! 👋\n\n"
+                        f"حدث خطأ في التحقق من هويتك.\n"
+                        f"يرجى التواصل مع المعلم."
+                    )
+                    
+        except Exception as e:
+            logger.error(f"❌ خطأ في معالج الأعضاء الجدد: {str(e)}", exc_info=True)
+    
     async def error_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """معالج الأخطاء"""
         logger.error(f"❌ خطأ: {context.error}", exc_info=context.error)
@@ -225,6 +350,9 @@ class SmartEduAIBot:
         app.add_handler(CommandHandler("help", self.help_command))
         app.add_handler(CommandHandler("status", self.status_command))
         app.add_handler(CommandHandler("stats", self.stats_command))
+        
+        # معالج الأعضاء الجدد في القروبات
+        app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, self.handle_new_member))
         
         # إضافة معالجات الملفات
         app.add_handler(MessageHandler(filters.Document.ALL, handle_document))
