@@ -71,7 +71,7 @@
         /* Dashboard Cards Grid */
         .dashboard-cards {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 350px), 1fr));
             gap: 30px;
             margin-bottom: 40px;
         }
@@ -324,7 +324,7 @@
         /* Responsive */
         @media (max-width: 1024px) {
             .dashboard-cards {
-                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
                 gap: 20px;
             }
         }
@@ -334,19 +334,55 @@
                 flex-direction: column;
                 text-align: center;
                 gap: 20px;
+                padding: 30px 20px;
+            }
+
+            .welcome-content h2 {
+                font-size: 24px;
             }
 
             .welcome-time {
-                font-size: 32px;
+                font-size: 28px;
             }
 
             .dashboard-cards {
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr !important;
                 gap: 15px;
             }
 
             .dashboard-card {
                 min-height: auto;
+                padding: 20px;
+            }
+
+            .card-icon {
+                font-size: 48px;
+            }
+
+            .card-title {
+                font-size: 18px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .welcome-banner {
+                padding: 20px 15px;
+            }
+
+            .welcome-content h2 {
+                font-size: 20px;
+            }
+
+            .dashboard-cards {
+                gap: 12px;
+            }
+
+            .dashboard-card {
+                padding: 20px 15px;
+            }
+
+            .card-icon {
+                font-size: 40px;
             }
         }
     </style>
