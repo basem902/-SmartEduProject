@@ -15,10 +15,9 @@ django.setup()
 from django.utils import timezone
 from datetime import timedelta
 from apps.sections.models import (
-    AcademicYear, Grade, Section, Teacher, 
-    TelegramGroup, StudentRegistration
+    SchoolGrade, Section, TelegramGroup, StudentRegistration
 )
-from apps.accounts.models import User
+from apps.accounts.models import User, Teacher
 from apps.projects.models import Project
 
 
@@ -30,38 +29,7 @@ def create_test_data():
     print("=" * 60)
     print()
     
-    # 1. السنة الدراسية
-    print("📅 إنشاء السنة الدراسية...")
-    academic_year, _ = AcademicYear.objects.get_or_create(
-        year="2024-2025",
-        defaults={
-            'is_active': True,
-            'start_date': timezone.now().date(),
-            'end_date': (timezone.now() + timedelta(days=365)).date()
-        }
-    )
-    print(f"   ✅ السنة الدراسية: {academic_year.year}")
-    print()
-    
-    # 2. الصفوف
-    print("📚 إنشاء الصفوف...")
-    grades_data = [
-        {'name': 'الصف الأول الثانوي', 'display_name': 'الأول الثانوي', 'order': 1},
-        {'name': 'الصف الثاني الثانوي', 'display_name': 'الثاني الثانوي', 'order': 2},
-        {'name': 'الصف الثالث الثانوي', 'display_name': 'الثالث الثانوي', 'order': 3},
-    ]
-    
-    grades = []
-    for grade_data in grades_data:
-        grade, created = Grade.objects.get_or_create(
-            name=grade_data['name'],
-            defaults=grade_data
-        )
-        grades.append(grade)
-        print(f"   {'✅' if created else 'ℹ️'} {grade.display_name}")
-    print()
-    
-    # 3. المعلم
+    # 1. المعلم
     print("👨‍🏫 إنشاء معلم تجريبي...")
     teacher_user, created = User.objects.get_or_create(
         username='test_teacher',
@@ -89,13 +57,37 @@ def create_test_data():
     print(f"   🔑 كلمة المرور: teacher123")
     print()
     
-    # 4. الشُعب
+    # 2. الصفوف الدراسية
+    print("📚 إنشاء الصفوف الدراسية...")
+    grades_data = [
+        {'level': 'high', 'grade_number': 1, 'school': 'مدرسة النجاح الثانوية', 'subject': 'المهارات الرقمية'},
+        {'level': 'high', 'grade_number': 2, 'school': 'مدرسة الأمل الثانوية', 'subject': 'المهارات الرقمية'},
+        {'level': 'high', 'grade_number': 3, 'school': 'مدرسة التميز الثانوية', 'subject': 'المهارات الرقمية'},
+    ]
+    
+    grades = []
+    for grade_data in grades_data:
+        grade, created = SchoolGrade.objects.get_or_create(
+            teacher=teacher,
+            level=grade_data['level'],
+            grade_number=grade_data['grade_number'],
+            subject=grade_data['subject'],
+            defaults={
+                'school_name': grade_data['school'],
+                'is_active': True
+            }
+        )
+        grades.append(grade)
+        print(f"   {'✅' if created else 'ℹ️'} {grade.display_name}")
+    print()
+    
+    # 3. الشُعب
     print("📖 إنشاء الشُعب...")
     sections_data = [
-        {'grade': grades[0], 'name': '1/1', 'school': 'مدرسة النجاح الثانوية'},
-        {'grade': grades[0], 'name': '1/2', 'school': 'مدرسة النجاح الثانوية'},
-        {'grade': grades[1], 'name': '2/1', 'school': 'مدرسة الأمل الثانوية'},
-        {'grade': grades[2], 'name': '3/1', 'school': 'مدرسة التميز الثانوية'},
+        {'grade': grades[0], 'name': '1/1'},
+        {'grade': grades[0], 'name': '1/2'},
+        {'grade': grades[1], 'name': '2/1'},
+        {'grade': grades[2], 'name': '3/1'},
     ]
     
     sections = []
@@ -103,10 +95,8 @@ def create_test_data():
         section, created = Section.objects.get_or_create(
             grade=sec_data['grade'],
             section_name=sec_data['name'],
-            academic_year=academic_year,
             defaults={
-                'teacher': teacher,
-                'school_name': sec_data['school']
+                'is_active': True
             }
         )
         sections.append(section)
@@ -244,19 +234,22 @@ def create_test_data():
     ]
     
     created_students = []
+    from apps.projects.utils import normalize_arabic_name
+    
     for student_data in students_data:
         student, created = StudentRegistration.objects.get_or_create(
-            full_name=student_data['name'],
+            teacher=teacher,
+            grade=student_data['section'].grade,
             section=student_data['section'],
+            normalized_name=normalize_arabic_name(student_data['name']),
             defaults={
+                'full_name': student_data['name'],
                 'telegram_user_id': student_data['telegram_id'],
                 'telegram_username': student_data['telegram_username'],
                 'telegram_group': student_data['telegram_group'],
-                'teacher': teacher,
-                'grade': student_data['section'].grade,
-                'school_name': student_data['section'].school_name,
+                'school_name': student_data['section'].grade.school_name,
                 'joined_telegram': True,
-                'registration_date': timezone.now()
+                'joined_at': timezone.now()
             }
         )
         created_students.append(student)
@@ -309,8 +302,7 @@ def create_test_data():
     print("=" * 60)
     print()
     print("📊 الملخص:")
-    print(f"   📅 سنوات دراسية: {AcademicYear.objects.count()}")
-    print(f"   📚 صفوف: {Grade.objects.count()}")
+    print(f"   📚 صفوف دراسية: {SchoolGrade.objects.count()}")
     print(f"   📖 شُعب: {Section.objects.count()}")
     print(f"   👨‍🏫 معلمين: {Teacher.objects.count()}")
     print(f"   📱 قروبات تليجرام: {TelegramGroup.objects.count()}")
@@ -337,7 +329,6 @@ def create_test_data():
     print()
     
     return {
-        'academic_year': academic_year,
         'grades': grades,
         'sections': sections,
         'teacher': teacher,
