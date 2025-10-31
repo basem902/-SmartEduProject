@@ -235,7 +235,7 @@ class StudentManagementSystem {
         console.log('\n✅ Grades populated successfully');
     }
 
-    loadSections(gradeId, selectId) {
+    async loadSections(gradeId, selectId) {
         console.log(`📖 Loading sections for grade ${gradeId} into ${selectId}`);
         const select = document.getElementById(selectId);
         
@@ -244,22 +244,44 @@ class StudentManagementSystem {
             return;
         }
         
-        select.innerHTML = '<option value="">اختر الشعبة</option>';
-        select.disabled = !gradeId;
+        select.innerHTML = '<option value="">جاري التحميل...</option>';
+        select.disabled = true;
         
-        if (gradeId) {
-            const gradeSelect = selectId.includes('Excel') ? document.getElementById('gradeSelectExcel') : document.getElementById('gradeSelect');
+        if (!gradeId) {
+            select.innerHTML = '<option value="">اختر الشعبة</option>';
+            select.disabled = true;
+            return;
+        }
+        
+        try {
+            // استدعاء API لتحميل الشعب (نفس طريقة create-project.js)
+            const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+            const response = await fetch(`${this.apiUrl}/sections/grade/${gradeId}/sections/`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
             
-            if (!gradeSelect || !gradeSelect.selectedOptions[0]) {
-                console.error('❌ Grade select or selected option not found');
-                return;
+            console.log('📡 Sections API Response status:', response.status);
+            
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status}`);
             }
             
-            const sectionsData = gradeSelect.selectedOptions[0].dataset.sections;
-            console.log('📊 Sections data from dataset:', sectionsData);
+            const data = await response.json();
+            console.log('📊 Sections data from API:', data);
             
-            const sections = JSON.parse(sectionsData || '[]');
+            const sections = data.sections || [];
             console.log(`✅ Found ${sections.length} sections`);
+            
+            select.innerHTML = '<option value="">اختر الشعبة</option>';
+            
+            if (sections.length === 0) {
+                select.innerHTML = '<option value="">لا توجد شعب</option>';
+                select.disabled = true;
+                return;
+            }
             
             sections.forEach(section => {
                 console.log(`  📖 Adding section: ${section.section_name}`);
@@ -268,6 +290,12 @@ class StudentManagementSystem {
             
             select.disabled = false;
             console.log('✅ Sections loaded successfully');
+            
+        } catch (error) {
+            console.error('❌ Error loading sections:', error);
+            select.innerHTML = '<option value="">خطأ في التحميل</option>';
+            select.disabled = true;
+            this.showToast('خطأ في تحميل الشعب', 'error');
         }
     }
 
