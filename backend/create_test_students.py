@@ -14,6 +14,7 @@ django.setup()
 
 from django.utils import timezone
 from datetime import timedelta
+from django.contrib.auth.hashers import make_password
 from apps.sections.models import (
     SchoolGrade, Section, TelegramGroup, StudentRegistration
 )
@@ -31,29 +32,40 @@ def create_test_data():
     
     # 1. المعلم
     print("👨‍🏫 إنشاء معلم تجريبي...")
-    teacher_user, created = User.objects.get_or_create(
-        username='test_teacher',
-        defaults={
-            'email': 'teacher@smartedu.com',
-            'first_name': 'أحمد',
-            'last_name': 'المعلم',
-            'role': 'teacher',
-            'is_active': True
-        }
-    )
-    if created:
-        teacher_user.set_password('teacher123')
-        teacher_user.save()
     
+    # إنشاء Teacher مباشرة (لا يحتاج User)
     teacher, created = Teacher.objects.get_or_create(
-        user=teacher_user,
+        email='teacher@smartedu.com',
         defaults={
-            'phone': '+966500000001',
-            'subject': 'الحاسب الآلي'
+            'full_name': 'أحمد المعلم',
+            'phone': '0500000001',
+            'school_name': 'مدرسة الاختبار',
+            'password_hash': make_password('teacher123'),
+            'is_active': True,
+            'subjects': ['المهارات الرقمية', 'الحاسب الآلي']
         }
     )
-    print(f"   ✅ المعلم: {teacher.user.get_full_name()}")
-    print(f"   📧 البريد: {teacher.user.email}")
+    
+    # إنشاء User مرتبط (اختياري للـ Admin)
+    if created or not teacher.user:
+        user, _ = User.objects.get_or_create(
+            username='test_teacher',
+            defaults={
+                'email': 'teacher@smartedu.com',
+                'first_name': 'أحمد',
+                'last_name': 'المعلم',
+                'is_active': True,
+                'is_staff': True
+            }
+        )
+        user.set_password('teacher123')
+        user.save()
+        
+        teacher.user = user
+        teacher.save()
+    
+    print(f"   ✅ المعلم: {teacher.full_name}")
+    print(f"   📧 البريد: {teacher.email}")
     print(f"   🔑 كلمة المرور: teacher123")
     print()
     
