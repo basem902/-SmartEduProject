@@ -321,6 +321,13 @@
             }
         }
 
+        /* Page Exit Animation */
+        .dashboard-cards.page-exit {
+            opacity: 0;
+            transform: scale(0.95);
+            transition: all 0.3s ease-out;
+        }
+
         /* Responsive */
         @media (max-width: 1024px) {
             .dashboard-cards {
@@ -642,13 +649,17 @@
         
         // Navigate to page with smooth transition
         function navigateToPage(url) {
-            // Add exit animation
-            document.querySelector('.dashboard-cards').style.opacity = '0';
-            document.querySelector('.dashboard-cards').style.transform = 'scale(0.95)';
-            
-            setTimeout(() => {
+            // Add exit animation class
+            const cardsContainer = document.querySelector('.dashboard-cards');
+            if (cardsContainer) {
+                cardsContainer.classList.add('page-exit');
+                
+                setTimeout(() => {
+                    window.location.href = url;
+                }, 300);
+            } else {
                 window.location.href = url;
-            }, 300);
+            }
         }
 
         // Update time display
@@ -832,6 +843,14 @@
         
         // Load dashboard on page load
         document.addEventListener('DOMContentLoaded', () => {
+            // Remove any exit animation classes
+            const cardsContainer = document.querySelector('.dashboard-cards');
+            if (cardsContainer) {
+                cardsContainer.classList.remove('page-exit');
+                cardsContainer.style.opacity = ''; // Clear any inline styles
+                cardsContainer.style.transform = ''; // Clear any inline styles
+            }
+            
             App.updateUserUI();
             loadDashboard();
             
