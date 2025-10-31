@@ -37,6 +37,8 @@ class StudentManagementSystem {
     // ==================== Event Listeners ====================
     
     setupEventListeners() {
+        console.log('🎧 Setting up event listeners...');
+        
         // Theme toggle
         document.getElementById('themeToggle').addEventListener('click', () => this.toggleTheme());
         
@@ -45,9 +47,29 @@ class StudentManagementSystem {
             tab.addEventListener('click', () => this.switchTab(tab.dataset.tab));
         });
         
-        // Manual form
-        document.getElementById('gradeSelect').addEventListener('change', (e) => this.loadSections(e.target.value, 'sectionSelect'));
-        document.getElementById('gradeSelectExcel').addEventListener('change', (e) => this.loadSections(e.target.value, 'sectionSelectExcel'));
+        // Manual form - Grade change listener
+        const gradeSelect = document.getElementById('gradeSelect');
+        const gradeSelectExcel = document.getElementById('gradeSelectExcel');
+        
+        if (gradeSelect) {
+            console.log('✅ gradeSelect found, adding change listener');
+            gradeSelect.addEventListener('change', (e) => {
+                console.log('🔔 Grade changed to:', e.target.value);
+                this.loadSections(e.target.value, 'sectionSelect');
+            });
+        } else {
+            console.error('❌ gradeSelect not found!');
+        }
+        
+        if (gradeSelectExcel) {
+            console.log('✅ gradeSelectExcel found, adding change listener');
+            gradeSelectExcel.addEventListener('change', (e) => {
+                console.log('🔔 Grade (Excel) changed to:', e.target.value);
+                this.loadSections(e.target.value, 'sectionSelectExcel');
+            });
+        } else {
+            console.error('❌ gradeSelectExcel not found!');
+        }
         
         document.getElementById('studentName').addEventListener('input', () => this.validateName());
         document.getElementById('studentPhone').addEventListener('input', () => this.validatePhone());
@@ -81,6 +103,8 @@ class StudentManagementSystem {
         });
         
         document.getElementById('downloadTemplate').addEventListener('click', () => this.downloadTemplate());
+        
+        console.log('✅ All event listeners set up successfully');
     }
 
     // ==================== Theme ====================
