@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تسليم المشروع - SmartEdu</title>
     <link rel="stylesheet" href="../css/submit-project-enhanced.css">
+    <link rel="stylesheet" href="../css/verification-styles.css">
     <link rel="stylesheet" href="/assets/css/mobile-responsive.css">
     
     <!-- PWA -->
@@ -116,7 +117,12 @@
                         <div class="form-group">
                             <label for="studentName">الاسم الكامل *</label>
                             <input type="text" id="studentName" required 
-                                   placeholder="أدخل اسمك الكامل">
+                                   placeholder="مثال: محمد أحمد علي حسن"
+                                   autocomplete="name"
+                                   pattern="[\u0600-\u06FF\s]+"
+                                   title="يرجى إدخال الاسم بالعربية"
+                                   minlength="6">
+                            <small class="form-hint">يرجى إدخال الاسم الرباعي كما هو مسجل في القائمة</small>
                         </div>
                         <div class="form-actions">
                             <button type="button" class="btn btn-secondary" onclick="history.back()">

@@ -224,8 +224,178 @@ async function handleStudentForm(e) {
         return;
     }
     
-    // الانتقال مباشرة للخطوة 2 (رفع الملف)
-    nextStep();
+    // التحقق من الطالب قبل الانتقال
+    await verifyStudent();
+}
+
+// ============================================
+// Student Verification
+// ============================================
+
+async function verifyStudent() {
+    showLoading('جاري التحقق من معلوماتك...');
+    
+    // عرض شاشة التحقق
+    showVerificationProgress();
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/projects/verify-student/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                student_name: state.studentName,
+                project_id: state.projectId
+            })
+        });
+        
+        const data = await response.json();
+        
+        hideLoading();
+        
+        if (data.success) {
+            // نجح التحقق
+            state.uploadToken = data.upload_token;
+            state.studentData = data.student;
+            state.projectData = data.project;
+            
+            // عرض تأكيد البيانات
+            showConfirmationScreen(data);
+        } else {
+            // فشل التحقق
+            hideVerificationProgress();
+            showVerificationError(data);
+        }
+        
+    } catch (error) {
+        console.error('Error verifying student:', error);
+        hideLoading();
+        hideVerificationProgress();
+        showError('حدث خطأ أثناء التحقق. يرجى التأكد من اتصالك بالإنترنت والمحاولة مرة أخرى');
+    }
+}
+
+function showVerificationProgress() {
+    // يمكن إضافة عناصر UI للتحقق
+    const form = document.getElementById('studentForm');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'جاري التحقق...';
+}
+
+function hideVerificationProgress() {
+    const form = document.getElementById('studentForm');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'التالي: رفع الملف';
+}
+
+function showConfirmationScreen(data) {
+    // إخفاء شاشة الاسم
+    hideVerificationProgress();
+    
+    // إظهار رسالة نجاح
+    const successMsg = document.createElement('div');
+    successMsg.className = 'verification-success';
+    successMsg.innerHTML = `
+        <div class="success-icon">✅</div>
+        <h3>تم التحقق بنجاح!</h3>
+        <div class="student-info">
+            <p><strong>الاسم:</strong> ${data.student.name}</p>
+            <p><strong>الصف:</strong> ${data.student.grade}</p>
+            <p><strong>الشعبة:</strong> ${data.student.section}</p>
+        </div>
+        <p class="info-text">يمكنك الآن رفع المشروع</p>
+    `;
+    
+    const formCard = document.querySelector('#step1 .form-card');
+    formCard.insertBefore(successMsg, formCard.firstChild);
+    
+    // الانتقال للخطوة التالية بعد ثانية
+    setTimeout(() => {
+        nextStep();
+    }, 1500);
+}
+
+function showVerificationError(data) {
+    const errorMessages = {
+        'student_not_found': {
+            title: '❌ الاسم غير موجود',
+            message: data.message,
+            action: data.action,
+            suggestions: data.suggestions
+        },
+        'telegram_not_verified': {
+            title: '⚠️ غير مسجل في التليجرام',
+            message: data.message,
+            action: data.action_steps,
+            link: data.telegram_link
+        },
+        'already_submitted': {
+            title: '✅ تم الرفع مسبقاً',
+            message: data.message,
+            action: data.action,
+            submission: data.submission
+        },
+        'deadline_expired': {
+            title: '⏰ انتهى الموعد النهائي',
+            message: data.message,
+            action: 'تواصل مع معلمك'
+        },
+        'invalid_name': {
+            title: '❌ الاسم غير صحيح',
+            message: data.message,
+            action: 'يرجى إدخال الاسم الرباعي كاملاً'
+        }
+    };
+    
+    const errorInfo = errorMessages[data.error] || {
+        title: '❌ خطأ',
+        message: data.message || 'حدث خطأ غير متوقع'
+    };
+    
+    // إنشاء صندوق الخطأ
+    const errorBox = document.createElement('div');
+    errorBox.className = 'error-box';
+    errorBox.innerHTML = `
+        <div class="error-icon">${errorInfo.title.split(' ')[0]}</div>
+        <h3>${errorInfo.title}</h3>
+        <p class="error-message">${errorInfo.message}</p>
+        ${errorInfo.suggestions ? `
+            <div class="suggestions">
+                <h4>هل تقصد أحد هذه الأسماء؟</h4>
+                <ul>
+                    ${errorInfo.suggestions.map(s => `<li>${s}</li>`).join('')}
+                </ul>
+            </div>
+        ` : ''}
+        ${errorInfo.action ? `
+            <div class="action-box">
+                <strong>ما الحل؟</strong>
+                ${Array.isArray(errorInfo.action) ? `
+                    <ol>
+                        ${errorInfo.action.map(a => `<li>${a}</li>`).join('')}
+                    </ol>
+                ` : `<p>${errorInfo.action}</p>`}
+            </div>
+        ` : ''}
+        ${errorInfo.link ? `
+            <a href="${errorInfo.link}" target="_blank" class="btn btn-primary">الانضمام للقروب</a>
+        ` : ''}
+        ${errorInfo.submission ? `
+            <div class="submission-info">
+                <p><strong>الملف:</strong> ${errorInfo.submission.file_name}</p>
+                <p><strong>التاريخ:</strong> ${new Date(errorInfo.submission.submitted_at).toLocaleString('ar-EG')}</p>
+            </div>
+        ` : ''}
+        <button class="btn btn-secondary" onclick="location.reload()">إعادة المحاولة</button>
+    `;
+    
+    // إضافة الصندوق للصفحة
+    const formCard = document.querySelector('#step1 .form-card');
+    formCard.innerHTML = '';
+    formCard.appendChild(errorBox);
 }
 
 // ============================================
@@ -458,8 +628,14 @@ function displayValidationResults(data) {
 }
 
 async function handleFileUpload() {
-    if (!state.selectedFile || !state.submitToken) {
-        showError('يرجى إكمال جميع الخطوات');
+    if (!state.selectedFile) {
+        showError('يرجى اختيار ملف أولاً');
+        return;
+    }
+    
+    if (!state.uploadToken) {
+        showError('انتهت صلاحية الجلسة. يرجى إعادة المحاولة');
+        setTimeout(() => location.reload(), 2000);
         return;
     }
     
@@ -469,7 +645,7 @@ async function handleFileUpload() {
         const formData = new FormData();
         formData.append('file', state.selectedFile);
         formData.append('project_id', state.projectId);
-        formData.append('submit_token', state.submitToken);
+        formData.append('upload_token', state.uploadToken);
         formData.append('student_name', state.studentName);
         if (state.sectionId) {
             formData.append('section_id', state.sectionId);

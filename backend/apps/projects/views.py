@@ -697,3 +697,201 @@ def check_submission_status_view(request, submission_id):
         return Response({
             'error': 'التسليم غير موجود'
         }, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def verify_student_for_submission(request):
+    """
+    التحقق من الطالب قبل السماح برفع المشروع
+    
+    يتحقق من:
+    1. هل الطالب موجود في القائمة؟
+    2. هل مسجل في قروب التليجرام؟
+    3. هل رفع المشروع من قبل؟
+    4. هل الموعد النهائي انتهى؟
+    
+    Request Body:
+        {
+            "student_name": "محمد أحمد علي حسن",
+            "project_id": 123
+        }
+    
+    Response:
+        {
+            "success": true,
+            "student": {...},
+            "upload_token": "...",
+            "expires_at": "..."
+        }
+    """
+    from apps.sections.models import StudentRegistration, TelegramGroup
+    from .utils import normalize_arabic_name, validate_full_name, find_similar_students
+    import jwt
+    from django.conf import settings
+    from datetime import datetime, timedelta
+    
+    try:
+        student_name = request.data.get('student_name', '').strip()
+        project_id = request.data.get('project_id')
+        
+        # 1. التحقق من صحة المدخلات
+        if not student_name:
+            return Response({
+                'success': False,
+                'error': 'missing_name',
+                'message': 'يرجى إدخال الاسم الكامل'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if not project_id:
+            return Response({
+                'success': False,
+                'error': 'missing_project',
+                'message': 'معرف المشروع مفقود'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # 2. التحقق من صحة الاسم
+        is_valid, error_msg = validate_full_name(student_name)
+        if not is_valid:
+            return Response({
+                'success': False,
+                'error': 'invalid_name',
+                'message': error_msg
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # 3. التحقق من وجود المشروع
+        try:
+            project = Project.objects.get(id=project_id, is_active=True)
+        except Project.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': 'project_not_found',
+                'message': 'المشروع غير موجود أو غير نشط'
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        # 4. التحقق من الموعد النهائي
+        if project.is_expired and not project.allow_late_submission:
+            hours_passed = (timezone.now() - project.deadline).total_seconds() / 3600
+            return Response({
+                'success': False,
+                'error': 'deadline_expired',
+                'message': f'عذراً، انتهى الموعد النهائي منذ {int(hours_passed)} ساعة',
+                'deadline': project.deadline.isoformat()
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # 5. تطبيع الاسم والبحث
+        normalized_name = normalize_arabic_name(student_name)
+        
+        # البحث عن الطالب في الشُعب المرتبطة بالمشروع
+        students = StudentRegistration.objects.filter(
+            section__in=project.sections.all(),
+            normalized_name=normalized_name
+        ).select_related('section', 'telegram_group', 'teacher', 'grade')
+        
+        if not students.exists():
+            # محاولة البحث بالتشابه
+            all_students = StudentRegistration.objects.filter(
+                section__in=project.sections.all()
+            ).select_related('section')
+            
+            similar_students = find_similar_students(student_name, all_students, threshold=0.80)
+            
+            if similar_students:
+                suggestions = [s['original_name'] for s in similar_students[:3]]
+                return Response({
+                    'success': False,
+                    'error': 'student_not_found',
+                    'message': 'لم نجد اسمك في القائمة. تحقق من الإملاء',
+                    'suggestions': suggestions,
+                    'action': 'تأكد من كتابة اسمك كما هو مسجل، أو تواصل مع معلمك'
+                }, status=status.HTTP_404_NOT_FOUND)
+            else:
+                return Response({
+                    'success': False,
+                    'error': 'student_not_found',
+                    'message': 'لم يتم العثور على اسمك في قائمة الطلاب',
+                    'action': 'تواصل مع معلمك لإضافة اسمك إلى القائمة'
+                }, status=status.HTTP_404_NOT_FOUND)
+        
+        student = students.first()
+        
+        # 6. التحقق من التليجرام (إذا كان القروب موجوداً)
+        if student.telegram_group:
+            if not student.telegram_user_id and not student.joined_telegram:
+                telegram_link = student.telegram_group.invite_link or student.telegram_invite_link
+                return Response({
+                    'success': False,
+                    'error': 'telegram_not_verified',
+                    'message': 'يجب أن تكون عضواً في قروب التليجرام لرفع المشروع',
+                    'telegram_link': telegram_link,
+                    'action_steps': [
+                        f'1. انضم إلى القروب: {telegram_link}' if telegram_link else '1. انضم إلى قروب الصف',
+                        '2. أرسل رسالة /start للبوت',
+                        '3. حاول مرة أخرى بعد 5 دقائق'
+                    ]
+                }, status=status.HTTP_403_FORBIDDEN)
+        
+        # 7. التحقق من رفع سابق
+        previous_submission = Submission.objects.filter(
+            project=project,
+            student__full_name__iexact=student.full_name
+        ).first()
+        
+        if not previous_submission:
+            # Check by normalized name in submitted_student_name
+            previous_submission = Submission.objects.filter(
+                project=project,
+                submitted_student_name__iexact=student_name
+            ).first()
+        
+        if previous_submission:
+            return Response({
+                'success': False,
+                'error': 'already_submitted',
+                'message': 'لقد قمت برفع المشروع مسبقاً',
+                'submission': {
+                    'file_name': previous_submission.file_name,
+                    'submitted_at': previous_submission.submitted_at.isoformat(),
+                    'status': previous_submission.get_status_display()
+                },
+                'action': 'إذا كنت تريد تعديله، تواصل مع معلمك'
+            }, status=status.HTTP_409_CONFLICT)
+        
+        # 8. إنشاء Upload Token (صالح لـ 30 دقيقة)
+        upload_token = jwt.encode({
+            'student_id': student.id,
+            'student_name': student.full_name,
+            'project_id': project.id,
+            'section_id': student.section.id,
+            'exp': datetime.utcnow() + timedelta(minutes=30),
+            'iat': datetime.utcnow()
+        }, settings.SECRET_KEY, algorithm='HS256')
+        
+        # 9. نجح التحقق - إرجاع البيانات
+        return Response({
+            'success': True,
+            'student': {
+                'id': student.id,
+                'name': student.full_name,
+                'grade': student.grade.display_name if student.grade else '-',
+                'section': student.section.section_name,
+                'school': student.school_name
+            },
+            'project': {
+                'id': project.id,
+                'title': project.title,
+                'deadline': project.deadline.isoformat(),
+                'max_file_size': project.max_file_size,
+                'allowed_file_types': project.allowed_file_types
+            },
+            'upload_token': upload_token,
+            'expires_at': (timezone.now() + timedelta(minutes=30)).isoformat()
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        logger.error(f"❌ Error in verify_student_for_submission: {str(e)}", exc_info=True)
+        return Response({
+            'success': False,
+            'error': 'server_error',
+            'message': 'حدث خطأ أثناء التحقق. يرجى المحاولة مرة أخرى'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

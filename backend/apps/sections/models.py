@@ -319,6 +319,10 @@ class StudentRegistration(models.Model):
     full_name = models.CharField(max_length=200, verbose_name='الاسم الكامل')
     normalized_name = models.CharField(max_length=200, db_index=True, verbose_name='الاسم المعياري')
     
+    # معلومات التليجرام
+    telegram_user_id = models.BigIntegerField(null=True, blank=True, unique=True, verbose_name='Telegram User ID')
+    telegram_username = models.CharField(max_length=100, blank=True, null=True, verbose_name='Telegram Username')
+    
     # الربط بالمعلم والمدرسة
     teacher = models.ForeignKey(
         'accounts.Teacher',

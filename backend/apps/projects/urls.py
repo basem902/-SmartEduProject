@@ -42,4 +42,7 @@ urlpatterns = [
     # AI Submission (NEW)
     path('<int:project_id>/submit-ai/', views.submit_project_with_ai, name='submit_project_with_ai'),
     path('submissions/<int:submission_id>/status/', views.check_submission_status_view, name='check_submission_status'),
+    
+    # Student Verification (للطلاب بدون تسجيل دخول)
+    path('verify-student/', views.verify_student_for_submission, name='verify_student_for_submission'),
 ]

@@ -1,0 +1,309 @@
+/**
+ * Verification & Error Styles for Student Verification
+ */
+
+/* Verification Success */
+.verification-success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 16px;
+    text-align: center;
+    margin-bottom: 2rem;
+    animation: slideDown 0.5s ease-out;
+}
+
+.verification-success .success-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    animation: bounceIn 0.6s ease-out;
+}
+
+.verification-success h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    font-weight: 700;
+}
+
+.verification-success .student-info {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin: 1.5rem 0;
+    text-align: right;
+}
+
+.verification-success .student-info p {
+    margin: 0.5rem 0;
+    font-size: 1.1rem;
+}
+
+.verification-success .info-text {
+    font-size: 1rem;
+    opacity: 0.9;
+    margin-top: 1rem;
+}
+
+/* Error Box */
+.error-box {
+    background: #fff;
+    border: 2px solid #ef4444;
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: center;
+    animation: shake 0.5s ease-out;
+}
+
+.error-box .error-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.error-box h3 {
+    color: #dc2626;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    font-weight: 700;
+}
+
+.error-box .error-message {
+    font-size: 1.1rem;
+    color: #374151;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+/* Suggestions */
+.suggestions {
+    background: #fef3c7;
+    border: 2px solid #fbbf24;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    text-align: right;
+}
+
+.suggestions h4 {
+    color: #92400e;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.suggestions ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.suggestions li {
+    background: white;
+    padding: 0.75rem 1rem;
+    margin: 0.5rem 0;
+    border-radius: 8px;
+    border-right: 4px solid #fbbf24;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.suggestions li:hover {
+    transform: translateX(-5px);
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+}
+
+/* Action Box */
+.action-box {
+    background: #dbeafe;
+    border: 2px solid #3b82f6;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    text-align: right;
+}
+
+.action-box strong {
+    display: block;
+    color: #1e40af;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.action-box ol {
+    text-align: right;
+    padding-right: 1.5rem;
+    margin: 0;
+}
+
+.action-box li {
+    margin: 0.75rem 0;
+    color: #1e3a8a;
+    line-height: 1.6;
+}
+
+.action-box p {
+    margin: 0;
+    color: #1e3a8a;
+}
+
+/* Submission Info */
+.submission-info {
+    background: #f3f4f6;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    text-align: right;
+}
+
+.submission-info p {
+    margin: 0.5rem 0;
+    color: #374151;
+}
+
+.submission-info strong {
+    color: #111827;
+}
+
+/* Buttons */
+.error-box .btn {
+    margin: 0.5rem;
+    min-width: 150px;
+}
+
+.error-box .btn-primary {
+    background: #3b82f6;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s;
+}
+
+.error-box .btn-primary:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.error-box .btn-secondary {
+    background: #6b7280;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.error-box .btn-secondary:hover {
+    background: #4b5563;
+    transform: translateY(-2px);
+}
+
+/* Animations */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes bounceIn {
+    0% {
+        transform: scale(0);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes shake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    10%, 30%, 50%, 70%, 90% {
+        transform: translateX(-10px);
+    }
+    20%, 40%, 60%, 80% {
+        transform: translateX(10px);
+    }
+}
+
+/* Loading State */
+.form-card button[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Dark Mode Support */
+body.dark-mode .error-box {
+    background: #1f2937;
+    border-color: #ef4444;
+}
+
+body.dark-mode .error-box .error-message {
+    color: #d1d5db;
+}
+
+body.dark-mode .suggestions {
+    background: #422006;
+    border-color: #fbbf24;
+}
+
+body.dark-mode .suggestions li {
+    background: #1f2937;
+    color: #f3f4f6;
+}
+
+body.dark-mode .action-box {
+    background: #1e3a8a;
+    border-color: #3b82f6;
+}
+
+body.dark-mode .action-box strong,
+body.dark-mode .action-box li,
+body.dark-mode .action-box p {
+    color: #dbeafe;
+}
+
+body.dark-mode .submission-info {
+    background: #374151;
+}
+
+body.dark-mode .submission-info p {
+    color: #d1d5db;
+}
+
+body.dark-mode .submission-info strong {
+    color: #f9fafb;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .verification-success,
+    .error-box {
+        padding: 1.5rem;
+    }
+    
+    .verification-success .success-icon,
+    .error-box .error-icon {
+        font-size: 3rem;
+    }
+    
+    .verification-success h3,
+    .error-box h3 {
+        font-size: 1.25rem;
+    }
+    
+    .error-box .btn {
+        display: block;
+        width: 100%;
+        margin: 0.5rem 0;
+    }
+}
