@@ -96,19 +96,21 @@ def create_test_data():
     # 3. الشُعب
     print("📖 إنشاء الشُعب...")
     sections_data = [
-        {'grade': grades[0], 'name': '1/1'},
-        {'grade': grades[0], 'name': '1/2'},
-        {'grade': grades[1], 'name': '2/1'},
-        {'grade': grades[2], 'name': '3/1'},
+        {'grade': grades[0], 'number': 1, 'name': '1/1'},
+        {'grade': grades[0], 'number': 2, 'name': '1/2'},
+        {'grade': grades[1], 'number': 1, 'name': '2/1'},
+        {'grade': grades[2], 'number': 1, 'name': '3/1'},
     ]
     
     sections = []
     for sec_data in sections_data:
         section, created = Section.objects.get_or_create(
             grade=sec_data['grade'],
-            section_name=sec_data['name'],
+            section_number=sec_data['number'],
             defaults={
-                'is_active': True
+                'section_name': sec_data['name'],
+                'is_active': True,
+                'total_students': 0
             }
         )
         sections.append(section)
