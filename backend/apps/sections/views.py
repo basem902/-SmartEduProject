@@ -2808,3 +2808,451 @@ def verify_student_for_join(request):
             'error': 'server_error',
             'message': 'حدث خطأ أثناء التحقق. يرجى المحاولة مرة أخرى'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# ==================== إضافة الطلاب (يدوي / Excel) ====================
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_students_manually(request):
+    """
+    إضافة طلاب يدوياً إلى شعبة
+    
+    Request Body:
+    {
+        "section_id": 6,
+        "students": [
+            {
+                "full_name": "محمد أحمد علي حسن",
+                "phone": "0501234567"
+            }
+        ]
+    }
+    """
+    import re
+    
+    try:
+        teacher = get_teacher_from_request(request)
+        
+        section_id = request.data.get('section_id')
+        students_data = request.data.get('students', [])
+        
+        # التحقق من المدخلات
+        if not section_id:
+            return Response({
+                'success': False,
+                'error': 'missing_section',
+                'message': 'معرف الشعبة مطلوب'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if not students_data or not isinstance(students_data, list):
+            return Response({
+                'success': False,
+                'error': 'invalid_data',
+                'message': 'قائمة الطلاب مطلوبة'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # التحقق من ملكية الشعبة
+        try:
+            section = Section.objects.select_related('grade').get(
+                id=section_id,
+                grade__teacher=teacher
+            )
+        except Section.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': 'section_not_found',
+                'message': 'الشعبة غير موجودة أو ليس لديك صلاحية'
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        # دالة تطبيع الأسماء
+        def normalize_arabic_name(name):
+            name = ' '.join(name.split())
+            name = re.sub('[إأآا]', 'ا', name)
+            name = re.sub('ى', 'ي', name)
+            name = re.sub('ة', 'ه', name)
+            return name.strip().lower()
+        
+        # معالجة كل طالب
+        added_students = []
+        errors = []
+        duplicates = []
+        
+        for idx, student_data in enumerate(students_data, 1):
+            full_name = student_data.get('full_name', '').strip()
+            phone = student_data.get('phone', '').strip()
+            
+            # التحقق من صحة البيانات
+            validation_errors = []
+            
+            # التحقق من الاسم
+            if not full_name:
+                validation_errors.append('الاسم مطلوب')
+            else:
+                name_parts = full_name.split()
+                if len(name_parts) < 4:
+                    validation_errors.append(f'الاسم يجب أن يكون رباعياً ({len(name_parts)}/4)')
+                
+                arabic_pattern = re.compile(r'^[\u0600-\u06FF\s]+$')
+                if not arabic_pattern.match(full_name):
+                    validation_errors.append('الاسم يجب أن يكون بالعربية فقط')
+            
+            # التحقق من رقم الجوال
+            if not phone:
+                validation_errors.append('رقم الجوال مطلوب')
+            else:
+                # إزالة المسافات والرموز
+                phone_clean = re.sub(r'[^\d+]', '', phone)
+                
+                # التحقق من الطول (10 أرقام للسعودية)
+                if not re.match(r'^(05|5)\d{8}$', phone_clean.replace('+966', '')):
+                    validation_errors.append('رقم الجوال غير صحيح (يجب أن يبدأ بـ 05 ويكون 10 أرقام)')
+                
+                # توحيد الصيغة
+                phone = phone_clean.replace('+966', '0') if phone_clean.startswith('+966') else phone_clean
+                phone = '0' + phone if phone.startswith('5') else phone
+            
+            if validation_errors:
+                errors.append({
+                    'index': idx,
+                    'name': full_name,
+                    'phone': phone,
+                    'errors': validation_errors
+                })
+                continue
+            
+            # التحقق من التكرار في قاعدة البيانات
+            normalized_name = normalize_arabic_name(full_name)
+            existing = StudentRegistration.objects.filter(
+                section=section,
+                normalized_name=normalized_name
+            ).first()
+            
+            if existing:
+                duplicates.append({
+                    'index': idx,
+                    'name': full_name,
+                    'phone': phone,
+                    'existing_phone': existing.phone_number or 'غير محدد'
+                })
+                continue
+            
+            # إضافة الطالب
+            try:
+                student = StudentRegistration.objects.create(
+                    full_name=full_name,
+                    normalized_name=normalized_name,
+                    phone_number=phone,
+                    section=section,
+                    grade=section.grade,
+                    school_name=section.grade.school_name,
+                    registration_ip=request.META.get('REMOTE_ADDR', ''),
+                    joined_telegram=False
+                )
+                
+                added_students.append({
+                    'id': student.id,
+                    'name': student.full_name,
+                    'phone': student.phone_number
+                })
+                
+                logger.info(f"✅ تم إضافة الطالب: {full_name} إلى الشعبة {section.id}")
+                
+            except Exception as e:
+                logger.error(f"❌ خطأ في إضافة الطالب {full_name}: {str(e)}")
+                errors.append({
+                    'index': idx,
+                    'name': full_name,
+                    'phone': phone,
+                    'errors': [f'خطأ في الحفظ: {str(e)}']
+                })
+        
+        # الإحصائيات
+        stats = {
+            'total': len(students_data),
+            'added': len(added_students),
+            'errors': len(errors),
+            'duplicates': len(duplicates)
+        }
+        
+        return Response({
+            'success': True,
+            'message': f'تم إضافة {len(added_students)} طالب بنجاح',
+            'stats': stats,
+            'added_students': added_students,
+            'errors': errors,
+            'duplicates': duplicates
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        logger.error(f"❌ Error in add_students_manually: {str(e)}", exc_info=True)
+        return Response({
+            'success': False,
+            'error': 'server_error',
+            'message': 'حدث خطأ أثناء إضافة الطلاب'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def upload_students_excel(request):
+    """
+    رفع ملف Excel يحتوي على الطلاب
+    
+    Request:
+    - multipart/form-data
+    - file: Excel file
+    - section_id: int
+    """
+    try:
+        import pandas as pd
+        import re
+        
+        teacher = get_teacher_from_request(request)
+        
+        section_id = request.data.get('section_id')
+        excel_file = request.FILES.get('file')
+        
+        # التحقق من المدخلات
+        if not section_id:
+            return Response({
+                'success': False,
+                'error': 'missing_section',
+                'message': 'معرف الشعبة مطلوب'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if not excel_file:
+            return Response({
+                'success': False,
+                'error': 'missing_file',
+                'message': 'يرجى رفع ملف Excel'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # التحقق من نوع الملف
+        if not excel_file.name.endswith(('.xlsx', '.xls')):
+            return Response({
+                'success': False,
+                'error': 'invalid_file_type',
+                'message': 'يجب أن يكون الملف من نوع Excel (.xlsx أو .xls)'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # التحقق من ملكية الشعبة
+        try:
+            section = Section.objects.select_related('grade').get(
+                id=section_id,
+                grade__teacher=teacher
+            )
+        except Section.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': 'section_not_found',
+                'message': 'الشعبة غير موجودة أو ليس لديك صلاحية'
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        # قراءة ملف Excel
+        try:
+            df = pd.read_excel(excel_file, header=None)
+            
+            # التحقق من وجود عمودين على الأقل
+            if df.shape[1] < 2:
+                return Response({
+                    'success': False,
+                    'error': 'invalid_format',
+                    'message': 'الملف يجب أن يحتوي على عمودين: الاسم ورقم الجوال'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # تسمية الأعمدة
+            df.columns = ['full_name', 'phone'] + [f'col_{i}' for i in range(2, df.shape[1])]
+            
+            # إزالة الصفوف الفارغة
+            df = df.dropna(subset=['full_name', 'phone'])
+            
+            # تحويل لقائمة
+            students_data = []
+            for idx, row in df.iterrows():
+                students_data.append({
+                    'full_name': str(row['full_name']).strip(),
+                    'phone': str(row['phone']).strip()
+                })
+            
+            if not students_data:
+                return Response({
+                    'success': False,
+                    'error': 'empty_file',
+                    'message': 'الملف لا يحتوي على بيانات'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            logger.info(f"📊 تم قراءة {len(students_data)} سجل من ملف Excel")
+            
+            # معالجة البيانات باستخدام نفس منطق الإضافة اليدوية
+            def normalize_arabic_name(name):
+                name = ' '.join(name.split())
+                name = re.sub('[إأآا]', 'ا', name)
+                name = re.sub('ى', 'ي', name)
+                name = re.sub('ة', 'ه', name)
+                return name.strip().lower()
+            
+            added_students = []
+            errors = []
+            duplicates = []
+            
+            for idx, student_data in enumerate(students_data, 1):
+                full_name = student_data['full_name']
+                phone = student_data['phone']
+                
+                # التحقق من صحة البيانات
+                validation_errors = []
+                
+                # التحقق من الاسم
+                if not full_name or full_name == 'nan':
+                    validation_errors.append('الاسم مطلوب')
+                else:
+                    name_parts = full_name.split()
+                    if len(name_parts) < 4:
+                        validation_errors.append(f'الاسم يجب أن يكون رباعياً ({len(name_parts)}/4)')
+                    
+                    arabic_pattern = re.compile(r'^[\u0600-\u06FF\s]+$')
+                    if not arabic_pattern.match(full_name):
+                        validation_errors.append('الاسم يجب أن يكون بالعربية فقط')
+                
+                # التحقق من رقم الجوال
+                if not phone or phone == 'nan':
+                    validation_errors.append('رقم الجوال مطلوب')
+                else:
+                    phone_clean = re.sub(r'[^\d+]', '', str(phone))
+                    
+                    if not re.match(r'^(05|5)\d{8}$', phone_clean.replace('+966', '')):
+                        validation_errors.append('رقم الجوال غير صحيح')
+                    
+                    phone = phone_clean.replace('+966', '0') if phone_clean.startswith('+966') else phone_clean
+                    phone = '0' + phone if phone.startswith('5') else phone
+                
+                if validation_errors:
+                    errors.append({
+                        'row': idx,
+                        'name': full_name,
+                        'phone': phone,
+                        'errors': validation_errors
+                    })
+                    continue
+                
+                # التحقق من التكرار
+                normalized_name = normalize_arabic_name(full_name)
+                existing = StudentRegistration.objects.filter(
+                    section=section,
+                    normalized_name=normalized_name
+                ).first()
+                
+                if existing:
+                    duplicates.append({
+                        'row': idx,
+                        'name': full_name,
+                        'phone': phone,
+                        'existing_phone': existing.phone_number or 'غير محدد'
+                    })
+                    continue
+                
+                # إضافة الطالب
+                try:
+                    student = StudentRegistration.objects.create(
+                        full_name=full_name,
+                        normalized_name=normalized_name,
+                        phone_number=phone,
+                        section=section,
+                        grade=section.grade,
+                        school_name=section.grade.school_name,
+                        registration_ip=request.META.get('REMOTE_ADDR', ''),
+                        joined_telegram=False
+                    )
+                    
+                    added_students.append({
+                        'id': student.id,
+                        'name': student.full_name,
+                        'phone': student.phone_number
+                    })
+                    
+                except Exception as e:
+                    errors.append({
+                        'row': idx,
+                        'name': full_name,
+                        'phone': phone,
+                        'errors': [f'خطأ في الحفظ: {str(e)}']
+                    })
+            
+            stats = {
+                'total': len(students_data),
+                'added': len(added_students),
+                'errors': len(errors),
+                'duplicates': len(duplicates)
+            }
+            
+            logger.info(f"✅ تم إضافة {len(added_students)} طالب من Excel")
+            
+            return Response({
+                'success': True,
+                'message': f'تم معالجة {len(students_data)} سجل، تم إضافة {len(added_students)} طالب',
+                'stats': stats,
+                'added_students': added_students,
+                'errors': errors,
+                'duplicates': duplicates
+            }, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            logger.error(f"❌ خطأ في قراءة ملف Excel: {str(e)}")
+            return Response({
+                'success': False,
+                'error': 'excel_error',
+                'message': f'خطأ في قراءة الملف: {str(e)}'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+    except Exception as e:
+        logger.error(f"❌ Error in upload_students_excel: {str(e)}", exc_info=True)
+        return Response({
+            'success': False,
+            'error': 'server_error',
+            'message': 'حدث خطأ أثناء رفع الملف'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def download_excel_template(request):
+    """
+    تحميل نموذج Excel فارغ
+    """
+    try:
+        import pandas as pd
+        from django.http import HttpResponse
+        import io
+        
+        # إنشاء DataFrame مع أمثلة
+        data = {
+            'الاسم الرباعي': ['محمد أحمد علي حسن', 'فاطمة علي محمد حسن', 'أحمد خالد عبدالله سالم'],
+            'رقم الجوال': ['0501234567', '0509876543', '0557654321']
+        }
+        
+        df = pd.DataFrame(data)
+        
+        # حفظ في buffer
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='الطلاب')
+        
+        output.seek(0)
+        
+        # إرجاع كـ response
+        response = HttpResponse(
+            output.read(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = 'attachment; filename="template_students.xlsx"'
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"❌ Error in download_excel_template: {str(e)}")
+        return Response({
+            'success': False,
+            'error': 'server_error',
+            'message': 'حدث خطأ أثناء تحميل النموذج'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -55,4 +55,9 @@ urlpatterns = [
     
     # ==================== Student Join Verification ====================
     path('verify-student-join/', views.verify_student_for_join, name='verify_student_for_join'),
+    
+    # ==================== Add Students (Manual / Excel) ====================
+    path('students/add-manually/', views.add_students_manually, name='add_students_manually'),
+    path('students/upload-excel/', views.upload_students_excel, name='upload_students_excel'),
+    path('students/excel-template/', views.download_excel_template, name='download_excel_template'),
 ]
