@@ -93,6 +93,27 @@ services:
     autoDeploy: true
     healthCheckPath: /api/health/
 
+  # Telegram Bot Service (NEW)
+  - type: worker
+    name: smartedu-telegram-bot
+    runtime: python
+    region: singapore
+    plan: free
+    buildCommand: "cd backend && pip install -r requirements.txt"
+    startCommand: "cd telegram_bot && python run_ai_bot.py"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.7
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_BOT_USERNAME
+        value: "SmartEduProjectBot"
+      - key: API_BASE_URL
+        value: "https://smarteduproject-k0um.onrender.com/api"
+      - key: GEMINI_API_KEY
+        sync: false
+    autoDeploy: true
+
   # PostgreSQL Database
   - type: pserv
     name: smartedu-db
