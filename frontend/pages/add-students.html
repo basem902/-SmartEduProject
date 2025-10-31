@@ -5,6 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إضافة الطلاب - SmartEdu</title>
     
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="نظام احترافي لإضافة الطلاب يدوياً أو عبر Excel">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SmartEdu">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- PWA Icons -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="/assets/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/assets/icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="/assets/icons/icon-192x192.png">
+    
     <style>
         * {
             margin: 0;
@@ -120,6 +136,40 @@
             border-radius: 20px;
             color: white;
             font-weight: 600;
+        }
+
+        /* PWA Install Button */
+        .install-btn {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+            animation: pulse 2s infinite;
+        }
+
+        .install-btn.show {
+            display: flex;
+        }
+
+        .install-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+            }
         }
 
         /* Main Container */
@@ -779,6 +829,11 @@
         </div>
         
         <div class="header-actions">
+            <button class="install-btn" id="installBtn">
+                <span>📱</span>
+                <span>تثبيت التطبيق</span>
+            </button>
+            
             <button class="theme-toggle" id="themeToggle">
                 <span id="themeIcon">🌙</span>
                 <span id="themeText">وضع داكن</span>
@@ -966,5 +1021,93 @@
     <!-- Scripts -->
     <script src="/assets/js/config.js"></script>
     <script src="../js/add-students.js"></script>
+    
+    <!-- PWA Installation Script -->
+    <script>
+        // PWA Install Prompt
+        let deferredPrompt;
+        const installBtn = document.getElementById('installBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('💾 PWA: Install prompt available');
+            e.preventDefault();
+            deferredPrompt = e;
+            installBtn.classList.add('show');
+        });
+
+        installBtn.addEventListener('click', async () => {
+            if (!deferredPrompt) {
+                console.log('❌ PWA: No install prompt available');
+                return;
+            }
+
+            console.log('📱 PWA: Showing install prompt');
+            deferredPrompt.prompt();
+            
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`👤 User response: ${outcome}`);
+            
+            if (outcome === 'accepted') {
+                console.log('✅ PWA: Install accepted');
+                showPWAToast('تم تثبيت التطبيق بنجاح! 🎉', 'success');
+            } else {
+                console.log('❌ PWA: Install dismissed');
+            }
+            
+            deferredPrompt = null;
+            installBtn.classList.remove('show');
+        });
+
+        window.addEventListener('appinstalled', () => {
+            console.log('✅ PWA: Successfully installed');
+            installBtn.classList.remove('show');
+            showPWAToast('تطبيق SmartEdu جاهز للاستخدام! 🚀', 'success');
+        });
+
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('✅ Service Worker registered:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.error('❌ Service Worker registration failed:', error);
+                    });
+            });
+        }
+
+        // PWA Toast Helper
+        function showPWAToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <div class="toast-icon">${type === 'success' ? '✅' : 'ℹ️'}</div>
+                <div class="toast-message">
+                    <div class="title">PWA</div>
+                    <div class="text">${message}</div>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Check if running as PWA
+        function isPWA() {
+            return window.matchMedia('(display-mode: standalone)').matches ||
+                   window.navigator.standalone ||
+                   document.referrer.includes('android-app://');
+        }
+
+        if (isPWA()) {
+            console.log('✅ Running as PWA');
+            installBtn.style.display = 'none';
+        }
+    </script>
 </body>
 </html>

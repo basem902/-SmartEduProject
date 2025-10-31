@@ -2,7 +2,7 @@
  * Service Worker للـ PWA
  */
 
-const CACHE_NAME = 'smartedu-v1.3.5';
+const CACHE_NAME = 'smartedu-v1.4.0';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -11,6 +11,8 @@ const urlsToCache = [
   '/pages/dashboard.html',
   '/pages/sections-setup.html',
   '/pages/join.html',
+  '/pages/join-student.html',
+  '/pages/add-students.html',
   '/pages/offline.html',
   '/assets/css/base.css',
   '/assets/css/dark-mode.css',
@@ -24,7 +26,9 @@ const urlsToCache = [
   '/assets/js/auth.js',
   '/assets/js/ui.js',
   '/assets/js/theme.js',
-  '/assets/js/sections-api.js'
+  '/assets/js/sections-api.js',
+  '/js/join-student.js',
+  '/js/add-students.js'
 ];
 
 // تثبيت Service Worker
