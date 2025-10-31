@@ -12,6 +12,22 @@ class StudentManagementSystem {
     }
 
     init() {
+        console.log('🚀 StudentManagementSystem initialized');
+        console.log('📡 API URL:', this.apiUrl);
+        
+        // Check authentication
+        const token = localStorage.getItem('token');
+        if (!token) {
+            console.error('❌ No authentication token found');
+            this.showToast('يرجى تسجيل الدخول أولاً', 'error');
+            setTimeout(() => {
+                window.location.href = '/pages/login.html';
+            }, 2000);
+            return;
+        }
+        
+        console.log('✅ Token found:', token.substring(0, 20) + '...');
+        
         this.setupEventListeners();
         this.loadGrades();
         this.applyTheme();
@@ -113,51 +129,105 @@ class StudentManagementSystem {
     
     async loadGrades() {
         try {
+            console.log('📚 Loading grades from API...');
             const token = localStorage.getItem('token');
-            const response = await fetch(`${this.apiUrl}/sections/my-grades/`, {
+            
+            const url = `${this.apiUrl}/sections/my-grades/`;
+            console.log('🔗 API URL:', url);
+            
+            const response = await fetch(url, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 }
             });
             
-            const data = await response.json();
+            console.log('📡 Response status:', response.status);
             
-            if (data.grades) {
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('❌ API Error:', response.status, errorText);
+                throw new Error(`API Error: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log('📊 Response data:', data);
+            
+            if (data.grades && data.grades.length > 0) {
+                console.log('✅ Grades found:', data.grades.length);
                 this.populateGrades(data.grades);
+            } else {
+                console.warn('⚠️ No grades found');
+                this.showToast('لا توجد صفوف متاحة. يرجى إنشاء صفوف أولاً.', 'warning');
             }
         } catch (error) {
-            console.error('Error loading grades:', error);
-            this.showToast('خطأ في تحميل الصفوف', 'error');
+            console.error('❌ Error loading grades:', error);
+            this.showToast('خطأ في تحميل الصفوف. تحقق من اتصالك بالإنترنت.', 'error');
         }
     }
 
     populateGrades(grades) {
+        console.log('📝 Populating grades in select elements...');
         const select1 = document.getElementById('gradeSelect');
         const select2 = document.getElementById('gradeSelectExcel');
         
+        if (!select1 || !select2) {
+            console.error('❌ Grade select elements not found!');
+            return;
+        }
+        
+        console.log('✅ Select elements found');
+        
+        // Clear existing options (keep placeholder)
+        select1.innerHTML = '<option value="">اختر الصف</option>';
+        select2.innerHTML = '<option value="">اختر الصف</option>';
+        
         grades.forEach(grade => {
+            console.log(`  📚 Adding grade: ${grade.display_name} (${grade.sections?.length || 0} sections)`);
             const option1 = new Option(grade.display_name, grade.id);
             const option2 = new Option(grade.display_name, grade.id);
-            option1.dataset.sections = JSON.stringify(grade.sections);
-            option2.dataset.sections = JSON.stringify(grade.sections);
+            option1.dataset.sections = JSON.stringify(grade.sections || []);
+            option2.dataset.sections = JSON.stringify(grade.sections || []);
             select1.add(option1);
             select2.add(option2);
         });
+        
+        console.log('✅ Grades populated successfully');
     }
 
     loadSections(gradeId, selectId) {
+        console.log(`📖 Loading sections for grade ${gradeId} into ${selectId}`);
         const select = document.getElementById(selectId);
+        
+        if (!select) {
+            console.error(`❌ Section select element ${selectId} not found!`);
+            return;
+        }
+        
         select.innerHTML = '<option value="">اختر الشعبة</option>';
         select.disabled = !gradeId;
         
         if (gradeId) {
             const gradeSelect = selectId.includes('Excel') ? document.getElementById('gradeSelectExcel') : document.getElementById('gradeSelect');
-            const sections = JSON.parse(gradeSelect.selectedOptions[0].dataset.sections || '[]');
+            
+            if (!gradeSelect || !gradeSelect.selectedOptions[0]) {
+                console.error('❌ Grade select or selected option not found');
+                return;
+            }
+            
+            const sectionsData = gradeSelect.selectedOptions[0].dataset.sections;
+            console.log('📊 Sections data from dataset:', sectionsData);
+            
+            const sections = JSON.parse(sectionsData || '[]');
+            console.log(`✅ Found ${sections.length} sections`);
             
             sections.forEach(section => {
+                console.log(`  📖 Adding section: ${section.section_name}`);
                 select.add(new Option(section.section_name, section.id));
             });
+            
+            select.disabled = false;
+            console.log('✅ Sections loaded successfully');
         }
     }
 
