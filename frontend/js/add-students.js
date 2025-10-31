@@ -169,6 +169,8 @@ class StudentManagementSystem {
 
     populateGrades(grades) {
         console.log('📝 Populating grades in select elements...');
+        console.log('📊 Full grades data:', JSON.stringify(grades, null, 2));
+        
         const select1 = document.getElementById('gradeSelect');
         const select2 = document.getElementById('gradeSelectExcel');
         
@@ -183,17 +185,30 @@ class StudentManagementSystem {
         select1.innerHTML = '<option value="">اختر الصف</option>';
         select2.innerHTML = '<option value="">اختر الصف</option>';
         
-        grades.forEach(grade => {
-            console.log(`  📚 Adding grade: ${grade.display_name} (${grade.sections?.length || 0} sections)`);
+        grades.forEach((grade, index) => {
+            console.log(`\n  📚 Grade ${index + 1}:`, {
+                id: grade.id,
+                name: grade.display_name,
+                sections: grade.sections
+            });
+            
             const option1 = new Option(grade.display_name, grade.id);
             const option2 = new Option(grade.display_name, grade.id);
-            option1.dataset.sections = JSON.stringify(grade.sections || []);
-            option2.dataset.sections = JSON.stringify(grade.sections || []);
+            
+            const sectionsData = JSON.stringify(grade.sections || []);
+            console.log(`  💾 Sections data to save:`, sectionsData);
+            
+            option1.dataset.sections = sectionsData;
+            option2.dataset.sections = sectionsData;
+            
             select1.add(option1);
             select2.add(option2);
+            
+            // Verify it was saved
+            console.log(`  ✓ Saved in option dataset:`, option1.dataset.sections);
         });
         
-        console.log('✅ Grades populated successfully');
+        console.log('\n✅ Grades populated successfully');
     }
 
     loadSections(gradeId, selectId) {
