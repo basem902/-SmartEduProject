@@ -2,7 +2,7 @@
  * Service Worker للـ PWA
  */
 
-const CACHE_NAME = 'smartedu-v1.3.4';
+const CACHE_NAME = 'smartedu-v1.3.5';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -109,7 +109,13 @@ self.addEventListener('fetch', event => {
 
         return fetch(event.request)
           .then(response => {
-            if (!response || response.status !== 200 || response.type !== 'basic') {
+            // Handle errors and missing files gracefully
+            if (!response || response.status === 404) {
+              console.info('SW: Resource not found:', event.request.url);
+              return response;
+            }
+            
+            if (response.status !== 200 || response.type !== 'basic') {
               return response;
             }
 
@@ -120,13 +126,21 @@ self.addEventListener('fetch', event => {
                 cache.put(event.request, responseToCache);
               } catch (e) {
                 // تجاهل أخطاء التخزين في الكاش
-                console.warn('SW cache.put failed:', e && e.message);
+                console.info('SW: Cache storage skipped:', e && e.message);
               }
             });
 
             return response;
           })
-          .catch(() => caches.match('/pages/offline.html'));
+          .catch(error => {
+            console.info('SW: Fetch failed for:', event.request.url);
+            // For HTML pages, return offline page
+            if (event.request.headers.get('accept').includes('text/html')) {
+              return caches.match('/pages/offline.html');
+            }
+            // For other resources, return empty response
+            return new Response('', { status: 503 });
+          });
       })
   );
 });
