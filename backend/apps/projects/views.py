@@ -896,17 +896,11 @@ def verify_student_for_submission(request):
                 }, status=status.HTTP_403_FORBIDDEN)
         
         # 7. التحقق من رفع سابق
+        # البحث بالاسم المُرسل
         previous_submission = Submission.objects.filter(
             project=project,
-            student__full_name__iexact=student.full_name
+            submitted_student_name__iexact=student.full_name
         ).first()
-        
-        if not previous_submission:
-            # Check by normalized name in submitted_student_name
-            previous_submission = Submission.objects.filter(
-                project=project,
-                submitted_student_name__iexact=student_name
-            ).first()
         
         if previous_submission:
             return Response({
