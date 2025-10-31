@@ -726,10 +726,44 @@ def verify_student_for_submission(request):
         }
     """
     from apps.sections.models import StudentRegistration, TelegramGroup
-    from .utils import normalize_arabic_name, validate_full_name, find_similar_students
     import jwt
     from django.conf import settings
     from datetime import datetime, timedelta
+    import re
+    
+    # دوال مساعدة محلية
+    def normalize_arabic_name(name):
+        """تطبيع الأسماء العربية"""
+        name = ' '.join(name.split())
+        name = re.sub('[إأآا]', 'ا', name)
+        name = re.sub('ى', 'ي', name)
+        name = re.sub('ة', 'ه', name)
+        return name.strip().lower()
+    
+    def validate_full_name(name):
+        """التحقق من صحة الاسم الرباعي"""
+        parts = name.strip().split()
+        if len(parts) < 4:
+            return False, f'الاسم يجب أن يكون رباعياً ({len(parts)}/4 أجزاء)'
+        arabic_pattern = re.compile(r'^[\u0600-\u06FF\s]+$')
+        if not arabic_pattern.match(name):
+            return False, 'الاسم يجب أن يحتوي على حروف عربية فقط'
+        return True, ''
+    
+    def find_similar_students(name, students, threshold=0.80):
+        """البحث عن أسماء مشابهة"""
+        from difflib import SequenceMatcher
+        normalized_input = normalize_arabic_name(name)
+        results = []
+        for student in students:
+            similarity = SequenceMatcher(None, normalized_input, student.normalized_name).ratio()
+            if similarity >= threshold:
+                results.append({
+                    'student': student,
+                    'similarity': similarity,
+                    'original_name': student.full_name
+                })
+        return sorted(results, key=lambda x: x['similarity'], reverse=True)
     
     try:
         student_name = request.data.get('student_name', '').strip()
