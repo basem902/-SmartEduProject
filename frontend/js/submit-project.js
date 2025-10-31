@@ -93,11 +93,20 @@ async function loadProjectInfo() {
     try {
         // استخدم endpoint العام دائماً، وأرفق التوكن إذا كان صالحاً
         let url = `${API_BASE_URL}/projects/${state.projectId}/detail-public/`;
-        const headers = {};
+        const headers = {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        };
         if (state.submitToken) {
             url += `?token=${encodeURIComponent(state.submitToken)}`;
         }
-        const response = await fetch(url, { headers });
+        
+        const response = await fetch(url, { 
+            method: 'GET',
+            headers: headers,
+            mode: 'cors',
+            credentials: 'omit'
+        });
         
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
@@ -114,7 +123,20 @@ async function loadProjectInfo() {
     } catch (error) {
         console.error('Error loading project:', error);
         hideLoading();
-        showError('فشل تحميل معلومات المشروع');
+        
+        // User-friendly error message
+        let errorMsg = 'فشل تحميل معلومات المشروع';
+        if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
+            errorMsg += '. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى';
+        }
+        showError(errorMsg);
+        
+        // Retry button
+        setTimeout(() => {
+            if (confirm('هل تريد المحاولة مرة أخرى؟')) {
+                location.reload();
+            }
+        }, 1000);
     }
 }
 

@@ -150,13 +150,26 @@ SIMPLE_JWT = {
 }
 
 # CORS Settings
-cors_origins_str = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:5500,http://127.0.0.1:5500')
-CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins_str.split(',') if origin.strip()]
+# Always include production domains + environment variable domains
+cors_origins_str = os.getenv('CORS_ALLOWED_ORIGINS', '')
+env_origins = [origin.strip() for origin in cors_origins_str.split(',') if origin.strip()]
+
+# Mandatory production origins (always included)
+PRODUCTION_ORIGINS = [
+    'https://smartedu-basem.netlify.app',
+    'https://smarteduproject-k0um.onrender.com',
+    'http://localhost:5500',
+    'http://127.0.0.1:5500',
+]
+
+# Combine and deduplicate
+CORS_ALLOWED_ORIGINS = list(set(PRODUCTION_ORIGINS + env_origins))
 
 # CORS Configuration
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL_ORIGINS', 'False') == 'True'
 CORS_PREFLIGHT_MAX_AGE = 86400  # 24 hours
+CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken']
 
 # CORS Headers
 CORS_ALLOW_HEADERS = [

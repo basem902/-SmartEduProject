@@ -2,7 +2,7 @@
  * Service Worker للـ PWA
  */
 
-const CACHE_NAME = 'smartedu-v1.3.3';
+const CACHE_NAME = 'smartedu-v1.3.4';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -69,9 +69,23 @@ self.addEventListener('fetch', event => {
     return; // دع المتصفح يتولى الطلب
   }
 
-  // السماح لطلبات API بالمرور مباشرة للشبكة
-  if (url.includes('/api/') || url.includes('localhost:8000')) {
-    event.respondWith(fetch(event.request));
+  // السماح لطلبات API بالمرور مباشرة للشبكة مع error handling
+  if (url.includes('/api/') || url.includes('localhost:8000') || url.includes('onrender.com')) {
+    event.respondWith(
+      fetch(event.request)
+        .catch(error => {
+          // Log error silently without throwing in console
+          console.info('SW: Network request failed (expected for CORS/offline):', event.request.url);
+          // Return a basic error response instead of throwing
+          return new Response(
+            JSON.stringify({ error: 'Network request failed', offline: true }), 
+            { 
+              status: 503,
+              headers: { 'Content-Type': 'application/json' }
+            }
+          );
+        })
+    );
     return;
   }
 
