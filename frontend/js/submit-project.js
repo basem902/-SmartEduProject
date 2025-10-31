@@ -20,6 +20,9 @@ const state = {
 // ============================================
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // Initialize dark mode from localStorage
+    initializeDarkMode();
+    
     // الحصول على project_id من URL
     const urlParams = new URLSearchParams(window.location.search);
     
@@ -127,6 +130,8 @@ function displayProjectInfo(project) {
     
     // المعلومات الأساسية
     document.getElementById('projectSubject').textContent = project.subject || '-';
+    document.getElementById('projectGrade').textContent = project.grade_display || '-';
+    document.getElementById('projectTeacher').textContent = project.teacher_name || '-';
     
     // عرض الشعبة من الـ token أو من قائمة الشعب
     if (state.sectionId && project.sections && project.sections.length > 0) {
@@ -152,6 +157,13 @@ function displayProjectInfo(project) {
     // قيود الملف
     document.getElementById('maxSize').textContent = `${project.max_file_size} MB`;
     document.getElementById('maxSizeText').textContent = `${project.max_file_size} MB`;
+    
+    // الأنواع المسموحة
+    if (project.allowed_file_types && project.allowed_file_types.length > 0) {
+        document.getElementById('allowedTypes').textContent = project.allowed_file_types.join(', ');
+    } else {
+        document.getElementById('allowedTypes').textContent = 'جميع الأنواع';
+    }
 }
 
 // ============================================
@@ -557,4 +569,28 @@ function formatFileSize(bytes) {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+}
+
+// ============================================
+// Dark Mode Support
+// ============================================
+
+function initializeDarkMode() {
+    // Get dark mode preference from localStorage
+    const darkMode = localStorage.getItem('darkMode') === 'true';
+    
+    if (darkMode) {
+        document.body.classList.add('dark-mode');
+    }
+    
+    // Listen for storage changes (if changed from another tab)
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'darkMode') {
+            if (e.newValue === 'true') {
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
+        }
+    });
 }
