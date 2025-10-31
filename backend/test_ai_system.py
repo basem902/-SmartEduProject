@@ -295,14 +295,34 @@ def create_test_data():
     try:
         from django.utils import timezone
         from datetime import timedelta
+        from apps.accounts.models import Teacher
+        
+        # الحصول على أول معلم أو إنشاء واحد
+        teacher = Teacher.objects.first()
+        
+        if not teacher:
+            # إنشاء معلم جديد
+            teacher = Teacher.objects.create(
+                full_name='معلم تجريبي',
+                email='test_teacher@example.com',
+                phone='1234567890',
+                school_name='مدرسة الاختبار',
+                password_hash='',  # سيتم تعيينه بعد قليل
+                is_active=True,
+                subjects=['الرياضيات', 'العلوم']
+            )
+            teacher.set_password('testpass123')
+            teacher.save()
+            print(f"✅ تم إنشاء معلم تجريبي: {teacher.email}")
         
         # إنشاء مشروع تجريبي
         project, created = Project.objects.get_or_create(
             title="مشروع اختبار AI",
             defaults={
+                'teacher': teacher,
                 'description': 'مشروع لاختبار نظام الذكاء الاصطناعي',
                 'file_type': 'video',
-                'deadline': timezone.now() + timedelta(days=30),  # deadline بعد 30 يوم
+                'deadline': timezone.now() + timedelta(days=30),
                 'ai_validation_enabled': True,
                 'max_attempts': 3,
                 'plagiarism_threshold': 70,
