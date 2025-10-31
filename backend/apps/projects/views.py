@@ -815,20 +815,49 @@ def verify_student_for_submission(request):
         
         student = students.first()
         
-        # 6. التحقق من التليجرام (إذا كان القروب موجوداً)
-        if student.telegram_group:
-            if not student.telegram_user_id and not student.joined_telegram:
+        # 6. التحقق من التليجرام (التحقق الحي من القروب)
+        if student.telegram_group and student.telegram_group.telegram_chat_id:
+            from .telegram_verifier import verify_student_in_group_sync
+            
+            # التحقق الحي من عضوية القروب
+            verification = verify_student_in_group_sync(
+                student, 
+                student.telegram_group.telegram_chat_id
+            )
+            
+            if not verification['verified']:
                 telegram_link = student.telegram_group.invite_link or student.telegram_invite_link
-                return Response({
-                    'success': False,
-                    'error': 'telegram_not_verified',
-                    'message': 'يجب أن تكون عضواً في قروب التليجرام لرفع المشروع',
-                    'telegram_link': telegram_link,
-                    'action_steps': [
+                
+                action_steps = []
+                if verification['status'] == 'no_telegram_id':
+                    action_steps = [
+                        '1. افتح البوت @SmartEduProjectBot',
+                        '2. أرسل رسالة /start',
+                        '3. انتظر 5 دقائق وحاول مرة أخرى'
+                    ]
+                elif verification['status'] == 'left':
+                    action_steps = [
+                        f'1. انضم إلى القروب مرة أخرى: {telegram_link}' if telegram_link else '1. انضم إلى قروب الصف',
+                        '2. حاول مرة أخرى بعد 5 دقائق'
+                    ]
+                elif verification['status'] == 'not_found':
+                    action_steps = [
                         f'1. انضم إلى القروب: {telegram_link}' if telegram_link else '1. انضم إلى قروب الصف',
                         '2. أرسل رسالة /start للبوت',
                         '3. حاول مرة أخرى بعد 5 دقائق'
                     ]
+                else:
+                    action_steps = [
+                        verification['action'] if 'action' in verification else 'تواصل مع معلمك'
+                    ]
+                
+                return Response({
+                    'success': False,
+                    'error': 'telegram_not_verified',
+                    'message': verification['message'],
+                    'status': verification['status'],
+                    'telegram_link': telegram_link,
+                    'action_steps': action_steps
                 }, status=status.HTTP_403_FORBIDDEN)
         
         # 7. التحقق من رفع سابق
