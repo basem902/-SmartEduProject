@@ -683,6 +683,8 @@
 
         // Update dashboard counters
         function updateDashboardCounters(stats) {
+            console.log('📊 Updating dashboard counters:', stats);
+            
             animateCounter(document.getElementById('gradesCount'), stats.total_grades || 0);
             animateCounter(document.getElementById('sectionsCount'), stats.total_sections || 0);
             animateCounter(document.getElementById('totalStudents'), stats.total_students || 0);
@@ -697,6 +699,8 @@
                 badge.textContent = newCount;
                 badge.style.display = newCount > 0 ? 'block' : 'none';
             }
+            
+            console.log('✅ Dashboard counters updated');
         }
         
         // Toggle User Menu
@@ -718,44 +722,38 @@
         // Load Dashboard Data
         async function loadDashboard() {
             try {
-                // Load projects
-                const projectsData = await api.getProjects();
-                const projects = projectsData.projects || [];
+                console.log('📊 Loading dashboard data...');
                 
-                // Update stats
-                document.getElementById('projectsCount').textContent = projects.length;
-                
-                // Calculate total students and submissions
-                let totalStudents = 0;
-                let totalSubmissions = 0;
-                let pendingSubmissions = 0;
-                
-                for (const project of projects) {
-                    // These would need actual API calls in production
-                    totalSubmissions += project.submissions_count || 0;
-                }
-                
-                document.getElementById('studentsCount').textContent = totalStudents;
-                document.getElementById('submissionsCount').textContent = totalSubmissions;
-                document.getElementById('pendingCount').textContent = pendingSubmissions;
-                
-                // Load sections stats
+                // Load sections stats first
                 await loadSectionsStats();
                 
-                // Display recent projects
-                displayRecentProjects(projects.slice(0, 5));
+                console.log('✅ Dashboard data loaded successfully');
                 
             } catch (error) {
-                console.error('Error loading dashboard:', error);
-                UI.showError('#recentProjects', 'فشل تحميل البيانات');
+                console.error('❌ Error loading dashboard:', error);
             }
         }
 
         // Load sections statistics
         async function loadSectionsStats() {
             try {
+                // Try to load cached stats first for instant display
+                const cachedStats = localStorage.getItem('dashboard_stats');
+                if (cachedStats) {
+                    try {
+                        const stats = JSON.parse(cachedStats);
+                        console.log('📦 Loading cached stats:', stats);
+                        updateDashboardCounters(stats);
+                    } catch (e) {
+                        console.error('Error parsing cached stats:', e);
+                    }
+                }
+                
+                // Then load fresh data
                 const response = await sectionsAPI.getMyGrades();
                 const stats = response.stats || {};
+                
+                console.log('🔄 Fresh stats from API:', stats);
                 
                 // Prepare stats object for dashboard
                 const dashboardStats = {
@@ -772,6 +770,8 @@
                     const projectsData = await api.getProjects();
                     const projects = projectsData.projects || [];
                     
+                    console.log('📚 Projects loaded:', projects.length);
+                    
                     for (const project of projects) {
                         dashboardStats.new_submissions += project.new_submissions || 0;
                         dashboardStats.pending_submissions += project.pending_submissions || 0;
@@ -781,12 +781,27 @@
                     console.error('Error loading projects for stats:', err);
                 }
                 
+                // Save to cache
+                localStorage.setItem('dashboard_stats', JSON.stringify(dashboardStats));
+                console.log('💾 Stats cached:', dashboardStats);
+                
                 // Update dashboard counters with animation
                 updateDashboardCounters(dashboardStats);
                 
             } catch (error) {
-                console.error('Error loading sections stats:', error);
-                // Don't show error, just keep default values
+                console.error('❌ Error loading sections stats:', error);
+                // Try to use cached stats if available
+                const cachedStats = localStorage.getItem('dashboard_stats');
+                if (cachedStats) {
+                    try {
+                        const stats = JSON.parse(cachedStats);
+                        updateDashboardCounters(stats);
+                        return;
+                    } catch (e) {
+                        console.error('Error using cached stats:', e);
+                    }
+                }
+                // Otherwise show zeros
                 updateDashboardCounters({
                     total_grades: 0,
                     total_sections: 0,
@@ -797,87 +812,6 @@
                 });
             }
         }
-        
-        function displayRecentProjects(projects) {
-            const container = document.getElementById('recentProjects');
-            
-            if (projects.length === 0) {
-                UI.showEmpty(container, 'لا توجد مشاريع بعد', '📭');
-                return;
-            }
-            
-            let html = '<div class="table-container"><table class="table"><thead><tr>';
-            html += '<th>العنوان</th><th>المادة</th><th>الصف</th><th>الموعد النهائي</th><th>الحالة</th><th>إشعار التليجرام</th></tr></thead><tbody>';
-            
-            projects.forEach(project => {
-                const deadline = new Date(project.deadline);
-                const now = new Date();
-                const isExpired = deadline < now;
-                
-                html += `
-                    <tr>
-                        <td><strong>${project.title}</strong></td>
-                        <td>${project.subject}</td>
-                        <td>${project.grade_display || 'غير محدد'}</td>
-                        <td>${UI.formatDate(project.deadline)}</td>
-                        <td>
-                            <span class="badge ${project.is_active ? 'badge-success' : 'badge-secondary'}">
-                                ${project.is_active ? '✅ نشط' : '❌ غير نشط'}
-                            </span>
-                            ${isExpired ? '<span class="badge badge-danger">⏰ انتهى</span>' : ''}
-                        </td>
-                        <td>
-                            ${project.telegram_sent ? 
-                                `
-                                <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
-                                  <span class="badge badge-success" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 6px 12px;">✓ تم الإرسال</span>
-                                  <button onclick="resendTelegram(${project.id}, '${project.title.replace(/'/g, "\\'")}')" class="btn btn-sm btn-warning" style="padding: 6px 12px; font-size: 13px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border: none; border-radius: 6px; cursor: pointer;">
-                                    ↻ إعادة الإرسال
-                                  </button>
-                                </div>
-                                ` : 
-                                `<button onclick="sendTelegramNow(${project.id}, '${project.title.replace(/'/g, "\\'")}');" class="btn btn-sm btn-primary" style="padding: 6px 16px; font-size: 13px; background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); border: none; border-radius: 6px; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform=\`translateY(-2px)\`" onmouseout="this.style.transform=\`translateY(0)\`"><span>📤 إرسال الآن</span></button>`
-                            }
-                        </td>
-                    </tr>
-                `;
-            });
-            
-            html += '</tbody></table></div>';
-            container.innerHTML = html;
-        }
-        
-        function createProject() {
-            // الانتقال إلى صفحة إنشاء المشروع
-            window.location.href = 'create-project.html';
-        }
-        
-        function viewSubmissions() {
-            UI.showModal(
-                'التسليمات',
-                '<p>هذه الميزة ستكون متاحة في الإصدار القادم</p>',
-                [{ text: 'حسناً', class: 'btn-primary', onclick: 'UI.closeModal()' }]
-            );
-        }
-        
-        function showSection(section) {
-            UI.showToast(`سيتم الانتقال إلى ${section === 'projects' ? 'المشاريع' : 'التسليمات'} قريباً`, 'info');
-        }
-        
-        // ✅ Send Telegram Now - Open Progress Page in Browser
-        function sendTelegramNow(projectId, projectTitle) {
-            // فتح صفحة الإرسال في تاب جديد في المتصفح
-            const url = `telegram-send-direct.html?project_id=${projectId}`;
-            window.open(url, '_blank');
-        }
-        
-        // 🔁 Resend Telegram - Open Direct Send Page
-        function resendTelegram(projectId, projectTitle) {
-            const url = `telegram-send-direct.html?project_id=${projectId}`;
-            window.open(url, '_blank');
-        }
-        
-        // ✅ Telegram functions are now in telegram-preview-modal.js
         
         // Toggle Mobile Menu
         function toggleMobileMenu() {
