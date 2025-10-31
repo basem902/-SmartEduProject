@@ -850,7 +850,8 @@ def verify_student_for_submission(request):
         student = students.first()
         
         # 6. التحقق من التليجرام (التحقق الحي من القروب)
-        if student.telegram_group and student.telegram_group.chat_id:
+        # تعطيل مؤقت للاختبار
+        if False and student.telegram_group and student.telegram_group.chat_id:
             from .telegram_verifier import verify_student_in_group_sync
             
             # التحقق الحي من عضوية القروب
