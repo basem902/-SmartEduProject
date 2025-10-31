@@ -15,10 +15,11 @@ class StudentManagementSystem {
         console.log('🚀 StudentManagementSystem initialized');
         console.log('📡 API URL:', this.apiUrl);
         
-        // Check authentication
-        const token = localStorage.getItem('token');
+        // Check authentication - try both token names
+        const token = localStorage.getItem('access_token') || localStorage.getItem('token');
         if (!token) {
             console.error('❌ No authentication token found');
+            console.log('📋 localStorage keys:', Object.keys(localStorage));
             this.showToast('يرجى تسجيل الدخول أولاً', 'error');
             setTimeout(() => {
                 window.location.href = '/pages/login.html';
@@ -130,7 +131,7 @@ class StudentManagementSystem {
     async loadGrades() {
         try {
             console.log('📚 Loading grades from API...');
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('access_token') || localStorage.getItem('token');
             
             const url = `${this.apiUrl}/sections/my-grades/`;
             console.log('🔗 API URL:', url);
@@ -361,7 +362,7 @@ class StudentManagementSystem {
             return;
         }
         
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token') || localStorage.getItem('token');
         
         try {
             this.showLoadingModal(true);
@@ -415,7 +416,7 @@ class StudentManagementSystem {
             return;
         }
         
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token') || localStorage.getItem('token');
         const formData = new FormData();
         formData.append('file', file);
         formData.append('section_id', sectionId);
@@ -455,7 +456,7 @@ class StudentManagementSystem {
     }
 
     async downloadTemplate() {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token') || localStorage.getItem('token');
         
         try {
             const response = await fetch(`${this.apiUrl}/sections/students/excel-template/`, {
