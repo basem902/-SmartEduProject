@@ -36,6 +36,319 @@
         .user-menu-logout {
             color: var(--danger-color);
         }
+
+        /* ==================== NEW DASHBOARD CARDS ==================== */
+        
+        /* Welcome Banner */
+        .welcome-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+        }
+
+        .welcome-content h2 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .welcome-content p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .welcome-time {
+            font-size: 48px;
+            font-weight: 700;
+            opacity: 0.3;
+        }
+
+        /* Dashboard Cards Grid */
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        /* Card Base Styles */
+        .dashboard-card {
+            background: var(--card-bg, white);
+            border-radius: 20px;
+            padding: 30px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+            min-height: 280px;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Card Icon */
+        .card-icon-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .card-icon {
+            font-size: 60px;
+            display: inline-block;
+            transition: transform 0.4s;
+        }
+
+        .dashboard-card:hover .card-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        /* Card Badge */
+        .card-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #10b981;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+
+        .card-badge.popular {
+            background: #f59e0b;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+        }
+
+        .card-badge.new {
+            background: #3b82f6;
+            animation: badgePulse 2s infinite;
+        }
+
+        @keyframes badgePulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+            }
+            50% {
+                transform: scale(1.1);
+                box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+            }
+        }
+
+        /* Card Content */
+        .card-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .card-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+        }
+
+        .card-divider {
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(90deg, currentColor, transparent);
+            margin-bottom: 20px;
+            border-radius: 2px;
+        }
+
+        /* Card Stats */
+        .card-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15px;
+            color: var(--text-secondary);
+        }
+
+        .stat-icon {
+            font-size: 20px;
+        }
+
+        .stat-text {
+            flex: 1;
+        }
+
+        .counter {
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        /* Card Features */
+        .card-features {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .feature-item span:first-child {
+            font-size: 18px;
+        }
+
+        /* Card Action */
+        .card-action {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 15px;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            font-weight: 600;
+            color: currentColor;
+        }
+
+        .arrow {
+            font-size: 20px;
+            transition: transform 0.3s;
+        }
+
+        .dashboard-card:hover .arrow {
+            transform: translateX(-5px);
+        }
+
+        /* Card Glow Effect */
+        .card-glow {
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1), transparent 70%);
+            opacity: 0;
+            transition: opacity 0.4s;
+            pointer-events: none;
+        }
+
+        .dashboard-card:hover .card-glow {
+            opacity: 1;
+        }
+
+        /* Individual Card Colors */
+        .card-sections {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .card-sections:hover {
+            border-color: #667eea;
+            box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3);
+        }
+
+        .card-students {
+            border-color: #10b981;
+            color: #10b981;
+        }
+
+        .card-students:hover {
+            border-color: #10b981;
+            box-shadow: 0 20px 60px rgba(16, 185, 129, 0.3);
+        }
+
+        .card-project {
+            border-color: #f59e0b;
+            color: #f59e0b;
+        }
+
+        .card-project:hover {
+            border-color: #f59e0b;
+            box-shadow: 0 20px 60px rgba(245, 158, 11, 0.3);
+        }
+
+        .card-submissions {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+
+        .card-submissions:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 20px 60px rgba(59, 130, 246, 0.3);
+        }
+
+        .card-stats {
+            border-color: #8b5cf6;
+            color: #8b5cf6;
+        }
+
+        .card-stats:hover {
+            border-color: #8b5cf6;
+            box-shadow: 0 20px 60px rgba(139, 92, 246, 0.3);
+        }
+
+        /* Stagger Animation */
+        .stagger-1 { animation: cardAppear 0.5s ease-out 0s; }
+        .stagger-2 { animation: cardAppear 0.5s ease-out 0.1s; }
+        .stagger-3 { animation: cardAppear 0.5s ease-out 0.2s; }
+        .stagger-4 { animation: cardAppear 0.5s ease-out 0.3s; }
+        .stagger-5 { animation: cardAppear 0.5s ease-out 0.4s; }
+
+        @keyframes cardAppear {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .dashboard-cards {
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .welcome-banner {
+                flex-direction: column;
+                text-align: center;
+                gap: 20px;
+            }
+
+            .welcome-time {
+                font-size: 32px;
+            }
+
+            .dashboard-cards {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .dashboard-card {
+                min-height: auto;
+            }
+        }
     </style>
 </head>
 <body data-page-type="dashboard">
@@ -141,96 +454,167 @@
         </nav>
 
         <!-- Welcome Section -->
-        <div class="card slide-up">
-            <h2>👋 مرحباً <span id="teacherName">المعلم</span></h2>
-            <p class="text-muted">نتمنى لك يومًا مثمرًا في إدارة مشاريعك الدراسية</p>
+        <div class="welcome-banner slide-up">
+            <div class="welcome-content">
+                <h2>👋 مرحباً <span id="teacherName">المعلم</span></h2>
+                <p>نتمنى لك يومًا مثمرًا في إدارة مشاريعك الدراسية</p>
+            </div>
+            <div class="welcome-time" id="currentTime"></div>
         </div>
 
-        <!-- Stats Grid -->
-        <div class="stats-grid">
-            <div class="stat-card stagger-item">
-                <div class="stat-icon">📚</div>
-                <div class="stat-value" id="projectsCount">0</div>
-                <div class="stat-label">المشاريع</div>
-            </div>
-            
-            <div class="stat-card success stagger-item">
-                <div class="stat-icon">👥</div>
-                <div class="stat-value" id="studentsCount">0</div>
-                <div class="stat-label">الطلاب</div>
-            </div>
-            
-            <div class="stat-card warning stagger-item">
-                <div class="stat-icon">📤</div>
-                <div class="stat-value" id="submissionsCount">0</div>
-                <div class="stat-label">التسليمات</div>
-            </div>
-            
-            <div class="stat-card danger stagger-item">
-                <div class="stat-icon">⏳</div>
-                <div class="stat-value" id="pendingCount">0</div>
-                <div class="stat-label">قيد المراجعة</div>
-            </div>
-        </div>
-
-        <!-- Sections Stats Grid -->
-        <div class="stats-grid" style="margin-top: 30px;">
-            <div class="stat-card primary stagger-item" onclick="location.href='/pages/sections-manage.html'" style="cursor: pointer;">
-                <div class="stat-icon">🏫</div>
-                <div class="stat-value" id="sectionsGradesCount">0</div>
-                <div class="stat-label">الصفوف الدراسية</div>
-            </div>
-            
-            <div class="stat-card info stagger-item" onclick="location.href='/pages/sections-manage.html'" style="cursor: pointer;">
-                <div class="stat-icon">📘</div>
-                <div class="stat-value" id="sectionsSectionsCount">0</div>
-                <div class="stat-label">الشُعب</div>
-            </div>
-            
-            <div class="stat-card success stagger-item" onclick="location.href='/pages/sections-dashboard.html'" style="cursor: pointer;">
-                <div class="stat-icon">👨‍🎓</div>
-                <div class="stat-value" id="sectionsStudentsCount">0</div>
-                <div class="stat-label">الطلاب المسجلون</div>
-            </div>
-            
-            <div class="stat-card warning stagger-item" onclick="location.href='/pages/sections-dashboard.html'" style="cursor: pointer;">
-                <div class="stat-icon">✅</div>
-                <div class="stat-value" id="sectionsJoinedCount">0</div>
-                <div class="stat-label">انضموا للقروبات</div>
-            </div>
-        </div>
-
-        <!-- Recent Projects -->
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">📚 المشاريع الحديثة</h3>
-            </div>
-            <div class="card-body" id="recentProjects">
-                <div class="text-center" style="padding: 40px;">
-                    <div class="spinner" style="margin: 0 auto;"></div>
-                    <p class="mt-2 text-muted">جاري التحميل...</p>
+        <!-- Main Dashboard Cards -->
+        <div class="dashboard-cards">
+            <!-- 1. الصفوف والشعب -->
+            <div class="dashboard-card card-sections stagger-1" onclick="navigateToPage('/pages/sections-setup.html')">
+                <div class="card-icon-wrapper">
+                    <div class="card-icon">📚</div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">⚡ إجراءات سريعة</h3>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-6">
-                        <button class="btn btn-primary btn-block" onclick="createProject()">
-                            ➕ إنشاء مشروع جديد
-                        </button>
+                <div class="card-content">
+                    <h3 class="card-title">الصفوف والشعب</h3>
+                    <div class="card-divider"></div>
+                    <div class="card-stats">
+                        <div class="stat-item">
+                            <span class="stat-icon">📊</span>
+                            <span class="stat-text"><span id="gradesCount" class="counter">0</span> صف</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-icon">👥</span>
+                            <span class="stat-text"><span id="sectionsCount" class="counter">0</span> شعبة</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-icon">🎓</span>
+                            <span class="stat-text"><span id="totalStudents" class="counter">0</span> طالب</span>
+                        </div>
                     </div>
-                    <div class="col-6">
-                        <button class="btn btn-success btn-block" onclick="viewSubmissions()">
-                            📥 عرض التسليمات
-                        </button>
+                    <div class="card-action">
+                        <span>إدارة</span>
+                        <span class="arrow">→</span>
                     </div>
                 </div>
+                <div class="card-glow"></div>
+            </div>
+
+            <!-- 2. إضافة الطلاب -->
+            <div class="dashboard-card card-students stagger-2" onclick="navigateToPage('/pages/add-students.html')">
+                <div class="card-icon-wrapper">
+                    <div class="card-icon">👥</div>
+                    <span class="card-badge">جديد</span>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">إضافة الطلاب</h3>
+                    <div class="card-divider"></div>
+                    <div class="card-features">
+                        <div class="feature-item">
+                            <span>➕</span>
+                            <span>يدوي أو Excel</span>
+                        </div>
+                        <div class="feature-item">
+                            <span>⚡</span>
+                            <span>سريع وسهل</span>
+                        </div>
+                        <div class="feature-item">
+                            <span>📊</span>
+                            <span>معاينة فورية</span>
+                        </div>
+                    </div>
+                    <div class="card-action">
+                        <span>إضافة جديد</span>
+                        <span class="arrow">+</span>
+                    </div>
+                </div>
+                <div class="card-glow"></div>
+            </div>
+
+            <!-- 3. إضافة مشروع -->
+            <div class="dashboard-card card-project stagger-3" onclick="navigateToPage('/pages/create-project.html')">
+                <div class="card-icon-wrapper">
+                    <div class="card-icon">📝</div>
+                    <span class="card-badge popular">شائع</span>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">إضافة مشروع جديد</h3>
+                    <div class="card-divider"></div>
+                    <div class="card-features">
+                        <div class="feature-item">
+                            <span>🎯</span>
+                            <span>تحديد المتطلبات</span>
+                        </div>
+                        <div class="feature-item">
+                            <span>📅</span>
+                            <span>تحديد الموعد</span>
+                        </div>
+                        <div class="feature-item">
+                            <span>🔗</span>
+                            <span>رابط التسليم</span>
+                        </div>
+                    </div>
+                    <div class="card-action">
+                        <span>إنشاء مشروع</span>
+                        <span class="arrow">+</span>
+                    </div>
+                </div>
+                <div class="card-glow"></div>
+            </div>
+
+            <!-- 4. التسليمات -->
+            <div class="dashboard-card card-submissions stagger-4" onclick="navigateToPage('/pages/submissions.html')">
+                <div class="card-icon-wrapper">
+                    <div class="card-icon">📤</div>
+                    <span class="card-badge new pulse" id="newSubmissionsBadge">0</span>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">التسليمات</h3>
+                    <div class="card-divider"></div>
+                    <div class="card-stats">
+                        <div class="stat-item">
+                            <span class="stat-icon new-badge">🆕</span>
+                            <span class="stat-text"><span id="newSubmissions" class="counter">0</span> جديد</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-icon">⏳</span>
+                            <span class="stat-text"><span id="pendingSubmissions" class="counter">0</span> قيد المراجعة</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-icon">✅</span>
+                            <span class="stat-text"><span id="completedSubmissions" class="counter">0</span> مكتمل</span>
+                        </div>
+                    </div>
+                    <div class="card-action">
+                        <span>عرض الكل</span>
+                        <span class="arrow">→</span>
+                    </div>
+                </div>
+                <div class="card-glow"></div>
+            </div>
+
+            <!-- 5. الإحصائيات -->
+            <div class="dashboard-card card-stats stagger-5" onclick="navigateToPage('/pages/statistics.html')">
+                <div class="card-icon-wrapper">
+                    <div class="card-icon">📊</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">الإحصائيات</h3>
+                    <div class="card-divider"></div>
+                    <div class="card-features">
+                        <div class="feature-item">
+                            <span>📈</span>
+                            <span>تقارير شاملة</span>
+                        </div>
+                        <div class="feature-item">
+                            <span>📉</span>
+                            <span>رسوم بيانية</span>
+                        </div>
+                        <div class="feature-item">
+                            <span>💹</span>
+                            <span>تحليل الأداء</span>
+                        </div>
+                    </div>
+                    <div class="card-action">
+                        <span>عرض الإحصائيات</span>
+                        <span class="arrow">→</span>
+                    </div>
+                </div>
+                <div class="card-glow"></div>
             </div>
         </div>
     </div>
@@ -258,6 +642,67 @@
             document.getElementById('userName').textContent = auth.getFirstName();
             document.getElementById('userAvatar').textContent = auth.getInitials();
             document.getElementById('teacherName').textContent = auth.getFirstName();
+        }
+
+        // ==================== New Dashboard Functions ====================
+        
+        // Navigate to page with smooth transition
+        function navigateToPage(url) {
+            // Add exit animation
+            document.querySelector('.dashboard-cards').style.opacity = '0';
+            document.querySelector('.dashboard-cards').style.transform = 'scale(0.95)';
+            
+            setTimeout(() => {
+                window.location.href = url;
+            }, 300);
+        }
+
+        // Update time display
+        function updateTime() {
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const timeElement = document.getElementById('currentTime');
+            if (timeElement) {
+                timeElement.textContent = `${hours}:${minutes}`;
+            }
+        }
+
+        // Animate counter
+        function animateCounter(element, target, duration = 1000) {
+            if (!element) return;
+            
+            const start = 0;
+            const increment = target / (duration / 16);
+            let current = start;
+            
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    element.textContent = target;
+                    clearInterval(timer);
+                } else {
+                    element.textContent = Math.floor(current);
+                }
+            }, 16);
+        }
+
+        // Update dashboard counters
+        function updateDashboardCounters(stats) {
+            animateCounter(document.getElementById('gradesCount'), stats.total_grades || 0);
+            animateCounter(document.getElementById('sectionsCount'), stats.total_sections || 0);
+            animateCounter(document.getElementById('totalStudents'), stats.total_students || 0);
+            animateCounter(document.getElementById('newSubmissions'), stats.new_submissions || 0);
+            animateCounter(document.getElementById('pendingSubmissions'), stats.pending_submissions || 0);
+            animateCounter(document.getElementById('completedSubmissions'), stats.completed_submissions || 0);
+            
+            // Update badge
+            const badge = document.getElementById('newSubmissionsBadge');
+            if (badge) {
+                const newCount = stats.new_submissions || 0;
+                badge.textContent = newCount;
+                badge.style.display = newCount > 0 ? 'block' : 'none';
+            }
         }
         
         // Toggle User Menu
@@ -318,38 +763,44 @@
                 const response = await sectionsAPI.getMyGrades();
                 const stats = response.stats || {};
                 
-                // Update sections stats
-                document.getElementById('sectionsGradesCount').textContent = stats.total_grades || 0;
-                document.getElementById('sectionsSectionsCount').textContent = stats.total_sections || 0;
-                document.getElementById('sectionsStudentsCount').textContent = stats.total_students || 0;
+                // Prepare stats object for dashboard
+                const dashboardStats = {
+                    total_grades: stats.total_grades || 0,
+                    total_sections: stats.total_sections || 0,
+                    total_students: stats.total_students || 0,
+                    new_submissions: 0, // Will be updated from projects
+                    pending_submissions: 0,
+                    completed_submissions: 0
+                };
                 
-                // Calculate joined count (سنحسبه من خلال جمع البيانات)
-                let totalJoined = 0;
-                if (response.grades && response.grades.length > 0) {
-                    for (const grade of response.grades) {
-                        // Get sections for this grade
-                        try {
-                            const sectionsData = await sectionsAPI.getGradeSections(grade.id);
-                            if (sectionsData.sections) {
-                                for (const section of sectionsData.sections) {
-                                    totalJoined += section.joined_count || 0;
-                                }
-                            }
-                        } catch (err) {
-                            console.error('Error loading grade sections:', err);
-                        }
+                // Calculate from projects
+                try {
+                    const projectsData = await api.getProjects();
+                    const projects = projectsData.projects || [];
+                    
+                    for (const project of projects) {
+                        dashboardStats.new_submissions += project.new_submissions || 0;
+                        dashboardStats.pending_submissions += project.pending_submissions || 0;
+                        dashboardStats.completed_submissions += project.completed_submissions || 0;
                     }
+                } catch (err) {
+                    console.error('Error loading projects for stats:', err);
                 }
                 
-                document.getElementById('sectionsJoinedCount').textContent = totalJoined;
+                // Update dashboard counters with animation
+                updateDashboardCounters(dashboardStats);
                 
             } catch (error) {
                 console.error('Error loading sections stats:', error);
                 // Don't show error, just keep default values
-                document.getElementById('sectionsGradesCount').textContent = '0';
-                document.getElementById('sectionsSectionsCount').textContent = '0';
-                document.getElementById('sectionsStudentsCount').textContent = '0';
-                document.getElementById('sectionsJoinedCount').textContent = '0';
+                updateDashboardCounters({
+                    total_grades: 0,
+                    total_sections: 0,
+                    total_students: 0,
+                    new_submissions: 0,
+                    pending_submissions: 0,
+                    completed_submissions: 0
+                });
             }
         }
         
@@ -455,6 +906,10 @@
         document.addEventListener('DOMContentLoaded', () => {
             App.updateUserUI();
             loadDashboard();
+            
+            // Update time every minute
+            updateTime();
+            setInterval(updateTime, 60000);
         });
     </script>
 
