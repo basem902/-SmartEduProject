@@ -117,7 +117,7 @@ def create_test_data():
         print(f"   {'✅' if created else 'ℹ️'} {sec_data['grade'].display_name} - شعبة {sec_data['name']}")
     print()
     
-    # 5. قروبات التليجرام
+    # 4. قروبات التليجرام
     print("📱 إنشاء قروبات تليجرام...")
     telegram_groups = []
     
@@ -126,25 +126,25 @@ def create_test_data():
         {
             'section': sections[0],
             'name': 'قروب الأول الثانوي 1/1',
-            'chat_id': '-1001234567890',  # استبدل بمعرف قروبك
+            'chat_id': -1001234567890,  # استبدل بمعرف قروبك
             'invite_link': 'https://t.me/+test_group_1'
         },
         {
             'section': sections[1],
             'name': 'قروب الأول الثانوي 1/2',
-            'chat_id': '-1001234567891',
+            'chat_id': -1001234567891,
             'invite_link': 'https://t.me/+test_group_2'
         },
         {
             'section': sections[2],
             'name': 'قروب الثاني الثانوي 2/1',
-            'chat_id': '-1001234567892',
+            'chat_id': -1001234567892,
             'invite_link': 'https://t.me/+test_group_3'
         },
         {
             'section': sections[3],
             'name': 'قروب الثالث الثانوي 3/1',
-            'chat_id': '-1001234567893',
+            'chat_id': -1001234567893,
             'invite_link': 'https://t.me/+test_group_4'
         },
     ]
@@ -154,9 +154,12 @@ def create_test_data():
             section=group_data['section'],
             defaults={
                 'group_name': group_data['name'],
-                'telegram_chat_id': group_data['chat_id'],
+                'chat_id': group_data['chat_id'],
                 'invite_link': group_data['invite_link'],
-                'is_active': True
+                'created_by_phone': teacher.phone,
+                'status': 'created',
+                'is_bot_added': False,
+                'is_bot_admin': False
             }
         )
         telegram_groups.append(group)
