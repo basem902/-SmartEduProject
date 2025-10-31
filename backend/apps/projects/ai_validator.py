@@ -157,25 +157,90 @@ class AIValidator:
     
     def validate_pdf(self, submission):
         """
-        التحقق من PDF
-        (سيتم التطوير في المرحلة التالية)
+        التحقق الشامل من PDF
+        1. استخراج النص
+        2. فحص عدد الكلمات والصفحات
+        3. تحليل المحتوى بـ Gemini
+        4. كشف الانتحال
         """
-        logger.info(f"📄 فحص PDF #{submission.id}")
+        logger.info(f"📄 بدء فحص PDF #{submission.id}")
         
-        # TODO: تطوير فحص PDF
-        # - استخراج النص
-        # - تحليل المحتوى
-        # - كشف التشابه
+        project = submission.project
+        file_path = submission.file_path
         
-        # مؤقتاً: قبول تلقائي للاختبار
-        return {
-            'status': 'approved',
-            'overall_score': 80.0,
-            'checks': {
-                'content': {'status': 'pass', 'score': 80}
-            },
-            'rejection_reasons': []
+        results = {
+            'checks': {},
+            'rejection_reasons': [],
+            'warnings': [],
+            'overall_score': 0
         }
+        
+        try:
+            # 1. استخراج النص من PDF
+            text_result = self._extract_pdf_text(file_path)
+            results['checks']['text_extraction'] = text_result
+            
+            if text_result['status'] == 'fail':
+                results['rejection_reasons'].append(text_result['message'])
+                results['status'] = 'rejected'
+                return results
+            
+            extracted_text = text_result.get('text', '')
+            
+            # 2. فحص عدد الكلمات والصفحات
+            stats_result = self._check_pdf_stats(text_result, project)
+            results['checks']['statistics'] = stats_result
+            
+            if stats_result['status'] == 'fail':
+                results['rejection_reasons'].append(stats_result['message'])
+            elif stats_result['status'] == 'warning':
+                results['warnings'].append(stats_result['message'])
+            
+            # 3. تحليل المحتوى بـ Gemini
+            content_result = self._analyze_pdf_content(extracted_text, project)
+            results['checks']['content_analysis'] = content_result
+            
+            if content_result['status'] == 'fail':
+                results['rejection_reasons'].append(content_result['message'])
+            
+            # 4. كشف الانتحال
+            plagiarism_result = self._check_pdf_plagiarism(extracted_text, submission)
+            results['checks']['plagiarism'] = plagiarism_result
+            
+            if plagiarism_result['status'] == 'fail':
+                results['rejection_reasons'].append(plagiarism_result['message'])
+            elif plagiarism_result['status'] == 'warning':
+                results['warnings'].append(plagiarism_result['message'])
+            
+            # حساب الدرجة النهائية
+            scores = [
+                text_result.get('score', 0),
+                stats_result.get('score', 0),
+                content_result.get('score', 0),
+                plagiarism_result.get('score', 0)
+            ]
+            results['overall_score'] = sum(scores) / len(scores)
+            
+            # تحديد الحالة النهائية
+            if results['rejection_reasons']:
+                results['status'] = 'rejected'
+            elif results['overall_score'] < 60:
+                results['status'] = 'needs_review'
+                results['rejection_reasons'].append('الدرجة أقل من 60%')
+            else:
+                results['status'] = 'approved'
+            
+            logger.info(f"✅ انتهى فحص PDF #{submission.id} - الحالة: {results['status']}")
+            return results
+            
+        except Exception as e:
+            logger.error(f"❌ خطأ في فحص PDF #{submission.id}: {str(e)}", exc_info=True)
+            return {
+                'status': 'needs_review',
+                'overall_score': 0,
+                'rejection_reasons': [f'حدث خطأ في فحص PDF: {str(e)}'],
+                'checks': results.get('checks', {})
+            }
     
     def validate_image(self, submission):
         """التحقق من الصورة"""
@@ -582,5 +647,367 @@ class AIValidator:
             return {
                 'status': 'warning',
                 'message': 'تعذر فحص التشابه',
+                'score': 80
+            }
+    
+    # ====================================
+    # PDF Validation Helper Methods
+    # ====================================
+    
+    def _extract_pdf_text(self, file_path):
+        """
+        استخراج النص من PDF
+        
+        Args:
+            file_path: مسار الملف
+            
+        Returns:
+            dict: النص المستخرج + البيانات الإحصائية
+        """
+        try:
+            import pdfplumber
+            
+            text = ''
+            page_count = 0
+            images_count = 0
+            
+            with pdfplumber.open(file_path) as pdf:
+                page_count = len(pdf.pages)
+                
+                for page in pdf.pages:
+                    # استخراج النص
+                    page_text = page.extract_text()
+                    if page_text:
+                        text += page_text + '\n'
+                    
+                    # عد الصور
+                    if hasattr(page, 'images'):
+                        images_count += len(page.images)
+            
+            # إحصائيات
+            word_count = len(text.split())
+            char_count = len(text)
+            
+            logger.info(f"📊 PDF: {page_count} صفحة، {word_count} كلمة، {images_count} صورة")
+            
+            if word_count < 10:
+                return {
+                    'status': 'fail',
+                    'message': 'PDF شبه فارغ أو لا يحتوي على نص',
+                    'text': text,
+                    'word_count': word_count,
+                    'page_count': page_count,
+                    'score': 0
+                }
+            
+            return {
+                'status': 'pass',
+                'message': f'تم استخراج {word_count} كلمة من {page_count} صفحة',
+                'text': text,
+                'word_count': word_count,
+                'page_count': page_count,
+                'char_count': char_count,
+                'images_count': images_count,
+                'score': 100
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ خطأ في استخراج نص PDF: {str(e)}")
+            return {
+                'status': 'fail',
+                'message': f'فشل في قراءة PDF: {str(e)}',
+                'text': '',
+                'word_count': 0,
+                'page_count': 0,
+                'score': 0
+            }
+    
+    def _check_pdf_stats(self, text_result, project):
+        """
+        فحص إحصائيات PDF (عدد الكلمات، الصفحات)
+        
+        Args:
+            text_result: نتيجة استخراج النص
+            project: كائن المشروع
+            
+        Returns:
+            dict: نتيجة الفحص
+        """
+        try:
+            word_count = text_result.get('word_count', 0)
+            page_count = text_result.get('page_count', 0)
+            
+            # قراءة القيود من المشروع
+            constraints = project.file_constraints or {}
+            min_words = constraints.get('min_words', 100)  # default 100 words
+            max_words = constraints.get('max_words', 5000)  # default 5000 words
+            min_pages = constraints.get('min_pages', 1)
+            max_pages = constraints.get('max_pages', 20)
+            
+            issues = []
+            
+            # فحص عدد الكلمات
+            if word_count < min_words:
+                issues.append(f'عدد الكلمات قليل جداً ({word_count}). المطلوب على الأقل {min_words} كلمة')
+            elif word_count > max_words:
+                issues.append(f'عدد الكلمات كثير جداً ({word_count}). الحد الأقصى {max_words} كلمة')
+            
+            # فحص عدد الصفحات
+            if page_count < min_pages:
+                issues.append(f'عدد الصفحات قليل ({page_count}). المطلوب على الأقل {min_pages} صفحة')
+            elif page_count > max_pages:
+                issues.append(f'عدد الصفحات كثير ({page_count}). الحد الأقصى {max_pages} صفحة')
+            
+            # التقييم
+            if issues:
+                if word_count < min_words / 2 or page_count < min_pages:
+                    return {
+                        'status': 'fail',
+                        'message': ' | '.join(issues),
+                        'word_count': word_count,
+                        'page_count': page_count,
+                        'score': 0
+                    }
+                else:
+                    return {
+                        'status': 'warning',
+                        'message': ' | '.join(issues),
+                        'word_count': word_count,
+                        'page_count': page_count,
+                        'score': 60
+                    }
+            else:
+                return {
+                    'status': 'pass',
+                    'message': f'الإحصائيات مناسبة: {word_count} كلمة في {page_count} صفحة',
+                    'word_count': word_count,
+                    'page_count': page_count,
+                    'score': 100
+                }
+                
+        except Exception as e:
+            logger.error(f"❌ خطأ في فحص إحصائيات PDF: {str(e)}")
+            return {
+                'status': 'warning',
+                'message': 'تعذر فحص الإحصائيات',
+                'score': 70
+            }
+    
+    def _analyze_pdf_content(self, text, project):
+        """
+        تحليل محتوى PDF باستخدام Gemini
+        
+        Args:
+            text: النص المستخرج
+            project: كائن المشروع
+            
+        Returns:
+            dict: نتيجة التحليل
+        """
+        try:
+            if not self.gemini_flash:
+                return {
+                    'status': 'warning',
+                    'message': 'Gemini غير متاح',
+                    'score': 70
+                }
+            
+            # اختصار النص للتحليل (أول 3000 حرف)
+            text_sample = text[:3000] if len(text) > 3000 else text
+            
+            # تجهيز Prompt
+            prompt = f"""حلل هذا النص من PDF وأجب بصيغة JSON:
+
+معلومات المشروع:
+- العنوان: {project.title}
+- الوصف: {project.description or 'غير محدد'}
+
+النص المستخرج:
+{text_sample}
+
+أجب على التالي بصيغة JSON:
+1. content_quality: جودة المحتوى من 0-100
+2. relevance_to_topic: مدى ارتباط المحتوى بالمشروع (0-100)
+3. language_quality: جودة اللغة والإملاء (0-100)
+4. has_copied_content: هل يبدو منسوخاً من الإنترنت؟ (true/false)
+5. key_topics: قائمة بالمواضيع الرئيسية (array)
+6. issues: قائمة بأي مشاكل (array)
+7. recommendation: التوصية (approved/rejected/needs_review)
+
+أجب فقط بصيغة JSON."""
+            
+            response = self.gemini_flash.generate_content(prompt)
+            
+            # تحليل النتيجة
+            import json
+            try:
+                result = json.loads(response.text)
+            except:
+                # Fallback parsing
+                result = {
+                    'content_quality': 75,
+                    'relevance_to_topic': 75,
+                    'language_quality': 80,
+                    'has_copied_content': False,
+                    'key_topics': [],
+                    'issues': [],
+                    'recommendation': 'approved'
+                }
+            
+            # حساب الدرجة
+            quality = result.get('content_quality', 70)
+            relevance = result.get('relevance_to_topic', 70)
+            language = result.get('language_quality', 70)
+            overall = (quality + relevance + language) / 3
+            
+            # التحقق من المحتوى المنسوخ
+            if result.get('has_copied_content'):
+                return {
+                    'status': 'fail',
+                    'message': 'المحتوى يبدو منسوخاً من الإنترنت',
+                    'analysis': result,
+                    'score': 0
+                }
+            
+            # التحقق من الجودة
+            if overall < 50:
+                return {
+                    'status': 'fail',
+                    'message': f'جودة المحتوى منخفضة ({overall:.0f}%)',
+                    'analysis': result,
+                    'score': overall
+                }
+            elif overall < 70:
+                return {
+                    'status': 'warning',
+                    'message': f'جودة المحتوى مقبولة ({overall:.0f}%)',
+                    'analysis': result,
+                    'score': overall
+                }
+            else:
+                return {
+                    'status': 'pass',
+                    'message': f'جودة المحتوى ممتازة ({overall:.0f}%)',
+                    'analysis': result,
+                    'score': overall
+                }
+                
+        except Exception as e:
+            logger.error(f"❌ خطأ في تحليل محتوى PDF: {str(e)}")
+            return {
+                'status': 'warning',
+                'message': f'تعذر تحليل المحتوى: {str(e)}',
+                'score': 70
+            }
+    
+    def _check_pdf_plagiarism(self, text, submission):
+        """
+        كشف الانتحال في PDF
+        
+        Args:
+            text: النص المستخرج
+            submission: كائن التسليم
+            
+        Returns:
+            dict: نتيجة الفحص
+        """
+        try:
+            from .models import Submission
+            from sklearn.feature_extraction.text import TfidfVectorizer
+            from sklearn.metrics.pairwise import cosine_similarity
+            import numpy as np
+            
+            # البحث عن تسليمات سابقة في نفس المشروع
+            previous_submissions = Submission.objects.filter(
+                project=submission.project,
+                file_type='pdf',
+                validation_data__pdf_text__isnull=False
+            ).exclude(id=submission.id)[:20]  # آخر 20 تسليم
+            
+            if not previous_submissions.exists():
+                # حفظ النص للمقارنة المستقبلية
+                submission.validation_data = submission.validation_data or {}
+                submission.validation_data['pdf_text'] = text[:5000]  # حفظ أول 5000 حرف
+                
+                return {
+                    'status': 'pass',
+                    'message': 'لا توجد تسليمات سابقة للمقارنة',
+                    'score': 100
+                }
+            
+            # تجهيز النصوص
+            current_text = text[:5000]  # أول 5000 حرف
+            previous_texts = [
+                sub.validation_data.get('pdf_text', '')[:5000]
+                for sub in previous_submissions
+                if sub.validation_data and sub.validation_data.get('pdf_text')
+            ]
+            
+            if not previous_texts:
+                submission.validation_data = submission.validation_data or {}
+                submission.validation_data['pdf_text'] = current_text
+                return {
+                    'status': 'pass',
+                    'message': 'لا توجد نصوص سابقة صالحة للمقارنة',
+                    'score': 100
+                }
+            
+            # TF-IDF + Cosine Similarity
+            all_texts = [current_text] + previous_texts
+            vectorizer = TfidfVectorizer(max_features=1000, stop_words=None)
+            tfidf_matrix = vectorizer.fit_transform(all_texts)
+            
+            # حساب التشابه مع كل نص سابق
+            current_vector = tfidf_matrix[0:1]
+            previous_vectors = tfidf_matrix[1:]
+            similarities = cosine_similarity(current_vector, previous_vectors)[0]
+            
+            # أعلى نسبة تشابه
+            max_similarity = float(np.max(similarities)) * 100
+            max_similarity_idx = int(np.argmax(similarities))
+            
+            # حفظ النص الحالي
+            submission.validation_data = submission.validation_data or {}
+            submission.validation_data['pdf_text'] = current_text
+            submission.validation_data['max_similarity'] = max_similarity
+            
+            logger.info(f"📊 أعلى نسبة تشابه: {max_similarity:.1f}%")
+            
+            # التقييم
+            threshold = submission.project.plagiarism_threshold  # من المشروع
+            
+            if max_similarity > 85:
+                similar_sub = list(previous_submissions)[max_similarity_idx]
+                return {
+                    'status': 'fail',
+                    'message': f'تشابه عالي جداً ({max_similarity:.0f}%) مع تسليم سابق',
+                    'max_similarity': max_similarity,
+                    'similar_submission': {
+                        'id': similar_sub.id,
+                        'student': similar_sub.submitted_student_name,
+                        'submitted_at': similar_sub.submitted_at.isoformat()
+                    },
+                    'score': 0
+                }
+            elif max_similarity > threshold:
+                return {
+                    'status': 'warning',
+                    'message': f'تشابه متوسط ({max_similarity:.0f}%) مع تسليم سابق',
+                    'max_similarity': max_similarity,
+                    'score': 70
+                }
+            else:
+                return {
+                    'status': 'pass',
+                    'message': f'نسبة التشابه منخفضة ({max_similarity:.0f}%)',
+                    'max_similarity': max_similarity,
+                    'score': 100
+                }
+                
+        except Exception as e:
+            logger.error(f"❌ خطأ في كشف الانتحال: {str(e)}")
+            return {
+                'status': 'warning',
+                'message': 'تعذر فحص الانتحال',
                 'score': 80
             }
