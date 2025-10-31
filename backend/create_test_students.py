@@ -251,7 +251,18 @@ def create_test_data():
     ]
     
     created_students = []
-    from apps.projects.utils import normalize_arabic_name
+    
+    # دالة تطبيع الأسماء (مبسطة)
+    def normalize_arabic_name(name):
+        """تطبيع الأسماء العربية"""
+        import re
+        # إزالة المسافات الزائدة
+        name = ' '.join(name.split())
+        # توحيد الهمزات
+        name = re.sub('[إأآا]', 'ا', name)
+        name = re.sub('ى', 'ي', name)
+        name = re.sub('ة', 'ه', name)
+        return name.strip().lower()
     
     for student_data in students_data:
         student, created = StudentRegistration.objects.get_or_create(
