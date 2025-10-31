@@ -339,21 +339,12 @@ def create_test_data():
         else:
             print(f"ℹ️ المشروع التجريبي موجود مسبقاً (ID: {project.id})")
         
-        # إنشاء طالب تجريبي
-        student, created = StudentRegistration.objects.get_or_create(
-            telegram_user_id=123456789,
-            defaults={
-                'full_name': 'طالب تجريبي',
-                'telegram_username': 'test_student'
-            }
-        )
-        
-        if created:
-            print(f"✅ تم إنشاء طالب تجريبي: {student.full_name}")
-        else:
-            print(f"ℹ️ الطالب التجريبي موجود مسبقاً")
-        
-        print(f"\n💡 يمكنك الآن رفع ملفات للمشروع ID: {project.id}")
+        print(f"\n💡 المشروع جاهز! يمكنك الآن رفع ملفات للمشروع ID: {project.id}")
+        print(f"📍 الرابط: http://localhost:8000/admin/projects/project/{project.id}/")
+        print(f"\n🎯 لاختبار النظام:")
+        print(f"   1. شغّل السيرفر: python manage.py runserver")
+        print(f"   2. ارفع ملفات من خلال الموقع")
+        print(f"   3. شاهد النتائج التلقائية!")
         
     except Exception as e:
         print(f"❌ خطأ: {str(e)}")
