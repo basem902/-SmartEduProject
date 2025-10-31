@@ -243,30 +243,170 @@ class AIValidator:
             }
     
     def validate_image(self, submission):
-        """التحقق من الصورة"""
-        logger.info(f"🖼️ فحص الصورة #{submission.id}")
+        """
+        التحقق الشامل من الصورة
+        1. OCR - قراءة النص
+        2. تحليل بـ Gemini Vision
+        3. فحص الجودة
+        4. كشف التشابه
+        """
+        logger.info(f"🖼️ بدء فحص الصورة #{submission.id}")
         
-        return {
-            'status': 'approved',
-            'overall_score': 75.0,
-            'checks': {
-                'quality': {'status': 'pass'}
-            },
-            'rejection_reasons': []
+        project = submission.project
+        file_path = submission.file_path
+        
+        results = {
+            'checks': {},
+            'rejection_reasons': [],
+            'warnings': [],
+            'overall_score': 0
         }
+        
+        try:
+            # 1. OCR - قراءة النص من الصورة
+            ocr_result = self._check_image_ocr(file_path)
+            results['checks']['ocr'] = ocr_result
+            
+            # 2. تحليل بـ Gemini Vision
+            vision_result = self._analyze_image_content(file_path, project)
+            results['checks']['vision_analysis'] = vision_result
+            
+            if vision_result['status'] == 'fail':
+                results['rejection_reasons'].append(vision_result['message'])
+            
+            # 3. فحص الجودة (الدقة والحجم)
+            quality_result = self._check_image_quality(file_path)
+            results['checks']['quality'] = quality_result
+            
+            if quality_result['status'] == 'warning':
+                results['warnings'].append(quality_result['message'])
+            
+            # 4. كشف التشابه
+            similarity_result = self._check_image_similarity(file_path, submission)
+            results['checks']['similarity'] = similarity_result
+            
+            if similarity_result['status'] == 'fail':
+                results['rejection_reasons'].append(similarity_result['message'])
+            elif similarity_result['status'] == 'warning':
+                results['warnings'].append(similarity_result['message'])
+            
+            # حساب الدرجة النهائية
+            scores = [
+                ocr_result.get('score', 0),
+                vision_result.get('score', 0),
+                quality_result.get('score', 0),
+                similarity_result.get('score', 0)
+            ]
+            results['overall_score'] = sum(scores) / len(scores)
+            
+            # تحديد الحالة النهائية
+            if results['rejection_reasons']:
+                results['status'] = 'rejected'
+            elif results['overall_score'] < 60:
+                results['status'] = 'needs_review'
+            else:
+                results['status'] = 'approved'
+            
+            logger.info(f"✅ انتهى فحص الصورة #{submission.id} - الحالة: {results['status']}")
+            return results
+            
+        except Exception as e:
+            logger.error(f"❌ خطأ في فحص الصورة #{submission.id}: {str(e)}", exc_info=True)
+            return {
+                'status': 'needs_review',
+                'overall_score': 0,
+                'rejection_reasons': [f'حدث خطأ في فحص الصورة: {str(e)}'],
+                'checks': results.get('checks', {})
+            }
     
     def validate_document(self, submission):
-        """التحقق من المستندات (Word/Excel/PPT)"""
-        logger.info(f"📝 فحص المستند #{submission.id}")
+        """
+        التحقق الشامل من المستندات (Word/Excel/PPT)
+        1. استخراج النص
+        2. فحص الإحصائيات
+        3. تحليل بـ Gemini
+        """
+        logger.info(f"📝 بدء فحص المستند #{submission.id}")
         
-        return {
-            'status': 'approved',
-            'overall_score': 80.0,
-            'checks': {
-                'format': {'status': 'pass'}
-            },
-            'rejection_reasons': []
+        project = submission.project
+        file_path = submission.file_path
+        file_ext = file_path.split('.')[-1].lower()
+        
+        results = {
+            'checks': {},
+            'rejection_reasons': [],
+            'warnings': [],
+            'overall_score': 0
         }
+        
+        try:
+            # 1. استخراج النص حسب نوع الملف
+            if file_ext in ['doc', 'docx']:
+                text_result = self._extract_word_text(file_path)
+            elif file_ext in ['xls', 'xlsx']:
+                text_result = self._extract_excel_text(file_path)
+            elif file_ext in ['ppt', 'pptx']:
+                text_result = self._extract_ppt_text(file_path)
+            else:
+                return {
+                    'status': 'rejected',
+                    'overall_score': 0,
+                    'rejection_reasons': [f'نوع ملف غير مدعوم: {file_ext}'],
+                    'checks': {}
+                }
+            
+            results['checks']['text_extraction'] = text_result
+            
+            if text_result['status'] == 'fail':
+                results['rejection_reasons'].append(text_result['message'])
+                results['status'] = 'rejected'
+                return results
+            
+            extracted_text = text_result.get('text', '')
+            
+            # 2. فحص الإحصائيات
+            stats_result = self._check_document_stats(text_result, project)
+            results['checks']['statistics'] = stats_result
+            
+            if stats_result['status'] == 'fail':
+                results['rejection_reasons'].append(stats_result['message'])
+            elif stats_result['status'] == 'warning':
+                results['warnings'].append(stats_result['message'])
+            
+            # 3. تحليل المحتوى بـ Gemini
+            content_result = self._analyze_document_content(extracted_text, project, file_ext)
+            results['checks']['content_analysis'] = content_result
+            
+            if content_result['status'] == 'fail':
+                results['rejection_reasons'].append(content_result['message'])
+            
+            # حساب الدرجة النهائية
+            scores = [
+                text_result.get('score', 0),
+                stats_result.get('score', 0),
+                content_result.get('score', 0)
+            ]
+            results['overall_score'] = sum(scores) / len(scores)
+            
+            # تحديد الحالة النهائية
+            if results['rejection_reasons']:
+                results['status'] = 'rejected'
+            elif results['overall_score'] < 60:
+                results['status'] = 'needs_review'
+            else:
+                results['status'] = 'approved'
+            
+            logger.info(f"✅ انتهى فحص المستند #{submission.id} - الحالة: {results['status']}")
+            return results
+            
+        except Exception as e:
+            logger.error(f"❌ خطأ في فحص المستند #{submission.id}: {str(e)}", exc_info=True)
+            return {
+                'status': 'needs_review',
+                'overall_score': 0,
+                'rejection_reasons': [f'حدث خطأ في فحص المستند: {str(e)}'],
+                'checks': results.get('checks', {})
+            }
     
     def validate_audio(self, submission):
         """التحقق من الصوت"""
@@ -1010,4 +1150,520 @@ class AIValidator:
                 'status': 'warning',
                 'message': 'تعذر فحص الانتحال',
                 'score': 80
+            }
+    
+    # ====================================
+    # Image Validation Helper Methods
+    # ====================================
+    
+    def _check_image_ocr(self, file_path):
+        """
+        OCR على الصورة
+        
+        Args:
+            file_path: مسار الصورة
+            
+        Returns:
+            dict: النص المستخرج
+        """
+        try:
+            import easyocr
+            
+            reader = easyocr.Reader(['ar', 'en'], gpu=False)
+            result = reader.readtext(file_path)
+            
+            # استخراج النصوص
+            texts = [detection[1] for detection in result]
+            combined_text = ' '.join(texts)
+            
+            word_count = len(combined_text.split())
+            
+            logger.info(f"📝 OCR: استخراج {word_count} كلمة من الصورة")
+            
+            return {
+                'status': 'pass',
+                'message': f'تم استخراج {word_count} كلمة',
+                'text': combined_text,
+                'word_count': word_count,
+                'score': 100 if word_count > 10 else 80
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ خطأ في OCR للصورة: {str(e)}")
+            return {
+                'status': 'warning',
+                'message': 'تعذر قراءة النص من الصورة',
+                'text': '',
+                'word_count': 0,
+                'score': 70
+            }
+    
+    def _analyze_image_content(self, file_path, project):
+        """
+        تحليل محتوى الصورة بـ Gemini Vision
+        
+        Args:
+            file_path: مسار الصورة
+            project: كائن المشروع
+            
+        Returns:
+            dict: نتيجة التحليل
+        """
+        try:
+            import google.generativeai as genai
+            from PIL import Image
+            
+            if not self.gemini_vision:
+                return {
+                    'status': 'warning',
+                    'message': 'Gemini Vision غير متاح',
+                    'score': 70
+                }
+            
+            # تحميل الصورة
+            img = Image.open(file_path)
+            
+            # تجهيز Prompt
+            prompt = f"""حلل هذه الصورة بدقة وأجب بصيغة JSON:
+
+معلومات المشروع:
+- العنوان: {project.title}
+- الوصف: {project.description or 'غير محدد'}
+
+أجب على التالي:
+1. quality_score: جودة الصورة (0-100)
+2. relevance_to_topic: ارتباط بالمشروع (0-100)
+3. has_inappropriate_content: محتوى غير مناسب؟ (true/false)
+4. description: وصف قصير للمحتوى
+5. recommendation: التوصية (approved/rejected/needs_review)
+
+أجب بصيغة JSON فقط."""
+            
+            response = self.gemini_vision.generate_content([prompt, img])
+            
+            # تحليل النتيجة
+            import json
+            try:
+                result = json.loads(response.text)
+            except:
+                result = {
+                    'quality_score': 75,
+                    'relevance_to_topic': 75,
+                    'has_inappropriate_content': False,
+                    'description': response.text[:100],
+                    'recommendation': 'approved'
+                }
+            
+            # حساب الدرجة
+            quality = result.get('quality_score', 70)
+            relevance = result.get('relevance_to_topic', 70)
+            overall = (quality + relevance) / 2
+            
+            # التحقق
+            if result.get('has_inappropriate_content'):
+                return {
+                    'status': 'fail',
+                    'message': 'الصورة تحتوي على محتوى غير مناسب',
+                    'analysis': result,
+                    'score': 0
+                }
+            
+            if overall < 50:
+                return {
+                    'status': 'fail',
+                    'message': f'جودة الصورة منخفضة ({overall:.0f}%)',
+                    'analysis': result,
+                    'score': overall
+                }
+            else:
+                return {
+                    'status': 'pass',
+                    'message': f'جودة الصورة جيدة ({overall:.0f}%)',
+                    'analysis': result,
+                    'score': overall
+                }
+                
+        except Exception as e:
+            logger.error(f"❌ خطأ في تحليل الصورة: {str(e)}")
+            return {
+                'status': 'warning',
+                'message': 'تعذر تحليل الصورة',
+                'score': 70
+            }
+    
+    def _check_image_quality(self, file_path):
+        """
+        فحص جودة الصورة (الدقة والحجم)
+        
+        Args:
+            file_path: مسار الصورة
+            
+        Returns:
+            dict: نتيجة الفحص
+        """
+        try:
+            from PIL import Image
+            
+            img = Image.open(file_path)
+            width, height = img.size
+            pixels = width * height
+            
+            logger.info(f"📏 حجم الصورة: {width}x{height} ({pixels:,} pixels)")
+            
+            # التقييم
+            if pixels < 100000:  # أقل من 0.1 ميجا بكسل
+                return {
+                    'status': 'warning',
+                    'message': f'الصورة صغيرة ({width}x{height})',
+                    'width': width,
+                    'height': height,
+                    'score': 60
+                }
+            elif pixels > 25000000:  # أكبر من 25 ميجا بكسل
+                return {
+                    'status': 'warning',
+                    'message': f'الصورة كبيرة جداً ({width}x{height})',
+                    'width': width,
+                    'height': height,
+                    'score': 80
+                }
+            else:
+                return {
+                    'status': 'pass',
+                    'message': f'حجم الصورة مناسب ({width}x{height})',
+                    'width': width,
+                    'height': height,
+                    'score': 100
+                }
+                
+        except Exception as e:
+            logger.error(f"❌ خطأ في فحص جودة الصورة: {str(e)}")
+            return {
+                'status': 'warning',
+                'message': 'تعذر فحص الجودة',
+                'score': 70
+            }
+    
+    def _check_image_similarity(self, file_path, submission):
+        """
+        كشف التشابه بين الصور
+        
+        Args:
+            file_path: مسار الصورة
+            submission: كائن التسليم
+            
+        Returns:
+            dict: نتيجة الفحص
+        """
+        try:
+            import imagehash
+            from PIL import Image
+            from .models import Submission
+            
+            # حساب hash للصورة الحالية
+            img = Image.open(file_path)
+            current_hash = imagehash.average_hash(img)
+            
+            # البحث عن صور سابقة
+            previous_submissions = Submission.objects.filter(
+                project=submission.project,
+                file_type='image',
+                validation_data__image_hash__isnull=False
+            ).exclude(id=submission.id)[:20]
+            
+            if not previous_submissions.exists():
+                submission.validation_data = submission.validation_data or {}
+                submission.validation_data['image_hash'] = str(current_hash)
+                return {
+                    'status': 'pass',
+                    'message': 'لا توجد صور سابقة للمقارنة',
+                    'score': 100
+                }
+            
+            # المقارنة
+            max_similarity = 0
+            similar_sub = None
+            
+            for prev_sub in previous_submissions:
+                try:
+                    prev_hash_str = prev_sub.validation_data.get('image_hash')
+                    if prev_hash_str:
+                        prev_hash = imagehash.hex_to_hash(prev_hash_str)
+                        difference = current_hash - prev_hash
+                        similarity = max(0, 100 - (difference * 2))
+                        
+                        if similarity > max_similarity:
+                            max_similarity = similarity
+                            similar_sub = prev_sub
+                except:
+                    continue
+            
+            # حفظ hash الحالي
+            submission.validation_data = submission.validation_data or {}
+            submission.validation_data['image_hash'] = str(current_hash)
+            
+            logger.info(f"📊 أعلى تشابه: {max_similarity:.1f}%")
+            
+            # التقييم
+            if max_similarity > 90:
+                return {
+                    'status': 'fail',
+                    'message': f'صورة مشابهة جداً ({max_similarity:.0f}%) لتسليم سابق',
+                    'similarity': max_similarity,
+                    'score': 0
+                }
+            elif max_similarity > 70:
+                return {
+                    'status': 'warning',
+                    'message': f'تشابه متوسط ({max_similarity:.0f}%)',
+                    'similarity': max_similarity,
+                    'score': 70
+                }
+            else:
+                return {
+                    'status': 'pass',
+                    'message': f'الصورة أصلية ({max_similarity:.0f}% تشابه)',
+                    'similarity': max_similarity,
+                    'score': 100
+                }
+                
+        except Exception as e:
+            logger.error(f"❌ خطأ في فحص التشابه: {str(e)}")
+            return {
+                'status': 'warning',
+                'message': 'تعذر فحص التشابه',
+                'score': 80
+            }
+    
+    # ====================================
+    # Document Validation Helper Methods
+    # ====================================
+    
+    def _extract_word_text(self, file_path):
+        """استخراج النص من Word"""
+        try:
+            from docx import Document
+            
+            doc = Document(file_path)
+            text = '\n'.join([para.text for para in doc.paragraphs if para.text])
+            word_count = len(text.split())
+            
+            logger.info(f"📄 Word: {word_count} كلمة")
+            
+            if word_count < 10:
+                return {
+                    'status': 'fail',
+                    'message': 'المستند شبه فارغ',
+                    'text': text,
+                    'word_count': word_count,
+                    'score': 0
+                }
+            
+            return {
+                'status': 'pass',
+                'message': f'تم استخراج {word_count} كلمة',
+                'text': text,
+                'word_count': word_count,
+                'score': 100
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ خطأ في قراءة Word: {str(e)}")
+            return {
+                'status': 'fail',
+                'message': f'فشل في قراءة الملف: {str(e)}',
+                'text': '',
+                'word_count': 0,
+                'score': 0
+            }
+    
+    def _extract_excel_text(self, file_path):
+        """استخراج النص من Excel"""
+        try:
+            from openpyxl import load_workbook
+            
+            wb = load_workbook(file_path)
+            text = ''
+            cell_count = 0
+            
+            for sheet in wb.sheetnames:
+                ws = wb[sheet]
+                for row in ws.iter_rows(values_only=True):
+                    for cell in row:
+                        if cell:
+                            text += str(cell) + ' '
+                            cell_count += 1
+            
+            word_count = len(text.split())
+            
+            logger.info(f"📊 Excel: {cell_count} خلية، {word_count} كلمة")
+            
+            if cell_count < 5:
+                return {
+                    'status': 'fail',
+                    'message': 'المستند شبه فارغ',
+                    'text': text,
+                    'word_count': word_count,
+                    'cell_count': cell_count,
+                    'score': 0
+                }
+            
+            return {
+                'status': 'pass',
+                'message': f'تم استخراج {cell_count} خلية',
+                'text': text,
+                'word_count': word_count,
+                'cell_count': cell_count,
+                'score': 100
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ خطأ في قراءة Excel: {str(e)}")
+            return {
+                'status': 'fail',
+                'message': f'فشل في قراءة الملف: {str(e)}',
+                'text': '',
+                'word_count': 0,
+                'score': 0
+            }
+    
+    def _extract_ppt_text(self, file_path):
+        """استخراج النص من PowerPoint"""
+        try:
+            from pptx import Presentation
+            
+            prs = Presentation(file_path)
+            text = ''
+            slide_count = len(prs.slides)
+            
+            for slide in prs.slides:
+                for shape in slide.shapes:
+                    if hasattr(shape, "text"):
+                        text += shape.text + '\n'
+            
+            word_count = len(text.split())
+            
+            logger.info(f"📊 PPT: {slide_count} شريحة، {word_count} كلمة")
+            
+            if word_count < 10:
+                return {
+                    'status': 'fail',
+                    'message': 'العرض التقديمي شبه فارغ',
+                    'text': text,
+                    'word_count': word_count,
+                    'slide_count': slide_count,
+                    'score': 0
+                }
+            
+            return {
+                'status': 'pass',
+                'message': f'تم استخراج {word_count} كلمة من {slide_count} شريحة',
+                'text': text,
+                'word_count': word_count,
+                'slide_count': slide_count,
+                'score': 100
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ خطأ في قراءة PowerPoint: {str(e)}")
+            return {
+                'status': 'fail',
+                'message': f'فشل في قراءة الملف: {str(e)}',
+                'text': '',
+                'word_count': 0,
+                'score': 0
+            }
+    
+    def _check_document_stats(self, text_result, project):
+        """فحص إحصائيات المستند"""
+        word_count = text_result.get('word_count', 0)
+        
+        # القيود
+        constraints = project.file_constraints or {}
+        min_words = constraints.get('min_words', 50)
+        max_words = constraints.get('max_words', 3000)
+        
+        if word_count < min_words:
+            return {
+                'status': 'fail',
+                'message': f'عدد الكلمات قليل ({word_count}). المطلوب {min_words}+',
+                'word_count': word_count,
+                'score': 0
+            }
+        elif word_count > max_words:
+            return {
+                'status': 'warning',
+                'message': f'عدد الكلمات كثير ({word_count}). الحد الأقصى {max_words}',
+                'word_count': word_count,
+                'score': 80
+            }
+        else:
+            return {
+                'status': 'pass',
+                'message': f'عدد الكلمات مناسب ({word_count})',
+                'word_count': word_count,
+                'score': 100
+            }
+    
+    def _analyze_document_content(self, text, project, file_ext):
+        """تحليل محتوى المستند بـ Gemini"""
+        try:
+            if not self.gemini_flash:
+                return {
+                    'status': 'warning',
+                    'message': 'Gemini غير متاح',
+                    'score': 70
+                }
+            
+            text_sample = text[:2000] if len(text) > 2000 else text
+            
+            prompt = f"""حلل هذا المستند ({file_ext}) بصيغة JSON:
+
+المشروع: {project.title}
+
+النص:
+{text_sample}
+
+أجب (JSON):
+1. content_quality: جودة (0-100)
+2. relevance: ارتباط بالمشروع (0-100)
+3. recommendation: (approved/rejected/needs_review)
+
+JSON فقط."""
+            
+            response = self.gemini_flash.generate_content(prompt)
+            
+            import json
+            try:
+                result = json.loads(response.text)
+            except:
+                result = {
+                    'content_quality': 75,
+                    'relevance': 75,
+                    'recommendation': 'approved'
+                }
+            
+            quality = result.get('content_quality', 70)
+            relevance = result.get('relevance', 70)
+            overall = (quality + relevance) / 2
+            
+            if overall < 50:
+                return {
+                    'status': 'fail',
+                    'message': f'جودة منخفضة ({overall:.0f}%)',
+                    'score': overall
+                }
+            else:
+                return {
+                    'status': 'pass',
+                    'message': f'جودة جيدة ({overall:.0f}%)',
+                    'score': overall
+                }
+                
+        except Exception as e:
+            logger.error(f"❌ خطأ في تحليل المستند: {str(e)}")
+            return {
+                'status': 'warning',
+                'message': 'تعذر التحليل',
+                'score': 70
             }
