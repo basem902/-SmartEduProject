@@ -20,10 +20,10 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=465
 
 # Telegram
-TELEGRAM_API_ID=26671326
-TELEGRAM_API_HASH=996fd0da7abec92881f41addceca3677
-TELEGRAM_BOT_TOKEN=7431625101:AAHinybqVQmZRSHN23VylqZZm_lJoi67_Wk
-TELEGRAM_BOT_USERNAME=SmartEduProjectBot
+TELEGRAM_API_ID=<your-api-id>
+TELEGRAM_API_HASH=<your-api-hash>
+TELEGRAM_BOT_TOKEN=<your-bot-token-here>
+TELEGRAM_BOT_USERNAME=YourBotUsername
 
 # Security
 OTP_SECRET_KEY=<generate-random-string>
@@ -165,10 +165,10 @@ openssl rand -base64 32
 ### المتغيرات المطلوبة:
 
 ```env
-TELEGRAM_API_ID=26671326
-TELEGRAM_API_HASH=996fd0da7abec92881f41addceca3677
-TELEGRAM_BOT_TOKEN=7431625101:AAHinybqVQmZRSHN23VylqZZm_lJoi67_Wk
-TELEGRAM_BOT_USERNAME=SmartEduProjectBot
+TELEGRAM_API_ID=<your-api-id>
+TELEGRAM_API_HASH=<your-api-hash>
+TELEGRAM_BOT_TOKEN=<your-bot-token>
+TELEGRAM_BOT_USERNAME=YourBotUsername
 OTP_SECRET_KEY=<same-as-backend>
 ```
 
@@ -280,7 +280,7 @@ CORS_ALLOWED_ORIGINS=https://smartedu-basem.netlify.app,https://yourdomain.com
 - TELEGRAM_BOT_TOKEN خاطئ أو قديم
 
 **الحل:**
-- تأكد من التوكن الجديد: `7431625101:AAHinybqVQmZRSHN23VylqZZm_lJoi67_Wk`
+- تأكد من التوكن الجديد الصحيح
 - أعد Deploy بعد التحديث
 
 ---
@@ -311,5 +311,4 @@ del TELEGRAM_CODE_SEARCH_GUIDE.md
 ---
 
 **آخر تحديث**: Nov 1, 2025  
-**التوكن الحالي**: 7431625101:AAHinybqVQmZRSHN23VylqZZm_lJoi67_Wk  
 **الحالة**: ✅ جاهز للتطبيق

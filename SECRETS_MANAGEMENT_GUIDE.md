@@ -92,7 +92,7 @@ Key: SECRET_KEY
 Value: <paste your secret key>
 
 Key: TELEGRAM_BOT_TOKEN
-Value: 7431625101:AAHinybqVQmZRSHN23VylqZZm_lJoi67_Wk
+Value: <your-bot-token-here>
 
 Key: DATABASE_URL
 Value: <auto-filled من Render Database>
@@ -187,9 +187,9 @@ ALLOWED_HOSTS=localhost,127.0.0.1
 DATABASE_URL=sqlite:///db.sqlite3
 
 # أضف باقي الأسرار هنا
-TELEGRAM_BOT_TOKEN=7431625101:AAHinybqVQmZRSHN23VylqZZm_lJoi67_Wk
-TELEGRAM_API_ID=26671326
-TELEGRAM_API_HASH=996fd0da7abec92881f41addceca3677
+TELEGRAM_BOT_TOKEN=<your-bot-token>
+TELEGRAM_API_ID=<your-api-id>
+TELEGRAM_API_HASH=<your-api-hash>
 # ... إلخ
 ```
 
