@@ -1110,6 +1110,11 @@ def telegram_session_login(request):
         import threading
         
         phone_number = request.data.get('phone_number')
+        force_sms_raw = request.data.get('force_sms', True)
+        if isinstance(force_sms_raw, bool):
+            force_sms = force_sms_raw
+        else:
+            force_sms = str(force_sms_raw).lower() in ('1', 'true', 'yes', 'y', 'on')
         
         if not phone_number:
             return Response({
@@ -1134,7 +1139,7 @@ def telegram_session_login(request):
                 asyncio.set_event_loop(loop)
             
             # بدء عملية تسجيل الدخول
-            result = loop.run_until_complete(session_manager.login_and_save_session(phone_number))
+            result = loop.run_until_complete(session_manager.login_and_save_session(phone_number, force_sms=force_sms))
             
             return Response(result, status=status.HTTP_200_OK)
             

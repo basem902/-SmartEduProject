@@ -7,11 +7,13 @@ from django.conf import settings
 
 try:
     from telethon import TelegramClient, errors
+    from telethon.tl import types as tl_types
     TELETHON_AVAILABLE = True
 except ImportError:
     TELETHON_AVAILABLE = False
     TelegramClient = None
     errors = None
+    tl_types = None
 
 
 class TelethonSessionManager:
@@ -28,7 +30,7 @@ class TelethonSessionManager:
         session_name = f"session_{clean_phone}"
         return os.path.join(self.sessions_dir, session_name)
     
-    async def login_and_save_session(self, phone_number):
+    async def login_and_save_session(self, phone_number, force_sms=True):
         """
         إرسال كود التحقق وحفظ client مؤقتاً
         """
@@ -106,10 +108,27 @@ class TelethonSessionManager:
                 print(f"🔄 Fresh client connected")
             
             # إرسال كود التحقق
-            print(f"📤 Sending code request to: {phone_number}")
+            print(f"📤 Sending code request to: {phone_number} | force_sms={force_sms}")
             try:
-                sent = await client.send_code_request(phone_number)
-                print(f"✅ Code sent! phone_code_hash: {sent.phone_code_hash[:10]}...")
+                if force_sms:
+                    sent = await client.send_code_request(phone_number, force_sms=True)
+                else:
+                    sent = await client.send_code_request(phone_number)
+                # Determine delivery type
+                delivery = 'unknown'
+                try:
+                    if tl_types is not None:
+                        if isinstance(sent.type, tl_types.auth.SentCodeTypeSms):
+                            delivery = 'sms'
+                        elif isinstance(sent.type, tl_types.auth.SentCodeTypeApp):
+                            delivery = 'app'
+                        elif isinstance(sent.type, tl_types.auth.SentCodeTypeCall):
+                            delivery = 'call'
+                        elif isinstance(sent.type, tl_types.auth.SentCodeTypeFlashCall):
+                            delivery = 'flash_call'
+                except Exception as _:
+                    pass
+                print(f"✅ Code sent! phone_code_hash: {str(sent.phone_code_hash)[:10]}... | delivery={delivery}")
             except errors.FloodWaitError as e:
                 print(f"❌ FloodWaitError: {e.seconds} seconds")
                 await client.disconnect()
@@ -140,7 +159,9 @@ class TelethonSessionManager:
             return {
                 'status': 'code_required',
                 'phone_code_hash': sent.phone_code_hash,
-                'message': 'تم إرسال كود التحقق إلى Telegram'
+                'message': 'تم إرسال كود التحقق',
+                'delivery': delivery if 'delivery' in locals() else 'unknown',
+                'force_sms': force_sms
             }
             
         except Exception as e:
