@@ -29,9 +29,31 @@ class StudentManagementSystem {
         
         console.log('✅ Token found:', token.substring(0, 20) + '...');
         
+        // Update teacher name
+        this.updateTeacherName();
+        
         this.setupEventListeners();
         this.loadGrades();
         this.applyTheme();
+    }
+
+    // ==================== Teacher Info ====================
+    
+    updateTeacherName() {
+        try {
+            const teacherData = localStorage.getItem('teacher');
+            if (teacherData) {
+                const teacher = JSON.parse(teacherData);
+                const teacherNameEl = document.getElementById('teacherName');
+                if (teacherNameEl && teacher.full_name) {
+                    const firstName = teacher.full_name.split(' ')[0];
+                    teacherNameEl.textContent = firstName;
+                    console.log('✅ Teacher name updated:', firstName);
+                }
+            }
+        } catch (error) {
+            console.error('❌ Error updating teacher name:', error);
+        }
     }
 
     // ==================== Event Listeners ====================
