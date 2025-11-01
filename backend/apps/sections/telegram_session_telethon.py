@@ -24,6 +24,14 @@ class TelethonSessionManager:
         self.sessions_dir = os.path.join(settings.BASE_DIR, 'sessions')
         os.makedirs(self.sessions_dir, exist_ok=True)
         self._active_clients = {}  # {phone: (client, phone_code_hash)}
+        self._loop = None  # نحفظ نفس الـ loop
+    
+    def _get_or_create_loop(self):
+        """الحصول على أو إنشاء event loop مخصص"""
+        import asyncio
+        if self._loop is None or self._loop.is_closed():
+            self._loop = asyncio.new_event_loop()
+        return self._loop
     
     def _get_session_path(self, phone_number):
         """الحصول على مسار session"""
@@ -343,17 +351,66 @@ class TelethonSessionManager:
     
     def delete_session(self, phone_number):
         """حذف session"""
+        import time
         session_path = self._get_session_path(phone_number)
         session_file = f"{session_path}.session"
+        journal_file = f"{session_path}.session-journal"
         
+        deleted = False
+        
+        # محاولة حذف session file
         if os.path.exists(session_file):
-            os.remove(session_file)
-            # حذف journal file أيضاً
-            journal_file = f"{session_path}.session-journal"
-            if os.path.exists(journal_file):
+            try:
+                os.remove(session_file)
+                deleted = True
+                print(f"✅ Deleted session file: {session_file}")
+            except PermissionError as e:
+                # الملف قيد الاستخدام، انتظر ثم حاول مرة أخرى
+                print(f"⚠️ File in use, waiting... {e}")
+                time.sleep(0.5)
+                try:
+                    os.remove(session_file)
+                    deleted = True
+                    print(f"✅ Deleted session file on retry: {session_file}")
+                except Exception as e2:
+                    print(f"❌ Failed to delete session file: {e2}")
+            except Exception as e:
+                print(f"❌ Error deleting session file: {e}")
+        
+        # حذف journal file
+        if os.path.exists(journal_file):
+            try:
                 os.remove(journal_file)
-            return True
-        return False
+                print(f"✅ Deleted journal file: {journal_file}")
+            except Exception as e:
+                print(f"⚠️ Could not delete journal file: {e}")
+        
+        return deleted or not os.path.exists(session_file)
+    
+    # ========== Sync Wrappers ==========
+    def login_and_save_session_sync(self, phone_number, force_sms=True):
+        """Synchronous wrapper لـ login_and_save_session"""
+        import asyncio
+        loop = self._get_or_create_loop()
+        return loop.run_until_complete(self.login_and_save_session(phone_number, force_sms))
+    
+    def verify_code_sync(self, phone_number, code, phone_code_hash):
+        """Synchronous wrapper لـ verify_code"""
+        import asyncio
+        loop = self._get_or_create_loop()
+        return loop.run_until_complete(self.verify_code(phone_number, code, phone_code_hash))
+    
+    def verify_password_sync(self, phone_number, password):
+        """Synchronous wrapper لـ verify_password"""
+        import asyncio
+        loop = self._get_or_create_loop()
+        return loop.run_until_complete(self.verify_password(phone_number, password))
+    
+    def resend_code_sync(self, phone_number):
+        """Synchronous wrapper لـ resend_code"""
+        import asyncio
+        loop = self._get_or_create_loop()
+        return loop.run_until_complete(self.resend_code(phone_number))
 
 
 # Singleton

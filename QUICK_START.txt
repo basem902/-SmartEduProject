@@ -58,11 +58,15 @@
 
 3. Environment Variables:
    
-   TELEGRAM_API_ID=26671326
-   TELEGRAM_API_HASH=996fd0da7abec92881f41addceca3677
-   TELEGRAM_BOT_TOKEN=7431625101:AAGR-rk1GbpdawfVCwBpTnnYGWu-aYVXTV4
-   TELEGRAM_BOT_USERNAME=SmartEduProjectBot
-   OTP_SECRET_KEY=sEcReT_2025_SmArTeDu_OtP_kEy_987654321
+   TELEGRAM_API_ID=your_api_id_here
+   TELEGRAM_API_HASH=your_api_hash_here
+   TELEGRAM_BOT_TOKEN=your_bot_token_here
+   TELEGRAM_BOT_USERNAME=YourBotUsername
+   OTP_SECRET_KEY=your_otp_secret_key_here
+   
+   ⚠️ Get your credentials from:
+   - https://my.telegram.org/apps (API ID/Hash)
+   - @BotFather on Telegram (Bot Token)
 
 4. Deploy!
 

@@ -88,12 +88,12 @@
 
     <!-- Section Detail Modal -->
     <div id="sectionModal" class="modal" style="display: none;">
-        <div class="modal-content" style="max-width: 800px;">
-            <div class="modal-header">
-                <h3 id="modalTitle">تفاصيل الشعبة</h3>
-                <button class="modal-close" onclick="closeSectionModal()">×</button>
+        <div class="modal-content" style="max-width: 900px; width: 95%; margin: 20px auto;">
+            <div class="modal-header" style="padding: 20px; border-bottom: 2px solid var(--border-color);">
+                <h3 id="modalTitle" style="margin: 0; font-size: 20px;">تفاصيل الشعبة</h3>
+                <button class="modal-close" onclick="closeSectionModal()" style="font-size: 32px; color: #999; background: none; border: none; cursor: pointer; padding: 0; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: all 0.3s;" onmouseover="this.style.background='rgba(0,0,0,0.05)'" onmouseout="this.style.background='none'">×</button>
             </div>
-            <div class="modal-body" id="modalBody">
+            <div class="modal-body" id="modalBody" style="padding: 20px;">
                 <!-- سيتم ملؤها ديناميكياً -->
             </div>
         </div>
@@ -365,9 +365,6 @@
                             <button class="btn btn-primary btn-icon" onclick="viewGradeSections(${grade.id})" title="عرض الشُعب">
                                 👁️ عرض
                             </button>
-                            <button class="btn" style="background: #0088cc; color: white;" onclick="openCreateTelegramGroupsModal(${grade.id}, '${grade.display_name}', '${grade.school_name}')" title="إنشاء قروبات تيليجرام">
-                                📱 تيليجرام
-                            </button>
                             <button class="btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;" onclick="openJoinLinkModal()" title="رابط تسجيل الطلاب">
                                 🔗 رابط الانضمام
                             </button>
@@ -422,15 +419,24 @@
             const modalTitle = document.getElementById('modalTitle');
             const modalBody = document.getElementById('modalBody');
 
-            modalTitle.textContent = `شُعب ${data.grade.display_name}`;
+            modalTitle.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 24px;">📚</span>
+                    <div>
+                        <div style="font-size: 18px; font-weight: bold;">${data.grade.display_name}</div>
+                        <div style="font-size: 14px; color: var(--text-secondary); font-weight: normal;">${data.grade.school_name}</div>
+                    </div>
+                </div>
+            `;
 
-            let html = '<div style="max-height: 500px; overflow-y: auto;">';
+            let html = '<div style="max-height: 70vh; overflow-y: auto; padding: 5px;">';
 
             if (data.sections.length === 0) {
                 html += `
-                    <div style="text-align: center; padding: 40px;">
-                        <div style="font-size: 60px; margin-bottom: 15px;">📭</div>
-                        <p style="color: var(--text-secondary);">لا توجد شُعب</p>
+                    <div style="text-align: center; padding: 60px 20px;">
+                        <div style="font-size: 80px; margin-bottom: 20px; opacity: 0.5;">📭</div>
+                        <h3 style="color: var(--text-secondary); margin: 0;">لا توجد شُعب</h3>
+                        <p style="color: var(--text-secondary); font-size: 14px; margin-top: 10px;">لم يتم إنشاء أي شعب بعد</p>
                     </div>
                 `;
             } else {
@@ -441,60 +447,61 @@
                         : 0;
 
                     html += `
-                        <div style="border: 2px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 15px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                                <h4 style="color: var(--primary-color); margin: 0;">
-                                    ${section.section_name}
-                                </h4>
-                                <span style="padding: 5px 15px; background: rgba(0, 173, 239, 0.1); color: var(--primary-color); border-radius: 20px; font-size: 12px;">
-                                    ${section.total_students} طالب
+                        <div style="background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                            <!-- Header -->
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 50px; height: 50px; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; font-weight: bold;">
+                                        ${section.section_name}
+                                    </div>
+                                    <div>
+                                        <h4 style="margin: 0; font-size: 20px; color: var(--text-primary);">
+                                            شعبة ${section.section_name}
+                                        </h4>
+                                        <p style="margin: 5px 0 0 0; font-size: 13px; color: var(--text-secondary);">
+                                            ${data.grade.subject || 'المادة'} - ${data.grade.display_name}
+                                        </p>
+                                    </div>
+                                </div>
+                                <span style="padding: 8px 18px; background: linear-gradient(135deg, rgba(0, 173, 239, 0.15), rgba(102, 126, 234, 0.15)); color: var(--primary-color); border-radius: 25px; font-size: 14px; font-weight: bold; white-space: nowrap;">
+                                    👥 ${section.total_students} طالب
                                 </span>
                             </div>
 
-                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px;">
-                                <div style="text-align: center; padding: 10px; background: var(--bg-color); border-radius: 8px;">
-                                    <div style="font-size: 18px; font-weight: bold; color: var(--text-primary);">
+                            <!-- Statistics -->
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 12px; margin-bottom: 20px;">
+                                <div style="text-align: center; padding: 15px; background: linear-gradient(135deg, #f8f9fa, #ffffff); border-radius: 12px; border: 2px solid #e9ecef;">
+                                    <div style="font-size: 28px; font-weight: bold; color: #495057; margin-bottom: 5px;">
                                         ${section.registrations_count || 0}
                                     </div>
-                                    <div style="font-size: 11px; color: var(--text-secondary);">المسجلون</div>
+                                    <div style="font-size: 12px; color: #6c757d; font-weight: 600;">المسجلون</div>
                                 </div>
-                                <div style="text-align: center; padding: 10px; background: var(--bg-color); border-radius: 8px;">
-                                    <div style="font-size: 18px; font-weight: bold; color: var(--success-color);">
+                                <div style="text-align: center; padding: 15px; background: linear-gradient(135deg, #d4edda, #ffffff); border-radius: 12px; border: 2px solid #c3e6cb;">
+                                    <div style="font-size: 28px; font-weight: bold; color: var(--success-color); margin-bottom: 5px;">
                                         ${section.joined_count || 0}
                                     </div>
-                                    <div style="font-size: 11px; color: var(--text-secondary);">المنضمون</div>
+                                    <div style="font-size: 12px; color: #155724; font-weight: 600;">المنضمون</div>
                                 </div>
-                                <div style="text-align: center; padding: 10px; background: var(--bg-color); border-radius: 8px;">
-                                    <div style="font-size: 18px; font-weight: bold; color: var(--primary-color);">
+                                <div style="text-align: center; padding: 15px; background: linear-gradient(135deg, #cfe2ff, #ffffff); border-radius: 12px; border: 2px solid #9ec5fe;">
+                                    <div style="font-size: 28px; font-weight: bold; color: var(--primary-color); margin-bottom: 5px;">
                                         ${joinRate}%
                                     </div>
-                                    <div style="font-size: 11px; color: var(--text-secondary);">النسبة</div>
+                                    <div style="font-size: 12px; color: #084298; font-weight: 600;">النسبة</div>
                                 </div>
                             </div>
 
-                            ${hasLink ? `
-                                <div style="display: none; background: rgba(0, 173, 239, 0.05); padding: 15px; border-radius: 8px; margin-bottom: 10px;">
-                                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">
-                                        رابط الانضمام:
-                                    </div>
-                                    <div style="display: flex; gap: 10px;">
-                                        <input type="text" value="${section.link.join_link}" 
-                                               style="flex: 1; padding: 8px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 12px;" 
-                                               readonly onclick="this.select()">
-                                        <button class="btn btn-primary" onclick="copyLink('${section.link.join_link}')" style="padding: 8px 15px;">
-                                            📋 نسخ
-                                        </button>
-                                    </div>
-                                </div>
-                            ` : ''}
-
-                            <div style="display: flex; gap: 10px; margin-top: 10px;">
-                                <button class="btn btn-primary" onclick="viewStudentsList(${section.id})" style="flex: 1;">
-                                    👥 الطلاب (${section.registrations_count || 0})
+                            <!-- Actions -->
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px;">
+                                <button class="btn btn-primary" onclick="viewStudentsList(${section.id})" 
+                                        style="padding: 12px; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 10px;">
+                                    <span style="font-size: 18px;">👥</span>
+                                    <span>الطلاب (${section.registrations_count || 0})</span>
                                 </button>
                                 ${hasLink ? `
-                                    <button class="btn btn-secondary" onclick="viewLinkStats(${section.id})" style="flex: 1;">
-                                        📈 الإحصائيات
+                                    <button class="btn btn-secondary" onclick="viewLinkStats(${section.id})" 
+                                            style="padding: 12px; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 10px;">
+                                        <span style="font-size: 18px;">📈</span>
+                                        <span>الإحصائيات</span>
                                     </button>
                                 ` : ''}
                             </div>
@@ -1079,6 +1086,78 @@
             animation: slideUp 0.5s ease-out;
             opacity: 0;
             animation-fill-mode: forwards;
+        }
+
+        /* Responsive Design for Mobile */
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 95% !important;
+                max-width: 95% !important;
+                margin: 10px auto !important;
+                max-height: 95vh;
+                overflow-y: auto;
+            }
+
+            .modal-header {
+                padding: 15px !important;
+                flex-wrap: wrap;
+            }
+
+            .modal-header h3 {
+                font-size: 16px !important;
+                line-height: 1.4;
+            }
+
+            .modal-body {
+                padding: 15px !important;
+            }
+
+            /* تحسين الأزرار على الموبايل */
+            .btn {
+                font-size: 13px !important;
+                padding: 10px !important;
+            }
+
+            /* تحسين البطاقات على الموبايل */
+            [style*="padding: 20px"] {
+                padding: 15px !important;
+            }
+
+            /* تحسين الـ Grid على الموبايل */
+            [style*="grid-template-columns"] {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* تحسين الأرقام الكبيرة */
+            [style*="font-size: 28px"] {
+                font-size: 24px !important;
+            }
+
+            /* تحسين العناوين */
+            [style*="font-size: 20px"] {
+                font-size: 18px !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .modal-header h3 {
+                font-size: 14px !important;
+            }
+
+            .btn {
+                font-size: 12px !important;
+                padding: 8px !important;
+            }
+
+            [style*="font-size: 24px"] {
+                font-size: 20px !important;
+            }
+
+            /* إخفاء بعض العناصر غير الضرورية على الشاشات الصغيرة جداً */
+            [style*="white-space: nowrap"] {
+                white-space: normal !important;
+                font-size: 12px !important;
+            }
         }
     </style>
 

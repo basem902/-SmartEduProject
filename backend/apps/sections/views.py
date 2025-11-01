@@ -784,7 +784,6 @@ def create_telegram_groups_client(request):
         
         # التحقق من وجود Session
         from .telegram_session_telethon import telethon_session_manager as session_manager
-        import asyncio
         
         session_exists = session_manager.is_session_exists(phone_number)
         
@@ -792,22 +791,8 @@ def create_telegram_groups_client(request):
             # إرسال كود التحقق
             logger.info(f"No session found for {phone_number}. Sending verification code...")
             
-            # استخدام sync_to_async أو subprocess للتعامل مع async
-            import asyncio
             try:
-                # محاولة استخدام loop موجود
-                loop = asyncio.get_event_loop()
-                if loop.is_running():
-                    import nest_asyncio
-                    nest_asyncio.apply()
-            except RuntimeError:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-            
-            try:
-                result = loop.run_until_complete(
-                    session_manager.login_and_save_session(phone_number)
-                )
+                result = session_manager.login_and_save_session_sync(phone_number)
                 logger.info(f"Session manager result: {result}")
             except Exception as e:
                 logger.error(f"Error in login_and_save_session: {e}")
@@ -972,20 +957,8 @@ def verify_telegram_code(request):
         
         # التحقق من الكود
         from .telegram_session_telethon import telethon_session_manager as session_manager
-        import asyncio
         
-        try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                import nest_asyncio
-                nest_asyncio.apply()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-        
-        result = loop.run_until_complete(
-            session_manager.verify_code(phone_number, code, phone_code_hash)
-        )
+        result = session_manager.verify_code_sync(phone_number, code, phone_code_hash)
         
         if result['status'] != 'success':
             return Response({
@@ -1129,7 +1102,6 @@ def telegram_session_login(request):
         
         # استخدام Telethon مباشرة
         if not use_fastapi:
-            import asyncio
             force_sms_raw = request.data.get('force_sms', True)
             if isinstance(force_sms_raw, bool):
                 force_sms = force_sms_raw
@@ -1146,15 +1118,8 @@ def telegram_session_login(request):
                         'message': 'حسابك مربوط مسبقاً!'
                     }, status=status.HTTP_200_OK)
                 
-                # إنشاء event loop جديد للـ thread الحالي
-                try:
-                    loop = asyncio.get_event_loop()
-                except RuntimeError:
-                    loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(loop)
-                
-                # بدء عملية تسجيل الدخول
-                result = loop.run_until_complete(session_manager.login_and_save_session(phone_number, force_sms=force_sms))
+                # بدء عملية تسجيل الدخول باستخدام sync wrapper
+                result = session_manager.login_and_save_session_sync(phone_number, force_sms=force_sms)
                 
                 return Response(result, status=status.HTTP_200_OK)
                 
@@ -1179,7 +1144,6 @@ def telegram_session_verify(request):
     """التحقق من كود تيليجرام وإكمال الربط"""
     try:
         from .telegram_session_telethon import telethon_session_manager as session_manager
-        import asyncio
         
         phone_number = request.data.get('phone_number')
         code = request.data.get('code')
@@ -1190,15 +1154,8 @@ def telegram_session_verify(request):
                 'error': 'جميع الحقول مطلوبة'
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        # استخدام نفس الـ loop أو إنشاء واحد جديد
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            # لا يوجد loop نشط - نستخدم الـ loop الرئيسي
-            loop = asyncio.get_event_loop()
-        
-        # تشغيل في الـ loop الحالي
-        result = loop.run_until_complete(session_manager.verify_code(phone_number, code, phone_code_hash))
+        # استخدام sync wrapper لتجنب مشاكل event loop
+        result = session_manager.verify_code_sync(phone_number, code, phone_code_hash)
         
         return Response(result, status=status.HTTP_200_OK)
         
@@ -1216,7 +1173,6 @@ def telegram_session_password(request):
     """التحقق من كلمة المرور للحسابات المحمية بالتحقق بخطوتين"""
     try:
         from .telegram_session_telethon import telethon_session_manager as session_manager
-        import asyncio
         
         phone_number = request.data.get('phone_number')
         password = request.data.get('password')
@@ -1226,14 +1182,8 @@ def telegram_session_password(request):
                 'error': 'رقم الهاتف وكلمة المرور مطلوبان'
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        # استخدام نفس الـ loop
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            loop = asyncio.get_event_loop()
-        
-        # التحقق من كلمة المرور
-        result = loop.run_until_complete(session_manager.verify_password(phone_number, password))
+        # استخدام sync wrapper لتجنب مشاكل event loop
+        result = session_manager.verify_password_sync(phone_number, password)
         
         return Response(result, status=status.HTTP_200_OK)
         
@@ -1251,19 +1201,13 @@ def telegram_session_resend(request):
     """إعادة إرسال كود تيليجرام (قد يحول لطريقة اتصال أخرى)"""
     try:
         from .telegram_session_telethon import telethon_session_manager as session_manager
-        import asyncio
         
         phone_number = request.data.get('phone_number')
         if not phone_number:
             return Response({'error': 'رقم الهاتف مطلوب'}, status=status.HTTP_400_BAD_REQUEST)
         
-        try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-        
-        result = loop.run_until_complete(session_manager.resend_code(phone_number))
+        # استخدام sync wrapper لتجنب مشاكل event loop
+        result = session_manager.resend_code_sync(phone_number)
         return Response(result, status=status.HTTP_200_OK)
     except Exception as e:
         logger.error(f"Error resending code: {e}")
@@ -1309,31 +1253,50 @@ def telegram_session_disconnect(request):
     try:
         from .telegram_session_telethon import telethon_session_manager as session_manager
         
-        phone_number = request.data.get('phone_number')
+        # قراءة phone_number من query params أو body
+        phone_number = request.data.get('phone_number') or request.query_params.get('phone_number')
         
         logger.info(f"Disconnect request received for phone: {phone_number}")
         logger.info(f"Request data: {request.data}")
+        logger.info(f"Query params: {request.query_params}")
         
         if not phone_number:
             logger.warning("Phone number not provided in request")
             return Response({
                 'error': 'رقم الهاتف مطلوب',
-                'details': 'phone_number field is required in request body'
+                'details': 'phone_number field is required in request body or query params'
             }, status=status.HTTP_400_BAD_REQUEST)
         
         # التحقق من وجود session قبل الحذف
-        exists = session_manager.is_session_exists(phone_number)
-        logger.info(f"Session exists for {phone_number}: {exists}")
+        try:
+            exists = session_manager.is_session_exists(phone_number)
+            logger.info(f"Session exists for {phone_number}: {exists}")
+        except Exception as check_error:
+            logger.error(f"Error checking session existence: {check_error}")
+            # حتى لو فشل الفحص، حاول الحذف
+            exists = True
         
         if not exists:
             logger.warning(f"No session found for phone: {phone_number}")
+            # نعتبرها نجاح لأن الهدف تحقق (لا يوجد session)
             return Response({
-                'error': 'لا يوجد حساب مربوط بهذا الرقم',
+                'success': True,
+                'message': 'لا يوجد حساب مربوط بهذا الرقم (تم بالفعل)',
                 'phone': phone_number
-            }, status=status.HTTP_404_NOT_FOUND)
+            }, status=status.HTTP_200_OK)
         
         # محاولة حذف الـ session
-        success = session_manager.delete_session(phone_number)
+        try:
+            success = session_manager.delete_session(phone_number)
+            logger.info(f"Delete session result for {phone_number}: {success}")
+        except Exception as delete_error:
+            logger.error(f"Error during session deletion: {delete_error}")
+            import traceback
+            logger.error(f"Delete traceback: {traceback.format_exc()}")
+            return Response({
+                'error': 'حدث خطأ أثناء حذف الملف',
+                'details': str(delete_error)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         if success:
             logger.info(f"Session deleted successfully for: {phone_number}")
@@ -1343,12 +1306,20 @@ def telegram_session_disconnect(request):
                 'phone': phone_number
             }, status=status.HTTP_200_OK)
         else:
-            logger.error(f"Failed to delete session for: {phone_number}")
+            # الملف غير موجود أو تم حذفه بالفعل
+            logger.warning(f"Session file not found for: {phone_number}")
             return Response({
-                'error': 'فشل في حذف الحساب',
-                'details': 'Session file deletion failed'
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                'success': True,
+                'message': 'تم فصل الحساب (الملف غير موجود)',
+                'phone': phone_number
+            }, status=status.HTTP_200_OK)
         
+    except ImportError as ie:
+        logger.error(f"Import error in disconnect: {ie}")
+        return Response({
+            'error': 'خطأ في تحميل مكتبات تيليجرام',
+            'details': str(ie)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except Exception as e:
         logger.error(f"Error disconnecting session: {e}")
         import traceback
@@ -1626,6 +1597,7 @@ def create_single_telegram_group(request):
         subject_name = request.data.get('subject_name')
         section = request.data.get('section')  # حرف واحد فقط
         phone_number = request.data.get('phone_number')
+        school_name = request.data.get('school_name')  # اسم المدرسة من الـ frontend
         
         # التحقق من البيانات
         if not grade_name or not subject_name or not section:
@@ -1676,7 +1648,9 @@ def create_single_telegram_group(request):
             env['PYTHONIOENCODING'] = 'utf-8'
             
             # السكريبت يتوقع: phone, grade, subject, school, teacher_name, sections...
-            school_name = getattr(teacher, 'school_name', 'المدرسة')
+            # إذا لم يتم إرسال school_name من الـ frontend، استخدم من بيانات المعلم
+            if not school_name:
+                school_name = getattr(teacher, 'school_name', 'المدرسة')
             teacher_name = teacher.full_name if teacher.full_name else teacher.email.split('@')[0]
             
             result = subprocess.run(

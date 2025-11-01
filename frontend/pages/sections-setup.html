@@ -1450,6 +1450,16 @@
                 
                 const data = await response.json();
                 
+                // فحص الأخطاء أولاً
+                if (!response.ok) {
+                    throw new Error(data.message || data.error || 'فشل التحقق من الكود');
+                }
+                
+                // فحص حالة error
+                if (data.status === 'error') {
+                    throw new Error(data.message || data.error || 'فشل التحقق من الكود');
+                }
+                
                 // التحقق من password_required
                 if (data.status === 'password_required') {
                     // يحتاج كلمة مرور Two-Step Verification
@@ -1459,8 +1469,8 @@
                     return;
                 }
                 
-                if (!response.ok || data.status !== 'success') {
-                    throw new Error(data.message || data.error || 'فشل التحقق من الكود');
+                if (data.status !== 'success') {
+                    throw new Error(data.message || data.error || 'حدث خطأ غير متوقع');
                 }
                 
                 // نجح التحقق
@@ -2317,7 +2327,13 @@
                     data = await response.json();
                 }
                 
+                // فحص الأخطاء
                 if (!response.ok) {
+                    throw new Error(data.message || data.error || 'فشل التحقق');
+                }
+                
+                // فحص حالة الـ response
+                if (data.status === 'error') {
                     throw new Error(data.message || data.error || 'فشل التحقق');
                 }
                 
@@ -2337,6 +2353,9 @@
                     UI.showToast('تم ربط حسابك بنجاح!', 'success');
                     
                     setTimeout(closeLinkAccountModal, 2000);
+                } else {
+                    // حالة غير متوقعة
+                    throw new Error('حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.');
                 }
                 
             } catch (error) {
