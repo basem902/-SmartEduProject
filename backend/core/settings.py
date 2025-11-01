@@ -252,7 +252,7 @@ CSP_FONT_SRC = ("'self'", "data:")
 
 # Telegram Bot Settings
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', None)  # ⚠️ أضف Token في .env
-TELEGRAM_BOT_USERNAME = os.getenv('TELEGRAM_BOT_USERNAME', 'SmartEduProjectBot')
+TELEGRAM_BOT_USERNAME = os.getenv('TELEGRAM_BOT_USERNAME', 'SmartEduProjectsBot')
 
 # ✅ للاختبار فقط - احذف بعد إضافة Token في .env
 if not TELEGRAM_BOT_TOKEN:
