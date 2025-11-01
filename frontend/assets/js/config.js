@@ -11,8 +11,11 @@ if (typeof window.API_BASE === 'undefined') {
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
         // Development
         window.API_BASE = 'http://localhost:8000/api';
+    } else if (hostname.includes('netlify.app')) {
+        // Production on Netlify → point to Render backend
+        window.API_BASE = 'https://smarteduproject-k0um.onrender.com/api';
     } else {
-        // Production
+        // Other production environments
         window.API_BASE = '/api';
     }
 }
