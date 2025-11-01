@@ -93,6 +93,21 @@ class StudentManagementSystem {
             console.error('❌ gradeSelectExcel not found!');
         }
         
+        // 🔧 FIX: Update currentSectionId when section is selected
+        const sectionSelect = document.getElementById('sectionSelect');
+        if (sectionSelect) {
+            sectionSelect.addEventListener('change', (e) => {
+                const selectedSectionId = e.target.value;
+                if (selectedSectionId) {
+                    this.currentSectionId = parseInt(selectedSectionId);
+                    console.log('✅ Section selected, currentSectionId updated to:', this.currentSectionId);
+                } else {
+                    this.currentSectionId = null;
+                    console.log('⚠️  No section selected, currentSectionId reset to null');
+                }
+            });
+        }
+        
         document.getElementById('studentName').addEventListener('input', () => this.validateName());
         document.getElementById('studentPhone').addEventListener('input', () => this.validatePhone());
         
@@ -456,6 +471,13 @@ class StudentManagementSystem {
     async saveAll() {
         if (this.students.length === 0) {
             this.showToast('لا يوجد طلاب لحفظهم', 'error');
+            return;
+        }
+        
+        // 🔧 FIX: Validate currentSectionId before saving
+        if (!this.currentSectionId) {
+            this.showToast('⚠️ يرجى اختيار الشعبة أولاً', 'error');
+            console.error('❌ Cannot save: currentSectionId is null');
             return;
         }
         
