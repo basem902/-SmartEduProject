@@ -1,0 +1,45 @@
+========================================
+Telegram FastAPI Service - إعداد سريع
+========================================
+
+1. تشغيل محلي (Local):
+   
+   cd telegram_service
+   
+   # Windows:
+   run.bat
+   
+   # أو يدوياً:
+   python -m venv venv
+   venv\Scripts\activate
+   pip install -r requirements.txt
+   copy .env.example .env
+   # عدّل .env بالقيم الصحيحة
+   python main.py
+
+2. نشر على Render:
+
+   - New Web Service
+   - Root Directory: telegram_service
+   - Build: pip install -r requirements.txt
+   - Start: uvicorn main:app --host 0.0.0.0 --port $PORT
+   - Environment Variables:
+     TELEGRAM_API_ID=26671326
+     TELEGRAM_API_HASH=996fd0da7abec92881f41addceca3677
+     TELEGRAM_BOT_TOKEN=7431625101:AAGR-rk1GbpdawfVCwBpTnnYGWu-aYVXTV4
+     TELEGRAM_BOT_USERNAME=SmartEduProjectBot
+     OTP_SECRET_KEY=sEcReT_2025_SmArTeDu_OtP_kEy_987654321
+
+3. ربط Django بـ FastAPI:
+
+   في backend/.env أضف:
+   
+   USE_FASTAPI_TELEGRAM=True
+   TELEGRAM_FASTAPI_URL=https://your-service.onrender.com
+
+4. اختبار:
+
+   http://localhost:8001/docs  (Swagger UI)
+   http://localhost:8001/health
+
+========================================

@@ -1,0 +1,141 @@
+================================================================================
+                    ✅ تم إنشاء FastAPI Telegram Service
+================================================================================
+
+📁 الملفات الجديدة:
+  telegram_service/
+  ├── main.py                    (FastAPI app)
+  ├── telegram_manager.py        (Telethon manager)
+  ├── requirements.txt           (المكتبات)
+  ├── .env                       (الإعدادات - تم إنشاؤه)
+  ├── .env.example              (مثال)
+  ├── .gitignore                (Git ignore)
+  ├── run.bat                   (تشغيل سريع)
+  └── SETUP.txt                 (التعليمات)
+
+  backend/apps/sections/
+  └── telegram_fastapi_client.py (عميل للاتصال من Django)
+
+================================================================================
+🚀 التشغيل المحلي (اختبار):
+================================================================================
+
+1. افتح Terminal في telegram_service:
+   
+   cd telegram_service
+   venv\Scripts\activate
+   pip install -r requirements.txt
+   python main.py
+
+2. افتح المتصفح:
+   
+   http://localhost:8001/docs  ← Swagger UI (اختبار API)
+   http://localhost:8001/health ← فحص الصحة
+
+3. اختبر إرسال كود:
+   
+   POST http://localhost:8001/telegram/send-code
+   Body: {"phone_number": "+966558048004"}
+
+================================================================================
+☁️ النشر على Render:
+================================================================================
+
+1. إنشاء Web Service جديد:
+   
+   Dashboard → New + → Web Service
+   Repository: basem902/-SmartEduProject
+   Branch: main
+   Root Directory: telegram_service  ← مهم!
+
+2. Build Settings:
+   
+   Build Command: pip install -r requirements.txt
+   Start Command: uvicorn main:app --host 0.0.0.0 --port $PORT
+
+3. Environment Variables:
+   
+   TELEGRAM_API_ID=26671326
+   TELEGRAM_API_HASH=996fd0da7abec92881f41addceca3677
+   TELEGRAM_BOT_TOKEN=7431625101:AAGR-rk1GbpdawfVCwBpTnnYGWu-aYVXTV4
+   TELEGRAM_BOT_USERNAME=SmartEduProjectBot
+   OTP_SECRET_KEY=sEcReT_2025_SmArTeDu_OtP_kEy_987654321
+
+4. Deploy!
+
+5. احصل على URL (مثال):
+   
+   https://smartedu-telegram.onrender.com
+
+================================================================================
+🔗 ربط Django بـ FastAPI:
+================================================================================
+
+في backend/.env أضف:
+
+USE_FASTAPI_TELEGRAM=True
+TELEGRAM_FASTAPI_URL=https://smartedu-telegram.onrender.com
+
+ثم أعد تشغيل Django أو أعد deploy على Render.
+
+================================================================================
+📡 API Endpoints:
+================================================================================
+
+POST   /telegram/send-code        إرسال كود
+POST   /telegram/resend-code      إعادة إرسال
+POST   /telegram/verify-code      التحقق من الكود
+POST   /telegram/verify-password  التحقق من 2FA
+GET    /telegram/session-status   حالة الجلسة
+DELETE /telegram/delete-session   حذف الجلسة
+GET    /health                    فحص الصحة
+GET    /docs                      Swagger UI
+
+================================================================================
+🎯 الخيارات:
+================================================================================
+
+الخيار 1: استخدام FastAPI فقط
+  - في Django .env: USE_FASTAPI_TELEGRAM=True
+  - جميع طلبات Telegram تذهب لـ FastAPI
+
+الخيار 2: استخدام Telethon مباشرة (الحالي)
+  - في Django .env: USE_FASTAPI_TELEGRAM=False (أو احذف السطر)
+  - Django يستخدم Telethon مباشرة
+
+الخيار 3: Hybrid (موصى به للإنتاج)
+  - FastAPI على Render منفصل
+  - Django يتصل به عبر HTTP
+  - أفضل للأداء والاستقرار
+
+================================================================================
+✅ الخطوات التالية:
+================================================================================
+
+1. اختبر محلياً:
+   cd telegram_service
+   run.bat
+   افتح http://localhost:8001/docs
+
+2. إذا نجح، انشر على Render:
+   - Web Service جديد
+   - Root: telegram_service
+   - Environment Variables كما أعلاه
+
+3. احصل على URL وضعه في Django:
+   backend/.env → TELEGRAM_FASTAPI_URL=...
+
+4. اختبر من Frontend:
+   sections-setup.html → Step 6 → ربط Telegram
+
+================================================================================
+💡 ملاحظات:
+================================================================================
+
+- Sessions تُحفظ في telegram_service/sessions/
+- FastAPI أسرع من Django لـ async operations
+- يمكن استخدام الاثنين معاً (fallback)
+- الكود لا يزال لا يصل؟ → المشكلة في Telegram نفسه، ليس الكود
+- تحقق من Telegram App (ليس SMS دائماً)
+
+================================================================================
