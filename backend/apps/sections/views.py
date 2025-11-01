@@ -2993,6 +2993,7 @@ def add_students_manually(request):
                     full_name=full_name,
                     normalized_name=normalized_name,
                     phone_number=phone,
+                    teacher=teacher,  # ✅ FIX: Add missing teacher field
                     section=section,
                     grade=section.grade,
                     school_name=section.grade.school_name,
@@ -3208,6 +3209,7 @@ def upload_students_excel(request):
                         full_name=full_name,
                         normalized_name=normalized_name,
                         phone_number=phone,
+                        teacher=teacher,  # ✅ FIX: Add missing teacher field
                         section=section,
                         grade=section.grade,
                         school_name=section.grade.school_name,
