@@ -48,6 +48,24 @@ class APIService {
 
     try {
       const response = await fetch(url, config);
+      
+      // Handle 504 Gateway Timeout
+      if (response.status === 504) {
+        const error = new Error('⏰ السيرفر يستغرق وقتاً أطول من المعتاد. يرجى المحاولة مرة أخرى بعد قليل.');
+        error.status = 504;
+        error.isTimeout = true;
+        throw error;
+      }
+      
+      // Handle empty response
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('Invalid response type:', contentType);
+        const error = new Error('⚠️ استجابة غير صالحة من السيرفر');
+        error.status = response.status;
+        throw error;
+      }
+      
       const data = await response.json();
 
       if (!response.ok) {
@@ -65,7 +83,7 @@ class APIService {
         }
         
         const error = new Error(data.error || data.message || 'حدث خطأ في الطلب');
-        error.details = data.details; // إضافة التفاصيل للخطأ
+        error.details = data.details;
         error.status = response.status;
         throw error;
       }
@@ -73,6 +91,17 @@ class APIService {
       return data;
     } catch (error) {
       console.error('API Request Error:', error);
+      
+      // Handle network errors
+      if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+        error.message = '❌ فشل الاتصال بالسيرفر. تحقق من الإنترنت.';
+      }
+      
+      // Handle timeout
+      if (error.isTimeout) {
+        error.message = '⏰ السيرفر يستغرق وقتاً طويلاً (يستيقظ من النوم). يرجى الانتظار 30 ثانية والمحاولة مرة أخرى.';
+      }
+      
       throw error;
     }
   }
@@ -155,18 +184,28 @@ class APIService {
   }
 
   /**
-   * تسجيل الدخول
+   * تسجيل الدخول (مع retry للـ 504 timeout)
    */
-  async login(email, password) {
-    const response = await this.post('/auth/login/', { email, password }, { auth: false });
-    
-    if (response.tokens) {
-      this.setToken(response.tokens.access);
-      localStorage.setItem('refresh_token', response.tokens.refresh);
-      localStorage.setItem('teacher', JSON.stringify(response.teacher));
+  async login(email, password, retryCount = 0) {
+    try {
+      const response = await this.post('/auth/login/', { email, password }, { auth: false });
+      
+      if (response.tokens) {
+        this.setToken(response.tokens.access);
+        localStorage.setItem('refresh_token', response.tokens.refresh);
+        localStorage.setItem('teacher', JSON.stringify(response.teacher));
+      }
+      
+      return response;
+    } catch (error) {
+      // إذا كان 504 وأقل من محاولتين، أعد المحاولة
+      if (error.status === 504 && retryCount < 2) {
+        console.log(`⏰ Timeout detected. Retrying... (${retryCount + 1}/2)`);
+        await new Promise(resolve => setTimeout(resolve, 3000)); // انتظر 3 ثواني
+        return this.login(email, password, retryCount + 1);
+      }
+      throw error;
     }
-    
-    return response;
   }
 
   /**
