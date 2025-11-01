@@ -154,31 +154,33 @@ class StudentManagementSystem {
     
     async loadGrades() {
         try {
-            console.log('📚 Loading grades from API...');
-            const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+            console.log('📚 Loading grades...');
             
-            const url = `${this.apiUrl}/sections/my-grades/`;
-            console.log('🔗 API URL:', url);
-            
-            const response = await fetch(url, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
+            // استخدام DataCache إذا كان متوفراً
+            let data;
+            if (window.dataCache) {
+                console.log('⚡ Using DataCache for faster loading');
+                data = await window.dataCache.getGrades();
+            } else {
+                console.log('📡 Fetching from API...');
+                const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+                const response = await fetch(`${this.apiUrl}/sections/my-grades/`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
                 }
-            });
-            
-            console.log('📡 Response status:', response.status);
-            
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('❌ API Error:', response.status, errorText);
-                throw new Error(`API Error: ${response.status}`);
+                
+                data = await response.json();
             }
             
-            const data = await response.json();
-            console.log('📊 Response data:', data);
+            console.log('📊 Grades data:', data);
             
-            if (data.grades && data.grades.length > 0) {
+            if (data && data.grades && data.grades.length > 0) {
                 console.log('✅ Grades found:', data.grades.length);
                 this.populateGrades(data.grades);
             } else {
@@ -187,7 +189,7 @@ class StudentManagementSystem {
             }
         } catch (error) {
             console.error('❌ Error loading grades:', error);
-            this.showToast('خطأ في تحميل الصفوف. تحقق من اتصالك بالإنترنت.', 'error');
+            this.showToast('خطأ في تحميل الصفوف.', 'error');
         }
     }
 
@@ -254,23 +256,29 @@ class StudentManagementSystem {
         }
         
         try {
-            // استدعاء API لتحميل الشعب (نفس طريقة create-project.js)
-            const token = localStorage.getItem('access_token') || localStorage.getItem('token');
-            const response = await fetch(`${this.apiUrl}/sections/grade/${gradeId}/sections/`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
+            // استخدام DataCache إذا كان متوفراً
+            let data;
+            if (window.dataCache) {
+                console.log('⚡ Using DataCache for sections');
+                data = await window.dataCache.getSections(gradeId);
+            } else {
+                console.log('📡 Fetching sections from API...');
+                const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+                const response = await fetch(`${this.apiUrl}/sections/grade/${gradeId}/sections/`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
                 }
-            });
-            
-            console.log('📡 Sections API Response status:', response.status);
-            
-            if (!response.ok) {
-                throw new Error(`API Error: ${response.status}`);
+                
+                data = await response.json();
             }
             
-            const data = await response.json();
-            console.log('📊 Sections data from API:', data);
+            console.log('📊 Sections data:', data);
             
             const sections = data.sections || [];
             console.log(`✅ Found ${sections.length} sections`);

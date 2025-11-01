@@ -622,6 +622,8 @@
 
     <!-- ✅ Config يُحمّل أولاً -->
     <script src="/assets/js/config.js"></script>
+    <!-- ✅ Data Cache للأداء السريع -->
+    <script src="/assets/js/data-cache.js"></script>
     
     <script src="/assets/js/api.js"></script>
     <script src="/assets/js/ui.js"></script>
@@ -636,6 +638,15 @@
         
         // حماية الصفحة
         auth.protectPage();
+        
+        // 🚀 Preload all data عند فتح dashboard
+        (async function() {
+            console.log('🚀 Starting data preload...');
+            const result = await dataCache.preloadAllData();
+            if (result.success) {
+                console.log(`✅ Data preloaded successfully in ${result.duration}ms`);
+            }
+        })();
         
         // تحديث معلومات المستخدم
         const teacher = auth.getTeacher();
