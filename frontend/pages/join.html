@@ -333,67 +333,69 @@
             const fullName = document.getElementById('fullName').value.trim();
             const submitBtn = document.getElementById('submitBtn');
             
-            // Validation
+            // ✅ Validation - تحقق من الاسم الرباعي
             if (fullName.length < 6) {
                 alert('الرجاء إدخال الاسم الكامل');
                 return;
             }
             
             const nameParts = fullName.split(' ').filter(p => p.length > 0);
-            if (nameParts.length < 2) {
-                alert('الرجاء إدخال اسمين على الأقل');
+            if (nameParts.length < 4) {
+                alert(`الاسم يجب أن يكون رباعياً (${nameParts.length}/4)\nمثال: محمد أحمد علي حسن`);
+                return;
+            }
+            
+            // ✅ تحقق من الحروف العربية فقط
+            const arabicPattern = /^[\u0600-\u06FF\s]+$/;
+            if (!arabicPattern.test(fullName)) {
+                alert('الاسم يجب أن يحتوي على حروف عربية فقط');
                 return;
             }
             
             submitBtn.disabled = true;
-            submitBtn.textContent = 'جاري التسجيل...';
+            submitBtn.textContent = 'جاري التحقق...';
             
-            // 🔍 Log data before sending
-            const requestData = {
-                full_name: fullName,
-                grade_id: parseInt(selectedGradeId),
+            // ✅ Step 1: التحقق من الطالب أولاً
+            const verifyData = {
+                student_name: fullName,
                 section_id: parseInt(selectedSectionId)
             };
-            console.log('📤 Sending registration data:', requestData);
+            console.log('🔍 التحقق من الطالب:', verifyData);
             
             try {
-                const response = await fetch(`${API_URL}/sections/join/${token}/register/`, {
+                const response = await fetch(`${API_URL}/sections/verify-student-join/`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(requestData)
+                    body: JSON.stringify(verifyData)
                 });
                 
                 const data = await response.json();
-                console.log('📡 Register response:', response.status, data);
+                console.log('📡 Verify response:', response.status, data);
                 
-                // 🐛 عرض traceback إذا موجود
-                if (data.traceback) {
-                    console.error('❌ Backend Traceback:', data.traceback);
-                }
-                
-                if (data.duplicate) {
-                    alert(`${data.message}\n\nطالب مشابه: ${data.similar_name}`);
+                if (!data.success) {
+                    // ❌ الطالب غير موجود
+                    console.error('❌ Student not found:', data);
+                    
+                    let errorMessage = data.message || 'الاسم غير موجود في هذه الشعبة';
+                    
+                    // عرض الاقتراحات إن وُجدت
+                    if (data.suggestions && data.suggestions.length > 0) {
+                        errorMessage += '\n\n🔍 هل تقصد أحد هذه الأسماء؟\n';
+                        data.suggestions.forEach(s => {
+                            errorMessage += `\n• ${s.name} (${s.similarity}% تشابه)`;
+                        });
+                    }
+                    
+                    errorMessage += '\n\n💡 ' + (data.action || 'تواصل مع معلمك لإضافة اسمك');
+                    
+                    alert(errorMessage);
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'التالي →';
                     return;
                 }
                 
-                if (!data.success) {
-                    console.error('❌ Registration failed:', data);
-                    
-                    // Show validation errors if available
-                    if (data.details && typeof data.details === 'object') {
-                        console.error('Validation errors:', data.details);
-                        const errorMessages = Object.entries(data.details)
-                            .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
-                            .join('\n');
-                        throw new Error(`خطأ في البيانات:\n${errorMessages}`);
-                    }
-                    
-                    throw new Error(data.error || 'فشل التسجيل');
-                }
-                
-                // Show success
+                // ✅ نجح التحقق - عرض معلومات الطالب ورابط القروب
+                console.log('✅ Student verified:', data.student);
                 showSuccessScreen(data);
                 
             } catch (error) {

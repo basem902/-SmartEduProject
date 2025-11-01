@@ -2860,6 +2860,74 @@ def verify_student_for_join(request):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@api_view(['POST'])
+@permission_classes([AllowAny])  # يستدعيه Telegram Bot
+def confirm_student_joined_telegram(request):
+    """
+    تأكيد انضمام الطالب إلى قروب Telegram
+    يُستدعى من Bot عندما ينضم الطالب للقروب
+    
+    Request Body:
+    {
+        "student_id": 6,
+        "telegram_user_id": 123456789,
+        "telegram_username": "student_username",
+        "chat_id": -1001234567890
+    }
+    """
+    try:
+        student_id = request.data.get('student_id')
+        telegram_user_id = request.data.get('telegram_user_id')
+        telegram_username = request.data.get('telegram_username', '')
+        chat_id = request.data.get('chat_id')
+        
+        # التحقق من المدخلات
+        if not student_id or not telegram_user_id:
+            return Response({
+                'success': False,
+                'error': 'missing_data',
+                'message': 'student_id و telegram_user_id مطلوبان'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # جلب الطالب
+        try:
+            student = StudentRegistration.objects.get(id=student_id)
+        except StudentRegistration.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': 'student_not_found',
+                'message': 'الطالب غير موجود'
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        # تحديث البيانات
+        student.joined_telegram = True
+        student.telegram_user_id = telegram_user_id
+        student.telegram_username = telegram_username
+        student.joined_at = timezone.now()
+        student.save()
+        
+        logger.info(f"✅ الطالب {student.full_name} (ID: {student_id}) انضم إلى Telegram (user_id: {telegram_user_id})")
+        
+        return Response({
+            'success': True,
+            'message': 'تم تحديث بيانات الطالب بنجاح',
+            'student': {
+                'id': student.id,
+                'name': student.full_name,
+                'joined_telegram': True,
+                'joined_at': student.joined_at.isoformat()
+            }
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        logger.error(f"❌ Error in confirm_student_joined_telegram: {str(e)}", exc_info=True)
+        return Response({
+            'success': False,
+            'error': 'server_error',
+            'message': 'حدث خطأ أثناء التحديث'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 # ==================== إضافة الطلاب (يدوي / Excel) ====================
 
 @api_view(['POST'])
