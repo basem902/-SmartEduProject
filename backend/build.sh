@@ -10,18 +10,23 @@ echo "Pip version: $(pip --version)"
 echo "⬆️ Upgrading pip..."
 pip install --upgrade pip
 
+# Install Telethon and cryptg first (critical for Telegram features)
+echo "📦 Installing Telethon and cryptg separately..."
+pip install --no-cache-dir telethon>=1.34.0 cryptg>=0.4.0 || echo "⚠️ Warning: Telethon/cryptg installation failed"
+
 # Install dependencies (use production requirements if exists)
 if [ -f requirements-production.txt ]; then
     echo "📦 Installing production dependencies..."
-    pip install -r requirements-production.txt
+    pip install --no-cache-dir -r requirements-production.txt
 else
     echo "📦 Installing all dependencies..."
-    pip install -r requirements.txt
+    pip install --no-cache-dir -r requirements.txt
 fi
 
 # Verify Telethon installation
 echo "🔍 Verifying Telethon installation..."
 python -c "import telethon; print(f'✅ Telethon version: {telethon.__version__}')" || echo "❌ Telethon not installed!"
+python -c "import cryptg; print(f'✅ Cryptg installed')" || echo "❌ Cryptg not installed!"
 
 # Collect static files
 python manage.py collectstatic --no-input

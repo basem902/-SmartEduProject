@@ -1,3 +1,5 @@
-Force redeploy trigger - 2025-11-01 13:15
-This file exists solely to trigger a new deployment on Render.
-Telethon installation issue needs fresh build.
+Force redeploy trigger - 2025-11-01 13:33
+Fixed requirements-production.txt to include telethon and cryptg.
+Added system dependencies in Aptfile.
+Modified build.sh to install telethon separately first.
+This deployment should successfully install telethon!
