@@ -2034,6 +2034,10 @@
         // ====== Telegram Session Management ======
         
         const API_URL = window.API_BASE || 'http://localhost:8000/api';
+        // FastAPI Telegram Service (optional - if deployed separately)
+        const FASTAPI_TELEGRAM_URL = window.FASTAPI_TELEGRAM_URL || null;
+        const USE_FASTAPI = !!FASTAPI_TELEGRAM_URL;
+        
         let linkedPhoneNumber = '';
         let phoneCodeHash = '';
         let linkTimer = null;
@@ -2164,17 +2168,38 @@
             document.getElementById('linkLoading').style.display = 'block';
             
             try {
-                const token = localStorage.getItem('access_token');
-                const response = await fetch(`${API_URL}/sections/telegram/session/login/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ phone_number: phone })
-                });
+                let response, data;
                 
-                const data = await response.json();
+                if (USE_FASTAPI) {
+                    // استخدام FastAPI مباشرة
+                    console.log('📡 Using FastAPI Telegram Service:', FASTAPI_TELEGRAM_URL);
+                    response = await fetch(`${FASTAPI_TELEGRAM_URL}/telegram/send-code`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ phone_number: phone })
+                    });
+                    data = await response.json();
+                    
+                    // تحويل response من FastAPI لصيغة Django
+                    if (data.status === 'code_sent') {
+                        data.status = 'code_required';
+                    }
+                } else {
+                    // استخدام Django (الحالي)
+                    console.log('📡 Using Django Backend:', API_URL);
+                    const token = localStorage.getItem('access_token');
+                    response = await fetch(`${API_URL}/sections/telegram/session/login/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ phone_number: phone })
+                    });
+                    data = await response.json();
+                }
                 
                 if (!response.ok) {
                     throw new Error(data.message || data.error || 'فشل إرسال الكود');
@@ -2258,21 +2283,39 @@
             document.getElementById('linkLoading').style.display = 'block';
             
             try {
-                const token = localStorage.getItem('access_token');
-                const response = await fetch(`${API_URL}/sections/telegram/session/verify/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        phone_number: linkedPhoneNumber,
-                        code: code,
-                        phone_code_hash: phoneCodeHash
-                    })
-                });
+                let response, data;
                 
-                const data = await response.json();
+                if (USE_FASTAPI) {
+                    // استخدام FastAPI
+                    response = await fetch(`${FASTAPI_TELEGRAM_URL}/telegram/verify-code`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            phone_number: linkedPhoneNumber,
+                            code: code,
+                            phone_code_hash: phoneCodeHash
+                        })
+                    });
+                    data = await response.json();
+                } else {
+                    // استخدام Django
+                    const token = localStorage.getItem('access_token');
+                    response = await fetch(`${API_URL}/sections/telegram/session/verify/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            phone_number: linkedPhoneNumber,
+                            code: code,
+                            phone_code_hash: phoneCodeHash
+                        })
+                    });
+                    data = await response.json();
+                }
                 
                 if (!response.ok) {
                     throw new Error(data.message || data.error || 'فشل التحقق');
@@ -2306,19 +2349,35 @@
 
         async function resendVerificationCode() {
             try {
-                const token = localStorage.getItem('access_token');
                 const btn = document.getElementById('linkResendBtn');
                 const deliveryInfo = document.getElementById('deliveryInfo');
                 if (btn) { btn.disabled = true; btn.textContent = '⏳ جاري إعادة الإرسال...'; }
-                const response = await fetch(`${API_URL}/sections/telegram/session/resend/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ phone_number: linkedPhoneNumber })
-                });
-                const data = await response.json();
+                
+                let response, data;
+                
+                if (USE_FASTAPI) {
+                    // استخدام FastAPI
+                    response = await fetch(`${FASTAPI_TELEGRAM_URL}/telegram/resend-code`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ phone_number: linkedPhoneNumber })
+                    });
+                    data = await response.json();
+                } else {
+                    // استخدام Django
+                    const token = localStorage.getItem('access_token');
+                    response = await fetch(`${API_URL}/sections/telegram/session/resend/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ phone_number: linkedPhoneNumber })
+                    });
+                    data = await response.json();
+                }
                 if (!response.ok) {
                     throw new Error(data.message || data.error || 'فشل إعادة الإرسال');
                 }
@@ -2357,20 +2416,37 @@
             document.getElementById('linkLoading').style.display = 'block';
             
             try {
-                const token = localStorage.getItem('access_token');
-                const response = await fetch(`${API_URL}/sections/telegram/session/password/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        phone_number: linkedPhoneNumber,
-                        password: password
-                    })
-                });
+                let response, data;
                 
-                const data = await response.json();
+                if (USE_FASTAPI) {
+                    // استخدام FastAPI
+                    response = await fetch(`${FASTAPI_TELEGRAM_URL}/telegram/verify-password`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            phone_number: linkedPhoneNumber,
+                            password: password
+                        })
+                    });
+                    data = await response.json();
+                } else {
+                    // استخدام Django
+                    const token = localStorage.getItem('access_token');
+                    response = await fetch(`${API_URL}/sections/telegram/session/password/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            phone_number: linkedPhoneNumber,
+                            password: password
+                        })
+                    });
+                    data = await response.json();
+                }
                 
                 if (!response.ok) {
                     throw new Error(data.message || data.error || 'فشل التحقق من كلمة المرور');
