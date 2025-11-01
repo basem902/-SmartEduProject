@@ -318,6 +318,7 @@ class StudentRegistration(models.Model):
     # البيانات الشخصية
     full_name = models.CharField(max_length=200, verbose_name='الاسم الكامل')
     normalized_name = models.CharField(max_length=200, db_index=True, verbose_name='الاسم المعياري')
+    phone_number = models.CharField(max_length=15, blank=True, null=True, verbose_name='رقم الجوال', help_text='رقم جوال الطالب للتواصل')
     
     # معلومات التليجرام
     telegram_user_id = models.BigIntegerField(null=True, blank=True, unique=True, verbose_name='Telegram User ID')
