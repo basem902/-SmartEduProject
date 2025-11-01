@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 from django.utils import timezone
+from django.conf import settings
 
 from .models import SchoolGrade, Section, SectionLink, StudentRegistration, AIGeneratedContent, TelegramGroup, TeacherSubject
 from apps.accounts.models import Teacher
