@@ -7,13 +7,14 @@ from django.conf import settings
 
 try:
     from telethon import TelegramClient, errors
-    from telethon.tl import types as tl_types
+    from telethon.tl import functions as tl_functions, types as tl_types
     TELETHON_AVAILABLE = True
 except ImportError:
     TELETHON_AVAILABLE = False
     TelegramClient = None
     errors = None
     tl_types = None
+    tl_functions = None
 
 
 class TelethonSessionManager:
@@ -221,17 +222,6 @@ class TelethonSessionManager:
                 except:
                     pass
                 del self._active_clients[phone_number]
-            
-            return {
-                'status': 'error',
-                'message': f'خطأ في التحقق: {str(e)}'
-            }
-    
-    async def verify_password(self, phone_number, password):
-        """
-        التحقق من كلمة المرور للحسابات المحمية بـ 2FA
-        """
-        try:
             if phone_number not in self._active_clients:
                 return {
                     'status': 'error',

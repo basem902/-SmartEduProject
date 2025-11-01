@@ -40,6 +40,7 @@ urlpatterns = [
     path('telegram/session/login/', views.telegram_session_login, name='telegram_session_login'),
     path('telegram/session/verify/', views.telegram_session_verify, name='telegram_session_verify'),
     path('telegram/session/password/', views.telegram_session_password, name='telegram_session_password'),
+    path('telegram/session/resend/', views.telegram_session_resend, name='telegram_session_resend'),
     path('telegram/session/status/', views.telegram_session_status, name='telegram_session_status'),
     path('telegram/session/disconnect/', views.telegram_session_disconnect, name='telegram_session_disconnect'),
     path('telegram/session/reset/', views.telegram_session_reset, name='telegram_session_reset'),

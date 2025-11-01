@@ -1230,6 +1230,31 @@ def telegram_session_password(request):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def telegram_session_resend(request):
+    """إعادة إرسال كود تيليجرام (قد يحول لطريقة اتصال أخرى)"""
+    try:
+        from .telegram_session_telethon import telethon_session_manager as session_manager
+        import asyncio
+        
+        phone_number = request.data.get('phone_number')
+        if not phone_number:
+            return Response({'error': 'رقم الهاتف مطلوب'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        
+        result = loop.run_until_complete(session_manager.resend_code(phone_number))
+        return Response(result, status=status.HTTP_200_OK)
+    except Exception as e:
+        logger.error(f"Error resending code: {e}")
+        return Response({'error': 'فشل إعادة الإرسال', 'details': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def telegram_session_status(request):
