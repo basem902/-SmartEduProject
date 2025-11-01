@@ -416,9 +416,9 @@
             document.getElementById('confirmedSection').textContent = student.section;
             
             // Telegram section
-            if (data.telegram && data.telegram.invite_link) {
-                const groupName = data.telegram.group_name;
-                const inviteLink = data.telegram.invite_link;
+            if (data.telegram_group && data.telegram_group.invite_link) {
+                const groupName = data.telegram_group.name;
+                const inviteLink = data.telegram_group.invite_link;
                 
                 document.getElementById('groupName').textContent = groupName;
                 document.getElementById('openBtn').href = inviteLink;
