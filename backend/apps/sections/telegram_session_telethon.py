@@ -32,7 +32,12 @@ class TelethonSessionManager:
         """
         إرسال كود التحقق وحفظ client مؤقتاً
         """
+        print(f"\n{'='*60}")
+        print(f"📱 login_and_save_session called for: {phone_number}")
+        print(f"{'='*60}")
+        
         if not TELETHON_AVAILABLE:
+            print("❌ Telethon not available!")
             return {
                 'status': 'error',
                 'message': 'Telethon غير مثبت. يرجى تثبيته على السيرفر.'
@@ -42,7 +47,10 @@ class TelethonSessionManager:
             api_id = settings.TELEGRAM_API_ID
             api_hash = settings.TELEGRAM_API_HASH
             
+            print(f"🔑 API Credentials: api_id={api_id}, api_hash={'*' * 10 if api_hash else 'None'}")
+            
             if not api_id or not api_hash:
+                print("❌ Missing API credentials!")
                 return {
                     'status': 'error',
                     'message': 'إعدادات Telegram API غير موجودة'
@@ -57,36 +65,69 @@ class TelethonSessionManager:
             # الاتصال
             await client.connect()
             
-            # التحقق من وجود جلسة صالحة
+            # التحقق من وجود جلسة صالحة (بفحص حقيقي!)
+            is_valid_session = False
             try:
                 if await client.is_user_authorized():
-                    await client.disconnect()
-                    return {
-                        'status': 'already_connected',
-                        'message': 'حسابك مربوط مسبقاً!'
-                    }
+                    # تحقق إضافي: جرب الحصول على معلومات المستخدم
+                    try:
+                        me = await client.get_me()
+                        if me and me.phone:
+                            print(f"✅ Valid session found for: {me.phone}")
+                            is_valid_session = True
+                    except Exception as get_me_error:
+                        print(f"⚠️ Session claims authorized but get_me() failed: {get_me_error}")
+                        is_valid_session = False
             except Exception as auth_error:
-                # Session موجود لكن غير صالح، احذفه
-                print(f"Invalid session found, removing: {auth_error}")
+                print(f"⚠️ is_user_authorized() failed: {auth_error}")
+                is_valid_session = False
+            
+            if is_valid_session:
+                await client.disconnect()
+                return {
+                    'status': 'already_connected',
+                    'message': 'حسابك مربوط مسبقاً!'
+                }
+            
+            # Session غير صالح أو غير موجود، احذفه
+            if not is_valid_session:
+                print(f"🗑️ Removing invalid session for: {phone_number}")
                 try:
                     await client.disconnect()
-                    os.remove(session_path + '.session')
-                except:
-                    pass
-                # أعد الاتصال
+                    if os.path.exists(session_path + '.session'):
+                        os.remove(session_path + '.session')
+                        print(f"✅ Session file deleted")
+                except Exception as del_error:
+                    print(f"⚠️ Error deleting session: {del_error}")
+                
+                # أعد الاتصال بـ session نظيف
                 client = TelegramClient(session_path, int(api_id), api_hash)
                 await client.connect()
+                print(f"🔄 Fresh client connected")
             
             # إرسال كود التحقق
+            print(f"📤 Sending code request to: {phone_number}")
             try:
                 sent = await client.send_code_request(phone_number)
+                print(f"✅ Code sent! phone_code_hash: {sent.phone_code_hash[:10]}...")
             except errors.FloodWaitError as e:
+                print(f"❌ FloodWaitError: {e.seconds} seconds")
                 await client.disconnect()
                 return {
                     'status': 'error',
                     'message': f'يرجى الانتظار {e.seconds} ثانية قبل المحاولة مرة أخرى (Telegram Flood Control)'
                 }
+            except errors.PhoneNumberInvalidError:
+                print(f"❌ Invalid phone number: {phone_number}")
+                await client.disconnect()
+                return {
+                    'status': 'error',
+                    'message': f'رقم الهاتف غير صحيح: {phone_number}'
+                }
             except Exception as send_error:
+                print(f"❌ Send code error: {send_error}")
+                import traceback
+                traceback.print_exc()
                 await client.disconnect()
                 return {
                     'status': 'error',
