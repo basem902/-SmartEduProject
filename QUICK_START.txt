@@ -1,0 +1,145 @@
+================================================================================
+                    🚀 تشغيل FastAPI Telegram Service
+================================================================================
+
+الخيار 1: تشغيل محلي (للاختبار)
+================================================================================
+
+1. افتح Terminal في telegram_service:
+   
+   cd telegram_service
+
+2. شغّل الخدمة:
+   
+   run.bat
+   
+   أو يدوياً:
+   venv\Scripts\activate
+   pip install -r requirements.txt
+   python main.py
+
+3. افتح المتصفح:
+   
+   http://localhost:8001/docs  ← اختبار API
+   http://localhost:8001/health ← فحص الصحة
+
+4. فعّل في Frontend:
+   
+   افتح: frontend/assets/js/config.js
+   
+   أزل التعليق من السطر:
+   // window.FASTAPI_TELEGRAM_URL = 'http://localhost:8001';
+   
+   ليصبح:
+   window.FASTAPI_TELEGRAM_URL = 'http://localhost:8001';
+
+5. اختبر:
+   
+   افتح sections-setup.html → Step 6 → ربط Telegram
+   راقب Console: يجب أن ترى "Using FastAPI Telegram Service"
+
+================================================================================
+الخيار 2: نشر على Render (Production)
+================================================================================
+
+1. إنشاء Web Service جديد:
+   
+   Dashboard → New + → Web Service
+   Repository: basem902/-SmartEduProject
+   Branch: main
+   
+   ⚠️ مهم جداً:
+   Root Directory: telegram_service
+
+2. Build Settings:
+   
+   Build Command: pip install -r requirements.txt
+   Start Command: uvicorn main:app --host 0.0.0.0 --port $PORT
+
+3. Environment Variables:
+   
+   TELEGRAM_API_ID=26671326
+   TELEGRAM_API_HASH=996fd0da7abec92881f41addceca3677
+   TELEGRAM_BOT_TOKEN=7431625101:AAGR-rk1GbpdawfVCwBpTnnYGWu-aYVXTV4
+   TELEGRAM_BOT_USERNAME=SmartEduProjectBot
+   OTP_SECRET_KEY=sEcReT_2025_SmArTeDu_OtP_kEy_987654321
+
+4. Deploy!
+
+5. احصل على URL (مثال):
+   
+   https://smartedu-telegram-abc123.onrender.com
+
+6. فعّل في Frontend:
+   
+   افتح: frontend/assets/js/config.js
+   
+   أزل التعليق وضع URL:
+   window.FASTAPI_TELEGRAM_URL = 'https://smartedu-telegram-abc123.onrender.com';
+
+7. أعد deploy Frontend على Netlify (سيتحدث تلقائياً)
+
+================================================================================
+اختبار سريع
+================================================================================
+
+بعد التشغيل (محلي أو Render):
+
+1. افتح sections-setup.html
+2. اذهب لـ Step 6
+3. افتح DevTools → Console
+4. اضغط "ربط حساب Telegram"
+5. أدخل: +966558048004
+6. اضغط "إرسال كود"
+
+يجب أن ترى في Console:
+📡 Using FastAPI Telegram Service: http://localhost:8001
+
+إذا رأيت:
+📡 Using Django Backend: ...
+→ FastAPI غير مفعّل، راجع config.js
+
+================================================================================
+الملفات المهمة
+================================================================================
+
+telegram_service/
+├── main.py                    ← FastAPI app
+├── telegram_manager.py        ← Telethon logic
+├── requirements.txt           ← المكتبات
+├── .env                       ← الإعدادات (محلي)
+└── run.bat                   ← تشغيل سريع
+
+frontend/assets/js/
+└── config.js                 ← تفعيل FastAPI هنا
+
+frontend/pages/
+└── sections-setup.html       ← Step 6 محدّث
+
+================================================================================
+استكشاف الأخطاء
+================================================================================
+
+1. run.bat لا يعمل؟
+   → افتح Terminal يدوياً:
+     cd telegram_service
+     python -m venv venv
+     venv\Scripts\activate
+     pip install -r requirements.txt
+     python main.py
+
+2. Module not found?
+   → تأكد من تثبيت المكتبات:
+     pip install -r requirements.txt
+
+3. الكود لا يصل؟
+   → المشكلة في Telegram نفسه، ليس الكود
+   → افحص Telegram App (ليس SMS)
+   → ابحث عن محادثة "Telegram"
+
+4. FastAPI لا يعمل في Frontend?
+   → تأكد من config.js:
+     window.FASTAPI_TELEGRAM_URL = 'http://localhost:8001';
+   → افتح Console وتأكد من الرسالة
+
+================================================================================
