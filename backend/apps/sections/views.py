@@ -3018,6 +3018,12 @@ def add_students_manually(request):
                     'errors': [f'خطأ في الحفظ: {str(e)}']
                 })
         
+        # ✅ تحديث عدد الطلاب في الشعبة
+        if added_students:
+            section.total_students = section.registered_students.count()
+            section.save()
+            logger.info(f"✅ تم تحديث total_students للشعبة {section.id}: {section.total_students}")
+        
         # الإحصائيات
         stats = {
             'total': len(students_data),
@@ -3230,6 +3236,12 @@ def upload_students_excel(request):
                         'phone': phone,
                         'errors': [f'خطأ في الحفظ: {str(e)}']
                     })
+            
+            # ✅ تحديث عدد الطلاب في الشعبة
+            if added_students:
+                section.total_students = section.registered_students.count()
+                section.save()
+                logger.info(f"✅ تم تحديث total_students للشعبة {section.id}: {section.total_students}")
             
             stats = {
                 'total': len(students_data),
