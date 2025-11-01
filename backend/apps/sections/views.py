@@ -1106,49 +1106,63 @@ def apply_telegram_permissions(request):
 def telegram_session_login(request):
     """بدء عملية ربط حساب تيليجرام - إرسال كود"""
     try:
-        import asyncio
-        import threading
-        
         phone_number = request.data.get('phone_number')
-        force_sms_raw = request.data.get('force_sms', True)
-        if isinstance(force_sms_raw, bool):
-            force_sms = force_sms_raw
-        else:
-            force_sms = str(force_sms_raw).lower() in ('1', 'true', 'yes', 'y', 'on')
         
         if not phone_number:
             return Response({
                 'error': 'رقم الهاتف مطلوب'
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        try:
-            from .telegram_session_telethon import telethon_session_manager as session_manager
-            
-            # التحقق من وجود session
-            if session_manager.is_session_exists(phone_number):
-                return Response({
-                    'status': 'already_connected',
-                    'message': 'حسابك مربوط مسبقاً!'
-                }, status=status.HTTP_200_OK)
-            
-            # إنشاء event loop جديد للـ thread الحالي
+        # استخدام FastAPI إذا كان مفعّلاً
+        use_fastapi = getattr(settings, 'USE_FASTAPI_TELEGRAM', False)
+        
+        if use_fastapi:
             try:
-                loop = asyncio.get_event_loop()
-            except RuntimeError:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
+                from .telegram_fastapi_client import telegram_fastapi_client
+                result = telegram_fastapi_client.send_code(phone_number)
+                return Response(result, status=status.HTTP_200_OK)
+            except Exception as e:
+                logger.error(f"FastAPI client error: {e}")
+                # Fallback to Telethon
+                use_fastapi = False
+        
+        # استخدام Telethon مباشرة
+        if not use_fastapi:
+            import asyncio
+            force_sms_raw = request.data.get('force_sms', True)
+            if isinstance(force_sms_raw, bool):
+                force_sms = force_sms_raw
+            else:
+                force_sms = str(force_sms_raw).lower() in ('1', 'true', 'yes', 'y', 'on')
             
-            # بدء عملية تسجيل الدخول
-            result = loop.run_until_complete(session_manager.login_and_save_session(phone_number, force_sms=force_sms))
+            try:
+                from .telegram_session_telethon import telethon_session_manager as session_manager
             
-            return Response(result, status=status.HTTP_200_OK)
-            
-        except ImportError as ie:
-            logger.error(f"Import error: {ie}")
-            return Response({
-                'error': 'Telethon غير مثبت. يرجى تثبيته: pip install telethon',
-                'details': str(ie)
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                # التحقق من وجود session
+                if session_manager.is_session_exists(phone_number):
+                    return Response({
+                        'status': 'already_connected',
+                        'message': 'حسابك مربوط مسبقاً!'
+                    }, status=status.HTTP_200_OK)
+                
+                # إنشاء event loop جديد للـ thread الحالي
+                try:
+                    loop = asyncio.get_event_loop()
+                except RuntimeError:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                
+                # بدء عملية تسجيل الدخول
+                result = loop.run_until_complete(session_manager.login_and_save_session(phone_number, force_sms=force_sms))
+                
+                return Response(result, status=status.HTTP_200_OK)
+                
+            except ImportError as ie:
+                logger.error(f"Import error: {ie}")
+                return Response({
+                    'error': 'Telethon غير مثبت. يرجى تثبيته: pip install telethon',
+                    'details': str(ie)
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
     except Exception as e:
         logger.error(f"Error in session login: {e}", exc_info=True)

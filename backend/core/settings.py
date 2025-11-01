@@ -266,6 +266,10 @@ if not TELEGRAM_BOT_TOKEN:
 TELEGRAM_API_ID = os.getenv('TELEGRAM_API_ID')
 TELEGRAM_API_HASH = os.getenv('TELEGRAM_API_HASH')
 
+# Telegram FastAPI Service (optional)
+USE_FASTAPI_TELEGRAM = os.getenv('USE_FASTAPI_TELEGRAM', 'False') == 'True'
+TELEGRAM_FASTAPI_URL = os.getenv('TELEGRAM_FASTAPI_URL', 'http://localhost:8001')
+
 OTP_SECRET_KEY = os.getenv('OTP_SECRET_KEY', SECRET_KEY)
 
 # Gemini AI Configuration

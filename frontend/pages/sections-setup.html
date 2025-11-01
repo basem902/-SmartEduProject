@@ -632,9 +632,19 @@
                             ⏱️ <span id="linkTimerValue">01:00</span>
                         </div>
 
+                        <div id="deliveryInfo" style="text-align: center; margin: 8px 0; color: #555; font-weight: 600;">
+                            طريقة الإرسال: -
+                        </div>
+
                         <button type="button" onclick="verifyCode()" class="btn btn-primary" 
                                 style="width: 100%; margin-top: 20px; padding: 15px; font-size: 1.1rem;">
                             ✅ تحقق من الكود
+                        </button>
+
+                        <button type="button" id="linkResendBtn" onclick="resendVerificationCode()"
+                                class="btn btn-secondary"
+                                style="width: 100%; margin-top: 10px; padding: 12px; font-size: 1rem;" disabled>
+                            🔁 إعادة إرسال الكود
                         </button>
                     </div>
 
@@ -2187,6 +2197,16 @@
                     document.getElementById('linkLoading').style.display = 'none';
                     document.getElementById('linkStep2').style.display = 'block';
                     document.getElementById('linkPhoneDisplay').textContent = phone;
+                    const deliveryInfo = document.getElementById('deliveryInfo');
+                    if (deliveryInfo) {
+                        const method = (data.delivery || '-').toString();
+                        deliveryInfo.textContent = `طريقة الإرسال: ${method}`;
+                    }
+                    const resendBtn = document.getElementById('linkResendBtn');
+                    if (resendBtn) {
+                        resendBtn.disabled = true;
+                        resendBtn.textContent = '🔁 إعادة إرسال الكود';
+                    }
                     
                     // بدء العد التنازلي
                     startLinkTimer();
@@ -2216,6 +2236,10 @@
                 if (timeLeft <= 0) {
                     clearInterval(linkTimer);
                     timerValue.textContent = 'انتهى الوقت';
+                    const resendBtn = document.getElementById('linkResendBtn');
+                    if (resendBtn) {
+                        resendBtn.disabled = false;
+                    }
                 }
             }, 1000);
         }
@@ -2277,6 +2301,45 @@
                 UI.showToast(error.message, 'error');
                 document.getElementById('linkLoading').style.display = 'none';
                 document.getElementById('linkStep2').style.display = 'block';
+            }
+        }
+
+        async function resendVerificationCode() {
+            try {
+                const token = localStorage.getItem('access_token');
+                const btn = document.getElementById('linkResendBtn');
+                const deliveryInfo = document.getElementById('deliveryInfo');
+                if (btn) { btn.disabled = true; btn.textContent = '⏳ جاري إعادة الإرسال...'; }
+                const response = await fetch(`${API_URL}/sections/telegram/session/resend/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ phone_number: linkedPhoneNumber })
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.message || data.error || 'فشل إعادة الإرسال');
+                }
+                if (data.status === 'code_resent' && data.phone_code_hash) {
+                    phoneCodeHash = data.phone_code_hash;
+                    if (deliveryInfo) {
+                        const current = (data.delivery || 'unknown').toString();
+                        const next = (data.next_delivery || '-').toString();
+                        deliveryInfo.textContent = `طريقة الإرسال: ${current} (التالي: ${next})`;
+                    }
+                    UI.showToast('تمت إعادة إرسال الكود', 'success');
+                    startLinkTimer();
+                } else {
+                    UI.showToast(data.message || 'تمت المعالجة', 'info');
+                }
+            } catch (error) {
+                console.error('Error resending code:', error);
+                UI.showToast(error.message, 'error');
+            } finally {
+                const btn = document.getElementById('linkResendBtn');
+                if (btn) { btn.disabled = false; btn.textContent = '🔁 إعادة إرسال الكود'; }
             }
         }
         
