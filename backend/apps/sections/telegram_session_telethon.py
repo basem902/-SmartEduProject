@@ -222,6 +222,15 @@ class TelethonSessionManager:
                 except:
                     pass
                 del self._active_clients[phone_number]
+            
+            return {
+                'status': 'error',
+                'message': f'خطأ في التحقق: {str(e)}'
+            }
+    
+    async def verify_password(self, phone_number, password):
+        """التحقق من كلمة مرور 2FA"""
+        try:
             if phone_number not in self._active_clients:
                 return {
                     'status': 'error',
@@ -261,6 +270,70 @@ class TelethonSessionManager:
             return {
                 'status': 'error',
                 'message': f'خطأ في التحقق من كلمة المرور: {str(e)}'
+            }
+    
+    async def resend_code(self, phone_number):
+        """إعادة إرسال كود التحقق"""
+        try:
+            if not TELETHON_AVAILABLE or tl_functions is None:
+                return {
+                    'status': 'error',
+                    'message': 'Telethon غير متاح'
+                }
+            
+            if phone_number not in self._active_clients:
+                return {
+                    'status': 'error',
+                    'message': 'لا توجد جلسة نشطة. اطلب الكود أولاً.'
+                }
+            
+            client, saved_hash = self._active_clients[phone_number]
+            print(f"🔁 Resending code for: {phone_number}")
+            
+            try:
+                sent = await client(tl_functions.auth.ResendCode(
+                    phone_number=phone_number,
+                    phone_code_hash=saved_hash
+                ))
+            except errors.FloodWaitError as e:
+                return {
+                    'status': 'error',
+                    'message': f'يرجى الانتظار {e.seconds} ثانية'
+                }
+            except Exception as e:
+                print(f"❌ Resend error: {e}")
+                return {
+                    'status': 'error',
+                    'message': f'فشل إعادة الإرسال: {str(e)}'
+                }
+            
+            # تحديد نوع التوصيل
+            def _type_name(t):
+                try:
+                    return type(t).__name__.replace('SentCodeType', '').lower()
+                except:
+                    return 'unknown'
+            
+            delivery = _type_name(getattr(sent, 'type', None))
+            next_delivery = _type_name(getattr(sent, 'next_type', None))
+            
+            # تحديث hash
+            self._active_clients[phone_number] = (client, sent.phone_code_hash)
+            
+            print(f"✅ Code resent! delivery: {delivery}, next: {next_delivery}")
+            
+            return {
+                'status': 'code_resent',
+                'phone_code_hash': sent.phone_code_hash,
+                'delivery': delivery,
+                'next_delivery': next_delivery,
+                'message': 'تمت إعادة إرسال الكود'
+            }
+        except Exception as e:
+            print(f"❌ Resend fatal error: {e}")
+            return {
+                'status': 'error',
+                'message': f'خطأ: {str(e)}'
             }
     
     def is_session_exists(self, phone_number):
