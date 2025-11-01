@@ -4,7 +4,14 @@ Telegram Session Manager - Telethon Version
 """
 import os
 from django.conf import settings
-from telethon import TelegramClient, errors
+
+try:
+    from telethon import TelegramClient, errors
+    TELETHON_AVAILABLE = True
+except ImportError:
+    TELETHON_AVAILABLE = False
+    TelegramClient = None
+    errors = None
 
 
 class TelethonSessionManager:
@@ -25,6 +32,12 @@ class TelethonSessionManager:
         """
         إرسال كود التحقق وحفظ client مؤقتاً
         """
+        if not TELETHON_AVAILABLE:
+            return {
+                'status': 'error',
+                'message': 'Telethon غير مثبت. يرجى تثبيته على السيرفر.'
+            }
+        
         try:
             api_id = settings.TELEGRAM_API_ID
             api_hash = settings.TELEGRAM_API_HASH

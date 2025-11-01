@@ -60,4 +60,7 @@ urlpatterns = [
     path('students/add-manually/', views.add_students_manually, name='add_students_manually'),
     path('students/upload-excel/', views.upload_students_excel, name='upload_students_excel'),
     path('students/excel-template/', views.download_excel_template, name='download_excel_template'),
+    
+    # ==================== System Health ====================
+    path('check-dependencies/', views.check_dependencies, name='check_dependencies'),
 ]

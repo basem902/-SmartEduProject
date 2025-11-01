@@ -3256,3 +3256,54 @@ def download_excel_template(request):
             'error': 'server_error',
             'message': 'حدث خطأ أثناء تحميل النموذج'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def check_dependencies(request):
+    """
+    التحقق من المكتبات المثبتة
+    """
+    import sys
+    import pkg_resources
+    
+    dependencies_status = {}
+    
+    # قائمة المكتبات المطلوبة
+    required_packages = [
+        'telethon',
+        'cryptg',
+        'python-telegram-bot',
+        'django',
+        'djangorestframework',
+        'psycopg',
+        'google-generativeai'
+    ]
+    
+    for package in required_packages:
+        try:
+            version = pkg_resources.get_distribution(package).version
+            dependencies_status[package] = {
+                'installed': True,
+                'version': version
+            }
+        except pkg_resources.DistributionNotFound:
+            dependencies_status[package] = {
+                'installed': False,
+                'version': None
+            }
+    
+    # فحص telethon بشكل خاص
+    telethon_import_status = False
+    try:
+        import telethon
+        telethon_import_status = True
+    except ImportError:
+        pass
+    
+    return Response({
+        'success': True,
+        'python_version': sys.version,
+        'dependencies': dependencies_status,
+        'telethon_importable': telethon_import_status
+    }, status=status.HTTP_200_OK)
