@@ -47,6 +47,10 @@ db.sqlite3-journal
 *.key
 age.key
 
+# Temporary instruction files (حذفها بعد الاستخدام)
+UPDATE_TOKEN_INSTRUCTIONS.txt
+*_INSTRUCTIONS.txt
+
 # Telegram Sessions (حساسة جداً!)
 *.session
 *.session-journal
