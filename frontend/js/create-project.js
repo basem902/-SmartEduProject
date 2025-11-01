@@ -341,10 +341,21 @@ async function loadTeacherSubjects() {
     }
 }
 
-// Load Grades
+// Load Grades (with DataCache support)
 async function loadGrades() {
     try {
-        const data = await api.getMyGrades();
+        console.log('📚 Loading grades...');
+        
+        // استخدام DataCache إذا كان متوفراً
+        let data;
+        if (window.dataCache) {
+            console.log('⚡ Using DataCache for faster loading');
+            data = await window.dataCache.getGrades();
+        } else {
+            console.log('📡 Using API directly');
+            data = await api.getMyGrades();
+        }
+        
         const select = document.getElementById('gradeSelect');
         select.innerHTML = '<option value="">اختر الصف...</option>';
         
@@ -369,7 +380,7 @@ async function loadGrades() {
     }
 }
 
-// Load Sections
+// Load Sections (with DataCache support)
 async function loadSections() {
     const gradeId = document.getElementById('gradeSelect').value;
     const container = document.getElementById('sectionsContainer');
@@ -381,7 +392,18 @@ async function loadSections() {
     }
     
     try {
-        const data = await api.getGradeSections(gradeId);
+        console.log(`📖 Loading sections for grade ${gradeId}...`);
+        
+        // استخدام DataCache إذا كان متوفراً
+        let data;
+        if (window.dataCache) {
+            console.log('⚡ Using DataCache for sections');
+            data = await window.dataCache.getSections(gradeId);
+        } else {
+            console.log('📡 Using API directly');
+            data = await api.getGradeSections(gradeId);
+        }
+        
         console.log('Sections loaded:', data.sections);
         const container = document.getElementById('sectionsList');
         container.innerHTML = '';
