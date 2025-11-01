@@ -2861,6 +2861,63 @@ def verify_student_for_join(request):
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def auto_promote_bot_in_groups(request):
+    """
+    ترقية البوت تلقائياً في جميع القروبات
+    
+    POST /api/sections/telegram/auto-promote-bot/
+    """
+    try:
+        import subprocess
+        import sys
+        from django.conf import settings
+        
+        # مسار السكريبت
+        script_path = os.path.join(settings.BASE_DIR.parent, 'auto_promote_bot.py')
+        
+        if not os.path.exists(script_path):
+            return Response({
+                'success': False,
+                'error': 'السكريبت غير موجود'
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        # تشغيل السكريبت
+        result = subprocess.run(
+            [sys.executable, script_path],
+            capture_output=True,
+            text=True,
+            timeout=300  # 5 دقائق
+        )
+        
+        if result.returncode == 0:
+            return Response({
+                'success': True,
+                'message': 'تمت ترقية البوت بنجاح',
+                'output': result.stdout
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({
+                'success': False,
+                'error': 'فشل تشغيل السكريبت',
+                'output': result.stderr or result.stdout
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+    except subprocess.TimeoutExpired:
+        return Response({
+            'success': False,
+            'error': 'انتهت مهلة التنفيذ'
+        }, status=status.HTTP_408_REQUEST_TIMEOUT)
+        
+    except Exception as e:
+        logger.error(f"Error in auto_promote_bot: {e}", exc_info=True)
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
 @permission_classes([AllowAny])  # يستدعيه Telegram Bot
 def confirm_student_joined_telegram(request):
     """

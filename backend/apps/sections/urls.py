@@ -54,6 +54,7 @@ urlpatterns = [
     
     # ==================== Telegram Utilities ====================
     path('telegram/fix-chatid/', views.fix_telegram_chatid, name='fix_telegram_chatid'),
+    path('telegram/auto-promote-bot/', views.auto_promote_bot_in_groups, name='auto_promote_bot'),
     
     # ==================== Student Join Verification ====================
     path('verify-student-join/', views.verify_student_for_join, name='verify_student_for_join'),
