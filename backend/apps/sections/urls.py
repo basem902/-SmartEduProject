@@ -42,6 +42,7 @@ urlpatterns = [
     path('telegram/session/password/', views.telegram_session_password, name='telegram_session_password'),
     path('telegram/session/status/', views.telegram_session_status, name='telegram_session_status'),
     path('telegram/session/disconnect/', views.telegram_session_disconnect, name='telegram_session_disconnect'),
+    path('telegram/session/reset/', views.telegram_session_reset, name='telegram_session_reset'),
     
     # ==================== Telegram Groups Management (Modal-based) ====================
     path('grade/<int:grade_id>/create-telegram-groups/', views.create_telegram_groups_for_grade, name='create_telegram_groups_for_grade'),

@@ -57,16 +57,41 @@ class TelethonSessionManager:
             # الاتصال
             await client.connect()
             
-            # التحقق من وجود جلسة
-            if await client.is_user_authorized():
-                await client.disconnect()
-                return {
-                    'status': 'already_connected',
-                    'message': 'حسابك مربوط مسبقاً!'
-                }
+            # التحقق من وجود جلسة صالحة
+            try:
+                if await client.is_user_authorized():
+                    await client.disconnect()
+                    return {
+                        'status': 'already_connected',
+                        'message': 'حسابك مربوط مسبقاً!'
+                    }
+            except Exception as auth_error:
+                # Session موجود لكن غير صالح، احذفه
+                print(f"Invalid session found, removing: {auth_error}")
+                try:
+                    await client.disconnect()
+                    os.remove(session_path + '.session')
+                except:
+                    pass
+                # أعد الاتصال
+                client = TelegramClient(session_path, int(api_id), api_hash)
+                await client.connect()
             
             # إرسال كود التحقق
-            sent = await client.send_code_request(phone_number)
+            try:
+                sent = await client.send_code_request(phone_number)
+            except errors.FloodWaitError as e:
+                await client.disconnect()
+                return {
+                    'status': 'error',
+                    'message': f'يرجى الانتظار {e.seconds} ثانية قبل المحاولة مرة أخرى (Telegram Flood Control)'
+                }
+            except Exception as send_error:
+                await client.disconnect()
+                return {
+                    'status': 'error',
+                    'message': f'فشل إرسال الكود: {str(send_error)}'
+                }
             
             # حفظ client مؤقتاً
             self._active_clients[phone_number] = (client, sent.phone_code_hash)
@@ -74,7 +99,7 @@ class TelethonSessionManager:
             return {
                 'status': 'code_required',
                 'phone_code_hash': sent.phone_code_hash,
-                'message': 'أدخل كود التحقق المرسل إلى هاتفك'
+                'message': 'تم إرسال كود التحقق إلى Telegram'
             }
             
         except Exception as e:

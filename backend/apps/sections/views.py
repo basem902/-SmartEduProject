@@ -1314,6 +1314,37 @@ def telegram_session_disconnect(request):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def telegram_session_reset(request):
+    """إعادة تعيين session (حذف session غير صالح)"""
+    try:
+        from .telegram_session_telethon import telethon_session_manager as session_manager
+        
+        phone_number = request.data.get('phone_number')
+        
+        if not phone_number:
+            return Response({
+                'error': 'رقم الهاتف مطلوب'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # حذف الـ session بالقوة
+        success = session_manager.delete_session(phone_number)
+        
+        return Response({
+            'success': True,
+            'message': 'تم إعادة تعيين Session. يمكنك المحاولة مرة أخرى.',
+            'session_deleted': success
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        logger.error(f"Error resetting session: {e}")
+        return Response({
+            'error': 'حدث خطأ أثناء إعادة التعيين',
+            'details': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 # ==================== Telegram Groups Creation ====================
 
 @api_view(['POST'])
