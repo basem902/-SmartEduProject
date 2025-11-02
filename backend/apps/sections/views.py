@@ -2883,11 +2883,13 @@ def auto_promote_bot_in_groups(request):
                 'error': 'السكريبت غير موجود'
             }, status=status.HTTP_404_NOT_FOUND)
         
-        # تشغيل السكريبت
+        # تشغيل السكريبت مع encoding UTF-8
         result = subprocess.run(
             [sys.executable, script_path],
             capture_output=True,
             text=True,
+            encoding='utf-8',
+            errors='ignore',  # تجاهل أخطاء encoding
             timeout=300  # 5 دقائق
         )
         
