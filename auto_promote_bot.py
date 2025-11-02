@@ -107,10 +107,20 @@ async def promote_bot_in_group(client, chat_id, bot_id, group_name):
 async def auto_promote_all():
     """ترقية البوت في جميع القروبات"""
     
-    # البحث عن session المحفوظ
-    session_file = os.path.join(BASE_DIR, 'telegram_sessions', f'session_{API_ID}')
+    # البحث عن session المحفوظ في مجلد backend/sessions
+    backend_dir = os.path.join(BASE_DIR, 'backend')
+    session_dir = os.path.join(backend_dir, 'sessions')
     
-    if not os.path.exists(session_file + '.session'):
+    # البحث عن أي session متاح
+    session_file = None
+    if os.path.exists(session_dir):
+        for filename in os.listdir(session_dir):
+            if filename.endswith('.session') and 'session_' in filename:
+                session_file = os.path.join(session_dir, filename.replace('.session', ''))
+                print(f"✅ وجدت session: {filename}")
+                break
+    
+    if not session_file or not os.path.exists(session_file + '.session'):
         print("\n❌ لا توجد session محفوظة!")
         print("\n💡 الحل:")
         print("   1. اذهب إلى sections-setup.html")
