@@ -2884,12 +2884,16 @@ def auto_promote_bot_in_groups(request):
             }, status=status.HTTP_404_NOT_FOUND)
         
         # تشغيل السكريبت مع encoding UTF-8
+        env = os.environ.copy()
+        env['PYTHONIOENCODING'] = 'utf-8'
+        
         result = subprocess.run(
             [sys.executable, script_path],
             capture_output=True,
             text=True,
             encoding='utf-8',
-            errors='ignore',  # تجاهل أخطاء encoding
+            errors='replace',  # استبدال الأحرف غير المدعومة
+            env=env,
             timeout=300  # 5 دقائق
         )
         
