@@ -2948,8 +2948,13 @@ def auto_promote_bot_in_groups(request):
             
             return {'success': True, 'results': results}
         
-        # تشغيل الدالة async
-        result = asyncio.run(promote_all())
+        # تشغيل الدالة async في thread منفصل
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            result = loop.run_until_complete(promote_all())
+        finally:
+            loop.close()
         
         if result.get('success'):
             res = result['results']
