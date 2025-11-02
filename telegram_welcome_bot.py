@@ -338,20 +338,28 @@ def main():
             ChatMemberHandler(welcome_new_member, ChatMemberHandler.CHAT_MEMBER)
         )
         
-        # الفحص الدوري: كل ساعة
+        # الفحص الدوري: كل ساعة (اختياري - يحتاج job-queue)
         job_queue = application.job_queue
-        job_queue.run_repeating(
-            periodic_admin_check,
-            interval=3600,  # كل ساعة (بالثواني)
-            first=60  # الفحص الأول بعد دقيقة من التشغيل
-        )
-        
-        logger.info("🤖 Bot بدأ العمل...")
-        logger.info(f"📡 API URL: {API_BASE_URL}")
-        logger.info("👂 في انتظار:")
-        logger.info("   • إضافة البوت لمجموعات جديدة")
-        logger.info("   • انضمام الطلاب")
-        logger.info("   • فحص دوري كل ساعة ✅")
+        if job_queue:
+            job_queue.run_repeating(
+                periodic_admin_check,
+                interval=3600,  # كل ساعة (بالثواني)
+                first=60  # الفحص الأول بعد دقيقة من التشغيل
+            )
+            logger.info("🤖 Bot بدأ العمل...")
+            logger.info(f"📡 API URL: {API_BASE_URL}")
+            logger.info("👂 في انتظار:")
+            logger.info("   • إضافة البوت لمجموعات جديدة")
+            logger.info("   • انضمام الطلاب")
+            logger.info("   • فحص دوري كل ساعة ✅")
+        else:
+            logger.warning("⚠️ JobQueue غير متاح - الفحص الدوري معطل")
+            logger.warning("💡 لتفعيله: pip install python-telegram-bot[job-queue]")
+            logger.info("🤖 Bot بدأ العمل...")
+            logger.info(f"📡 API URL: {API_BASE_URL}")
+            logger.info("👂 في انتظار:")
+            logger.info("   • إضافة البوت لمجموعات جديدة")
+            logger.info("   • انضمام الطلاب")
         
         # بدء البوت
         application.run_polling(allowed_updates=Update.ALL_TYPES)
