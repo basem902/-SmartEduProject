@@ -2871,6 +2871,7 @@ def auto_promote_bot_in_groups(request):
     try:
         import subprocess
         import sys
+        import os
         from django.conf import settings
         
         # مسار السكريبت
