@@ -2869,53 +2869,101 @@ def auto_promote_bot_in_groups(request):
     POST /api/sections/telegram/auto-promote-bot/
     """
     try:
-        import subprocess
-        import sys
         import os
+        import asyncio
         from django.conf import settings
+        from pyrogram import Client
+        from pyrogram.types import ChatPrivileges
+        from pyrogram.errors import UserNotParticipant, ChatAdminRequired
         
-        # مسار السكريبت
-        script_path = os.path.join(settings.BASE_DIR.parent, 'auto_promote_bot.py')
+        async def promote_all():
+            # البحث عن session
+            backend_dir = settings.BASE_DIR
+            session_dir = os.path.join(backend_dir, 'sessions')
+            
+            session_file = None
+            if os.path.exists(session_dir):
+                for filename in os.listdir(session_dir):
+                    if filename.endswith('.session') and 'session_' in filename:
+                        session_file = os.path.join(session_dir, filename.replace('.session', ''))
+                        break
+            
+            if not session_file:
+                return {'success': False, 'error': 'لا توجد session محفوظة'}
+            
+            # جلب المجموعات
+            groups = TelegramGroup.objects.filter(is_active=True)
+            if not groups.exists():
+                return {'success': False, 'error': 'لا توجد مجموعات'}
+            
+            # الاتصال بـ Telegram
+            client = Client(
+                name=session_file,
+                api_id=settings.TELEGRAM_API_ID,
+                api_hash=settings.TELEGRAM_API_HASH,
+                phone_number=None
+            )
+            
+            results = {
+                'total': groups.count(),
+                'success': 0,
+                'already_admin': 0,
+                'failed': 0
+            }
+            
+            async with client:
+                # معلومات البوت
+                bot_username = settings.TELEGRAM_BOT_USERNAME.replace('@', '')
+                bot = await client.get_users(f"@{bot_username}")
+                
+                for group in groups:
+                    try:
+                        member = await client.get_chat_member(group.chat_id, bot.id)
+                        
+                        if member.status.name in ["ADMINISTRATOR", "OWNER"]:
+                            results['already_admin'] += 1
+                        elif member.status.name == "MEMBER":
+                            # ترقية البوت
+                            await client.promote_chat_member(
+                                group.chat_id,
+                                bot.id,
+                                privileges=ChatPrivileges(
+                                    can_manage_chat=True,
+                                    can_delete_messages=True,
+                                    can_restrict_members=True,
+                                    can_invite_users=True,
+                                    can_pin_messages=True
+                                )
+                            )
+                            results['success'] += 1
+                            group.is_bot_added = True
+                            group.status = 'active'
+                            group.save()
+                        
+                        await asyncio.sleep(2)
+                        
+                    except Exception as e:
+                        results['failed'] += 1
+                        logger.error(f"Failed to promote in {group.group_name}: {e}")
+            
+            return {'success': True, 'results': results}
         
-        if not os.path.exists(script_path):
-            return Response({
-                'success': False,
-                'error': 'السكريبت غير موجود'
-            }, status=status.HTTP_404_NOT_FOUND)
+        # تشغيل الدالة async
+        result = asyncio.run(promote_all())
         
-        # تشغيل السكريبت مع encoding UTF-8
-        env = os.environ.copy()
-        env['PYTHONIOENCODING'] = 'utf-8'
-        
-        result = subprocess.run(
-            [sys.executable, script_path],
-            capture_output=True,
-            text=True,
-            encoding='utf-8',
-            errors='replace',  # استبدال الأحرف غير المدعومة
-            env=env,
-            timeout=300  # 5 دقائق
-        )
-        
-        if result.returncode == 0:
+        if result.get('success'):
+            res = result['results']
             return Response({
                 'success': True,
-                'message': 'تمت ترقية البوت بنجاح',
-                'output': result.stdout
+                'message': f"تمت الترقية!\nنجح: {res['success']}, مشرف مسبقاً: {res['already_admin']}, فشل: {res['failed']}",
+                'data': res
             }, status=status.HTTP_200_OK)
         else:
             return Response({
                 'success': False,
-                'error': 'فشل تشغيل السكريبت',
-                'output': result.stderr or result.stdout
+                'error': result.get('error', 'خطأ غير معروف')
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             
-    except subprocess.TimeoutExpired:
-        return Response({
-            'success': False,
-            'error': 'انتهت مهلة التنفيذ'
-        }, status=status.HTTP_408_REQUEST_TIMEOUT)
-        
     except Exception as e:
         logger.error(f"Error in auto_promote_bot: {e}", exc_info=True)
         return Response({
