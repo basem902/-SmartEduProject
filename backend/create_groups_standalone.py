@@ -97,19 +97,20 @@ def promote_bot_admin(bot_token, chat_id, user_id):
     return response.json()
 
 
-async def promote_bot_with_retry(client, chat_id, bot_user_id, bot_token=None, max_retries=2):
+async def promote_bot_with_retry(client, chat_id, bot_user_id, bot_token=None, max_retries=5):
     """
-    ترقية البوت مع retry logic (محاولتين)
-    مستوحى من منطق Telethon script
+    ترقية البوت مع retry logic محسّن (5 محاولات)
     
     المحاولة 1: صلاحيات كاملة
-    المحاولة 2: صلاحيات أساسية
-    المحاولة 3: Bot API (إذا توفر token)
+    المحاولة 2: صلاحيات كاملة (بعد انتظار)
+    المحاولة 3: صلاحيات أساسية
+    المحاولة 4: صلاحيات أساسية (بعد انتظار)
+    المحاولة 5: Bot API (إذا توفر token)
     """
     from pyrogram import errors
     
     # المحاولة 1: صلاحيات كاملة
-    print(f"   [PROMOTE] Attempting full privileges...")
+    print(f"   [PROMOTE 1/5] Attempting full privileges...")
     try:
         await client.promote_chat_member(
             chat_id,
@@ -119,7 +120,7 @@ async def promote_bot_with_retry(client, chat_id, bot_user_id, bot_token=None, m
                 can_delete_messages=True,
                 can_manage_video_chats=True,
                 can_restrict_members=True,
-                can_promote_members=True,  # محاولة إعطاء هذه الصلاحية
+                can_promote_members=False,  # عادة محظورة
                 can_change_info=True,
                 can_invite_users=True,
                 can_pin_messages=True,
@@ -128,60 +129,86 @@ async def promote_bot_with_retry(client, chat_id, bot_user_id, bot_token=None, m
                 can_manage_topics=True
             )
         )
-        print(f"   [OK] Bot promoted with FULL privileges")
+        print(f"   [OK] ✅ Bot promoted with FULL privileges")
         return True
     except errors.FloodWait as e:
         print(f"   [WAIT] FloodWait {e.value}s, waiting...")
         await asyncio.sleep(e.value)
-        # إعادة المحاولة بعد الانتظار
-        try:
-            await client.promote_chat_member(chat_id, bot_user_id, privileges=ChatPrivileges(can_delete_messages=True))
-            print(f"   [OK] Bot promoted after FloodWait")
-            return True
-        except Exception:
-            pass
     except Exception as e:
-        print(f"   [WARN] Full promotion failed: {e}")
+        print(f"   [WARN] Attempt 1 failed: {e}")
     
-    # المحاولة 2: صلاحيات أساسية (مخففة)
-    print(f"   [PROMOTE] Attempting minimal privileges...")
-    await asyncio.sleep(2)
+    # المحاولة 2: صلاحيات كاملة (بعد انتظار أطول)
+    print(f"   [PROMOTE 2/5] Retrying full privileges after delay...")
+    await asyncio.sleep(5)
     try:
         await client.promote_chat_member(
             chat_id,
             bot_user_id,
             privileges=ChatPrivileges(
-                can_manage_chat=False,
+                can_manage_chat=True,
                 can_delete_messages=True,
-                can_manage_video_chats=False,
-                can_restrict_members=False,
-                can_promote_members=False,
                 can_change_info=True,
                 can_invite_users=True,
                 can_pin_messages=True,
                 can_post_messages=True
             )
         )
-        print(f"   [OK] Bot promoted with MINIMAL privileges")
+        print(f"   [OK] ✅ Bot promoted with FULL privileges (retry)")
         return True
     except Exception as e:
-        print(f"   [WARN] Minimal promotion also failed: {e}")
+        print(f"   [WARN] Attempt 2 failed: {e}")
     
-    # المحاولة 3: Bot API (إذا توفر)
+    # المحاولة 3: صلاحيات أساسية
+    print(f"   [PROMOTE 3/5] Attempting minimal privileges...")
+    await asyncio.sleep(3)
+    try:
+        await client.promote_chat_member(
+            chat_id,
+            bot_user_id,
+            privileges=ChatPrivileges(
+                can_delete_messages=True,
+                can_invite_users=True,
+                can_pin_messages=True,
+                can_post_messages=True
+            )
+        )
+        print(f"   [OK] ✅ Bot promoted with MINIMAL privileges")
+        return True
+    except Exception as e:
+        print(f"   [WARN] Attempt 3 failed: {e}")
+    
+    # المحاولة 4: صلاحيات أساسية جداً (آخر محاولة Pyrogram)
+    print(f"   [PROMOTE 4/5] Attempting BASIC privileges...")
+    await asyncio.sleep(3)
+    try:
+        await client.promote_chat_member(
+            chat_id,
+            bot_user_id,
+            privileges=ChatPrivileges(
+                can_delete_messages=True,
+                can_pin_messages=True
+            )
+        )
+        print(f"   [OK] ✅ Bot promoted with BASIC privileges")
+        return True
+    except Exception as e:
+        print(f"   [WARN] Attempt 4 failed: {e}")
+    
+    # المحاولة 5: Bot API (إذا توفر)
     if bot_token:
-        print(f"   [PROMOTE] Attempting via Bot API...")
-        await asyncio.sleep(2)
+        print(f"   [PROMOTE 5/5] Attempting via Bot API...")
+        await asyncio.sleep(3)
         try:
             result = promote_bot_admin(bot_token, chat_id, bot_user_id)
             if result.get('ok'):
-                print(f"   [OK] Bot promoted via Bot API")
+                print(f"   [OK] ✅ Bot promoted via Bot API")
                 return True
             else:
                 print(f"   [WARN] Bot API failed: {result.get('description')}")
         except Exception as e:
             print(f"   [WARN] Bot API exception: {e}")
     
-    print(f"   [FAIL] All promotion attempts failed")
+    print(f"   [FAIL] ❌ All 5 promotion attempts failed - manual promotion required")
     return False
 
 

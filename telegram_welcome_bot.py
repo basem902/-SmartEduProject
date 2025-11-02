@@ -8,6 +8,7 @@ import sys
 import logging
 import asyncio
 import requests
+from datetime import datetime, timedelta
 from telegram import Update
 from telegram.ext import Application, ChatMemberHandler, ContextTypes
 
@@ -32,6 +33,84 @@ logger = logging.getLogger(__name__)
 # البيانات من .env
 BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '8454359902:AAF-yYkwNnjbtg1O0juwxcOBXy4MlhnU4nU')
 API_BASE_URL = os.getenv('API_BASE_URL', 'http://localhost:8000/api')
+
+
+async def bot_added_to_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    يُستدعى عندما يُضاف البوت نفسه لمجموعة جديدة
+    """
+    try:
+        chat_member_update = update.my_chat_member
+        
+        if not chat_member_update:
+            return
+        
+        new_status = chat_member_update.new_chat_member.status
+        old_status = chat_member_update.old_chat_member.status
+        chat = update.effective_chat
+        
+        # التحقق من أن البوت تمت إضافته للتو
+        if old_status in ['left', 'kicked'] and new_status in ['member', 'administrator', 'creator']:
+            logger.info(f"🤖 Bot added to group: {chat.title} (ID: {chat.id})")
+            
+            # التحقق من الصلاحيات
+            bot_member = await context.bot.get_chat_member(chat.id, context.bot.id)
+            is_admin = bot_member.status in ['administrator', 'creator']
+            
+            if is_admin:
+                # البوت مشرف - رائع!
+                welcome_msg = f"""
+✅ **تم إضافتي بنجاح!**
+
+مرحباً! أنا **SmartEdu Bot** 🤖
+
+✅ **حالتي:** مشرف في المجموعة  
+📱 **الوظائف:**
+• الترحيب بالطلاب الجدد
+• تحديث قاعدة البيانات تلقائياً
+• إدارة الأعضاء
+
+🎉 **جاهز للعمل!**
+"""
+                logger.info(f"✅ Bot is already admin in {chat.title}")
+                
+            else:
+                # البوت ليس مشرف - رسالة تذكيرية
+                welcome_msg = f"""
+⚠️ **تم إضافتي للمجموعة!**
+
+مرحباً! أنا **SmartEdu Bot** 🤖
+
+❗ **لكي أعمل بشكل كامل، يرجى ترقيتي لمشرف:**
+
+📝 **الخطوات:**
+1️⃣ اضغط على اسم المجموعة أعلى الشاشة
+2️⃣ اختر **Administrators** (المشرفون)
+3️⃣ اضغط **Add Admin** (إضافة مشرف)
+4️⃣ ابحث عن: **SmartEduProjectsBot**
+5️⃣ فعّل الصلاحيات التالية:
+   ✅ Delete messages (حذف الرسائل)
+   ✅ Invite users (إضافة أعضاء)
+   ✅ Pin messages (تثبيت رسائل)
+   ✅ Manage chat (إدارة الدردشة)
+
+⏳ **بعد الترقية سأعمل تلقائياً!**
+
+💡 أو يمكنك استخدام زر "ترقية البوت" من لوحة التحكم في الموقع.
+"""
+                logger.warning(f"⚠️ Bot is NOT admin in {chat.title}")
+            
+            # إرسال الرسالة
+            await context.bot.send_message(
+                chat_id=chat.id,
+                text=welcome_msg,
+                parse_mode='Markdown'
+            )
+            
+            logger.info(f"✅ Sent welcome message to {chat.title}")
+            
+    except Exception as e:
+        logger.error(f"❌ Error in bot_added_to_group: {str(e)}", exc_info=True)
 
 
 async def welcome_new_member(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -158,6 +237,89 @@ async def welcome_new_member(update: Update, context: ContextTypes.DEFAULT_TYPE)
         logger.error(f"❌ خطأ في welcome_new_member: {str(e)}", exc_info=True)
 
 
+async def periodic_admin_check(context: ContextTypes.DEFAULT_TYPE):
+    """
+    فحص دوري للتأكد من أن البوت مشرف في جميع المجموعات
+    يعمل كل ساعة
+    """
+    try:
+        logger.info("🔍 بدء الفحص الدوري لصلاحيات البوت...")
+        
+        # جلب جميع المجموعات من Database
+        telegram_groups = TelegramGroup.objects.filter(is_active=True)
+        
+        if not telegram_groups.exists():
+            logger.info("ℹ️ لا توجد مجموعات في Database")
+            return
+        
+        checked = 0
+        is_admin = 0
+        not_admin = 0
+        errors = 0
+        
+        for group in telegram_groups:
+            try:
+                checked += 1
+                
+                # التحقق من صلاحيات البوت
+                bot_member = await context.bot.get_chat_member(group.chat_id, context.bot.id)
+                
+                if bot_member.status in ['administrator', 'creator']:
+                    is_admin += 1
+                    logger.debug(f"✅ البوت مشرف في: {group.group_name}")
+                else:
+                    not_admin += 1
+                    logger.warning(f"⚠️ البوت ليس مشرف في: {group.group_name}")
+                    
+                    # إرسال تذكير (اختياري - مرة واحدة فقط)
+                    try:
+                        reminder_msg = f"""
+⚠️ **تذكير: يرجى ترقية البوت**
+
+أنا البوت **SmartEdu Bot** 🤖
+
+❗ لست مشرفاً في هذه المجموعة حالياً.
+
+💡 **لكي أعمل بشكل كامل:**
+   → اذهب لإعدادات المجموعة
+   → اضغط Administrators
+   → اضغط Add Admin
+   → ابحث عن: SmartEduProjectsBot
+   → منحني الصلاحيات
+
+🔧 أو استخدم زر "ترقية البوت" من لوحة التحكم.
+
+شكراً! 🙏
+"""
+                        await context.bot.send_message(
+                            chat_id=group.chat_id,
+                            text=reminder_msg,
+                            parse_mode='Markdown'
+                        )
+                        logger.info(f"📧 تم إرسال تذكير لـ: {group.group_name}")
+                    except Exception as e:
+                        logger.debug(f"لم يتم إرسال التذكير: {e}")
+                
+                # تأخير صغير لتجنب Flood
+                await asyncio.sleep(1)
+                
+            except Exception as e:
+                errors += 1
+                logger.error(f"❌ خطأ في فحص {group.group_name}: {e}")
+        
+        # ملخص الفحص
+        logger.info("=" * 60)
+        logger.info(f"📊 ملخص الفحص الدوري:")
+        logger.info(f"   ✅ مجموعات تم فحصها: {checked}")
+        logger.info(f"   👑 البوت مشرف في: {is_admin}")
+        logger.info(f"   ⚠️  البوت ليس مشرف في: {not_admin}")
+        logger.info(f"   ❌ أخطاء: {errors}")
+        logger.info("=" * 60)
+        
+    except Exception as e:
+        logger.error(f"❌ خطأ في periodic_admin_check: {str(e)}", exc_info=True)
+
+
 def main():
     """
     تشغيل البوت
@@ -166,14 +328,30 @@ def main():
         # إنشاء Application
         application = Application.builder().token(BOT_TOKEN).build()
         
-        # إضافة Handler للأعضاء الجدد
+        # Handler 1: عند إضافة البوت لمجموعة جديدة
+        application.add_handler(
+            ChatMemberHandler(bot_added_to_group, ChatMemberHandler.MY_CHAT_MEMBER)
+        )
+        
+        # Handler 2: عند انضمام أعضاء جدد (الطلاب)
         application.add_handler(
             ChatMemberHandler(welcome_new_member, ChatMemberHandler.CHAT_MEMBER)
         )
         
+        # الفحص الدوري: كل ساعة
+        job_queue = application.job_queue
+        job_queue.run_repeating(
+            periodic_admin_check,
+            interval=3600,  # كل ساعة (بالثواني)
+            first=60  # الفحص الأول بعد دقيقة من التشغيل
+        )
+        
         logger.info("🤖 Bot بدأ العمل...")
         logger.info(f"📡 API URL: {API_BASE_URL}")
-        logger.info("👂 في انتظار انضمام الطلاب...")
+        logger.info("👂 في انتظار:")
+        logger.info("   • إضافة البوت لمجموعات جديدة")
+        logger.info("   • انضمام الطلاب")
+        logger.info("   • فحص دوري كل ساعة ✅")
         
         # بدء البوت
         application.run_polling(allowed_updates=Update.ALL_TYPES)

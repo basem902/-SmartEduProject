@@ -470,13 +470,22 @@
                         </div>
                     </div>
 
-                    <!-- زر الإنشاء -->
-                    <div style="text-align: center; margin: 30px 0;">
+                    <!-- أزرار الإنشاء والترقية -->
+                    <div style="text-align: center; margin: 30px 0; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
                         <button type="button" class="btn btn-success" id="createGroupsBtn" 
                                 style="padding: 18px 50px; font-size: 1.2rem; background: #28a745; border: none; border-radius: 12px;">
                             <span id="createGroupsText">🚀 إنشاء القروبات الآن</span>
                             <span id="createGroupsSpinner" style="display: none;">
                                 <span class="spinner-border spinner-border-sm"></span> جاري الإنشاء...
+                            </span>
+                        </button>
+                        
+                        <button type="button" class="btn btn-warning" id="promoteBotBtn" 
+                                style="padding: 18px 40px; font-size: 1.2rem; background: #ff9800; color: white; border: none; border-radius: 12px;"
+                                onclick="promoteBotInAllGroups()">
+                            <span id="promoteBotText">🔧 ترقية البوت في جميع المجموعات</span>
+                            <span id="promoteBotSpinner" style="display: none;">
+                                <span class="spinner-border spinner-border-sm"></span> جاري الترقية...
                             </span>
                         </button>
                     </div>
@@ -2940,6 +2949,56 @@
                 console.log('ℹ️ localStorage: لا توجد بيانات محفوظة');
             }
         });
+        
+        // ==================== ترقية البوت التلقائية ====================
+        
+        async function promoteBotInAllGroups() {
+            const btn = document.getElementById('promoteBotBtn');
+            const textSpan = document.getElementById('promoteBotText');
+            const spinnerSpan = document.getElementById('promoteBotSpinner');
+            
+            if (!confirm('هل تريد ترقية البوت ليصبح مشرفاً في جميع المجموعات؟\n\nهذا قد يستغرق بضع دقائق...')) {
+                return;
+            }
+            
+            // تعطيل الزر
+            btn.disabled = true;
+            textSpan.style.display = 'none';
+            spinnerSpan.style.display = 'inline';
+            
+            try {
+                const response = await fetch(`${API_BASE}/sections/telegram/auto-promote-bot/`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('✅ تمت ترقية البوت بنجاح!\n\n' + data.message);
+                    
+                    // عرض تفاصيل النتائج (اختياري)
+                    if (data.output) {
+                        console.log('📊 نتائج الترقية:', data.output);
+                    }
+                } else {
+                    alert('❌ فشل ترقية البوت:\n\n' + (data.error || data.message || 'خطأ غير معروف'));
+                    console.error('Error:', data);
+                }
+                
+            } catch (error) {
+                console.error('❌ خطأ في استدعاء API:', error);
+                alert('❌ حدث خطأ أثناء الترقية.\n\nالرجاء التحقق من:\n• تشغيل Backend\n• الاتصال بالإنترنت\n• صلاحيات المشرف في المجموعات');
+            } finally {
+                // إعادة تفعيل الزر
+                btn.disabled = false;
+                textSpan.style.display = 'inline';
+                spinnerSpan.style.display = 'none';
+            }
+        }
     </script>
 
     <style>
