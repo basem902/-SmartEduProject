@@ -2875,6 +2875,7 @@ def auto_promote_bot_in_groups(request):
         from pyrogram import Client
         from pyrogram.types import ChatPrivileges
         from pyrogram.errors import UserNotParticipant, ChatAdminRequired
+        from asgiref.sync import async_to_sync
         
         async def promote_all():
             # البحث عن session
@@ -2948,13 +2949,8 @@ def auto_promote_bot_in_groups(request):
             
             return {'success': True, 'results': results}
         
-        # تشغيل الدالة async في thread منفصل
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            result = loop.run_until_complete(promote_all())
-        finally:
-            loop.close()
+        # تشغيل الدالة async باستخدام Django's async_to_sync
+        result = async_to_sync(promote_all)()
         
         if result.get('success'):
             res = result['results']
