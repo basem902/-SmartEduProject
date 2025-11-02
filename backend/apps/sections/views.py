@@ -2917,6 +2917,105 @@ def auto_promote_bot_in_groups(request):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_join_link_statistics(request):
+    """
+    إحصائيات الطلاب الذين انضموا عبر join link
+    
+    GET /api/sections/join-link-stats/?token=homealhajri7
+    
+    Response:
+    {
+        "section_info": {...},
+        "total_students": 20,
+        "joined_telegram": 15,
+        "not_joined": 5,
+        "join_rate": 75,
+        "students": [...]
+    }
+    """
+    try:
+        token = request.GET.get('token')
+        
+        if not token:
+            return Response({
+                'success': False,
+                'error': 'missing_token',
+                'message': 'Token مطلوب'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # جلب Section من Token
+        try:
+            section = Section.objects.get(join_token=token)
+        except Section.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': 'invalid_token',
+                'message': 'Token غير صحيح'
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        # جلب جميع الطلاب في هذه الشعبة
+        students = StudentRegistration.objects.filter(section=section).order_by('full_name')
+        
+        # الإحصائيات
+        total_students = students.count()
+        joined = students.filter(joined_telegram=True).count()
+        not_joined = students.filter(joined_telegram=False).count()
+        join_rate = round((joined / total_students * 100), 1) if total_students > 0 else 0
+        
+        # قائمة الطلاب
+        students_list = []
+        for student in students:
+            students_list.append({
+                'id': student.id,
+                'name': student.full_name,
+                'joined': student.joined_telegram,
+                'username': student.telegram_username,
+                'user_id': student.telegram_user_id,
+                'joined_at': student.joined_at.isoformat() if student.joined_at else None,
+                'phone': student.phone_number
+            })
+        
+        # معلومات Telegram Group
+        telegram_group = None
+        if hasattr(section, 'telegram_group'):
+            tg = section.telegram_group
+            telegram_group = {
+                'name': tg.group_name,
+                'invite_link': tg.invite_link,
+                'chat_id': tg.chat_id
+            }
+        
+        return Response({
+            'success': True,
+            'section_info': {
+                'id': section.id,
+                'name': section.section_name,
+                'grade': section.grade.display_name,
+                'school': section.grade.school_name,
+                'teacher': section.grade.teacher.get_full_name()
+            },
+            'telegram_group': telegram_group,
+            'statistics': {
+                'total_students': total_students,
+                'joined_telegram': joined,
+                'not_joined': not_joined,
+                'join_rate': join_rate
+            },
+            'students': students_list,
+            'join_link': f"https://smartedu-basem.netlify.app/pages/join.html?token={token}"
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        logger.error(f"Error in get_join_link_statistics: {e}", exc_info=True)
+        return Response({
+            'success': False,
+            'error': 'server_error',
+            'message': 'حدث خطأ أثناء جلب الإحصائيات'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 @api_view(['POST'])
 @permission_classes([AllowAny])  # يستدعيه Telegram Bot
 def confirm_student_joined_telegram(request):

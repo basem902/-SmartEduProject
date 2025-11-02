@@ -59,6 +59,7 @@ urlpatterns = [
     # ==================== Student Join Verification ====================
     path('verify-student-join/', views.verify_student_for_join, name='verify_student_for_join'),
     path('confirm-student-joined/', views.confirm_student_joined_telegram, name='confirm_student_joined'),
+    path('join-link-stats/', views.get_join_link_statistics, name='join_link_stats'),
     
     # ==================== Add Students (Manual / Excel) ====================
     path('students/add-manually/', views.add_students_manually, name='add_students_manually'),
