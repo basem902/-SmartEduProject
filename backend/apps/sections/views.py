@@ -300,7 +300,6 @@ def section_students_list(request, section_id):
         for idx, student in enumerate(students, 1):
             students_data.append({
                 'id': student.id,
-                'number': idx,
                 'full_name': student.full_name,
                 'joined_telegram': student.joined_telegram,
                 'registered_at': student.registered_at,
@@ -2870,107 +2869,38 @@ def auto_promote_bot_in_groups(request):
     """
     try:
         import os
-        import asyncio
+        import sys
+        import subprocess
         from django.conf import settings
-        from pyrogram import Client
-        from pyrogram.types import ChatPrivileges
-        from pyrogram.errors import UserNotParticipant, ChatAdminRequired
-        from asgiref.sync import async_to_sync
-        
-        async def promote_all():
-            # البحث عن session
-            backend_dir = settings.BASE_DIR
-            session_dir = os.path.join(backend_dir, 'sessions')
-            
-            session_file = None
-            if os.path.exists(session_dir):
-                for filename in os.listdir(session_dir):
-                    if filename.endswith('.session') and 'session_' in filename:
-                        session_file = os.path.join(session_dir, filename.replace('.session', ''))
-                        break
-            
-            if not session_file:
-                return {'success': False, 'error': 'لا توجد session محفوظة'}
-            
-            # جلب المجموعات
-            groups = TelegramGroup.objects.filter(is_active=True)
-            if not groups.exists():
-                return {'success': False, 'error': 'لا توجد مجموعات'}
-            
-            # الاتصال بـ Telegram
-            client = Client(
-                name=session_file,
-                api_id=settings.TELEGRAM_API_ID,
-                api_hash=settings.TELEGRAM_API_HASH,
-                phone_number=None
-            )
-            
-            results = {
-                'total': groups.count(),
-                'success': 0,
-                'already_admin': 0,
-                'failed': 0
-            }
-            
-            async with client:
-                # معلومات البوت
-                bot_username = settings.TELEGRAM_BOT_USERNAME.replace('@', '')
-                bot = await client.get_users(f"@{bot_username}")
-                
-                for group in groups:
-                    try:
-                        member = await client.get_chat_member(group.chat_id, bot.id)
-                        
-                        if member.status.name in ["ADMINISTRATOR", "OWNER"]:
-                            results['already_admin'] += 1
-                        elif member.status.name == "MEMBER":
-                            # ترقية البوت
-                            await client.promote_chat_member(
-                                group.chat_id,
-                                bot.id,
-                                privileges=ChatPrivileges(
-                                    can_manage_chat=True,
-                                    can_delete_messages=True,
-                                    can_restrict_members=True,
-                                    can_invite_users=True,
-                                    can_pin_messages=True
-                                )
-                            )
-                            results['success'] += 1
-                            group.is_bot_added = True
-                            group.status = 'active'
-                            group.save()
-                        
-                        await asyncio.sleep(2)
-                        
-                    except Exception as e:
-                        results['failed'] += 1
-                        logger.error(f"Failed to promote in {group.group_name}: {e}")
-            
-            return {'success': True, 'results': results}
-        
-        # تشغيل الدالة async باستخدام Django's async_to_sync
-        result = async_to_sync(promote_all)()
-        
-        if result.get('success'):
-            res = result['results']
-            return Response({
-                'success': True,
-                'message': f"تمت الترقية!\nنجح: {res['success']}, مشرف مسبقاً: {res['already_admin']}, فشل: {res['failed']}",
-                'data': res
-            }, status=status.HTTP_200_OK)
+
+        # استدعاء أمر الإدارة Django management command لتفادي مشاكل event loop
+        manage_py = os.path.join(settings.BASE_DIR, 'manage.py')
+        if not os.path.exists(manage_py):
+            return Response({'success': False, 'error': 'manage.py غير موجود'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        env = os.environ.copy()
+        env['PYTHONIOENCODING'] = 'utf-8'
+        env['PYTHONUNBUFFERED'] = '1'
+
+        result = subprocess.run(
+            [sys.executable, manage_py, 'auto_promote_bot'],
+            capture_output=True,
+            text=True,
+            encoding='utf-8',
+            errors='replace',
+            env=env,
+            timeout=600
+        )
+
+        if result.returncode == 0:
+            return Response({'success': True, 'message': 'تم تنفيذ أمر الترقية', 'output': result.stdout}, status=status.HTTP_200_OK)
         else:
-            return Response({
-                'success': False,
-                'error': result.get('error', 'خطأ غير معروف')
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            
+            return Response({'success': False, 'error': 'فشل تشغيل الأمر', 'output': (result.stderr or result.stdout)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except subprocess.TimeoutExpired:
+        return Response({'success': False, 'error': 'انتهت مهلة التنفيذ'}, status=status.HTTP_408_REQUEST_TIMEOUT)
     except Exception as e:
-        logger.error(f"Error in auto_promote_bot: {e}", exc_info=True)
-        return Response({
-            'success': False,
-            'error': str(e)
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        logger.error(f"Error in auto_promote_bot_in_groups: {e}", exc_info=True)
+        return Response({'success': False, 'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['GET'])
@@ -3400,6 +3330,18 @@ def upload_students_excel(request):
             
             # تسمية الأعمدة
             df.columns = ['full_name', 'phone'] + [f'col_{i}' for i in range(2, df.shape[1])]
+            
+            # إزالة الصف الأول إذا كان header (يحتوي على كلمات مثل "اسم" أو "جوال")
+            if df.shape[0] > 0:
+                first_row_name = str(df.iloc[0]['full_name']).strip().lower()
+                first_row_phone = str(df.iloc[0]['phone']).strip().lower()
+                
+                # تحقق إذا كان الصف الأول header
+                if any(keyword in first_row_name for keyword in ['اسم', 'الاسم', 'name']) or \
+                   any(keyword in first_row_phone for keyword in ['جوال', 'هاتف', 'رقم', 'phone', 'mobile']):
+                    logger.info("🔍 تم اكتشاف صف header، سيتم تخطيه")
+                    df = df.iloc[1:]  # تخطي الصف الأول
+                    df = df.reset_index(drop=True)
             
             # إزالة الصفوف الفارغة
             df = df.dropna(subset=['full_name', 'phone'])
